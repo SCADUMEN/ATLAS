@@ -39,7 +39,9 @@ Invoke automatically when:
 - a fragile thought needs to become a durable record
 - restoration is tempting but the source has not been examined
 
-**Le Sauvegarder holds first precedence.** When a source is at risk, this mode speaks before investigation, classification, repair, argument, or transmission. Evidence loss is the one failure that cannot be reversed.
+**Le Sauvegarder is the bezel.** He is not an hour on the dial. He is the ring around all of it — set before you go under, and the component that gets you back. Everything crosses him in both directions: state is captured before anything is acted on, and the passage is recorded after.
+
+**He holds first precedence by construction.** When a source is at risk, this mode precedes investigation, classification, repair, argument, and transmission. Evidence loss is the one failure that cannot be reversed, so preservation is not a step in the chain — it is the medium the chain runs through.
 
 ### Output Contract
 

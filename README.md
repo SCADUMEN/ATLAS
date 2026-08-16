@@ -18,6 +18,7 @@ Core layer:
 Council:
 
 - `overlays/le-conseil.md` - the routing manifest: roster, gate conditions, handoff graph, panel limits, precedence.
+- `overlays/le-sas.md` - the airlock. A complication, not a member: admission control between the ring and ATLAS.
 - `overlays/le-protocol-de-trois.md` - Le Protocole des Trois Témoins, the three-witness judgment protocol.
 - `subroutines/` - twelve operating modes, one file each.
 
@@ -29,26 +30,39 @@ Overlays and templates:
 
 ## Le Conseil
 
-Twelve subroutines, gated and routed by `overlays/le-conseil.md`. They are operating modes of one agent, not twelve agents.
+Eleven subroutines, gated and routed by `overlays/le-conseil.md`. They are operating modes of one agent, not eleven agents.
 
-| Panel | Subroutine | Function |
+The council is built as a diver's movement, and each part carries a real constraint:
+
+| Part | Council | Position |
 |---|---|---|
-| Trois Témoins | Le Sauvegarder | Preserves what can still be saved now |
-| Trois Témoins | Le Continuant | Maintains continuity across long arcs |
-| Trois Témoins | Le Rédempteur | Returns to damaged or abandoned work |
-| Quatrième Témoin | Le Sceptique | The airlock — tiers claims, enforces gain, gates output |
-| Autorités du Registre | Le Taxonomiste | Classifies records, preserves source language |
-| Forces Adverses | Le Vigile | Defends access, custody, and boundaries |
-| Forces Adverses | Le Fripon | Authorized red team, under charter |
-| Forces Adverses | Le Renégat | Argues against the mission; owns Reduce and Release |
-| Opérateurs de Terrain | Le Cartographe | Maps dependencies and provenance |
-| Opérateurs de Terrain | Le Limier | Reconstructs what happened, in sequence |
-| Opérateurs de Terrain | Le Forgeron | Builds and repairs durable systems |
-| Opérateurs de Terrain | Le Messager | Carries findings outward without distortion |
+| Crown | L'Opérateur — MTM | Outside the case. Winds it, sets it, decides. |
+| Bezel | Le Sauvegarder | Around all of it. Everything crosses, both ways. |
+| Registers | Le Continuant · Le Rédempteur · Le Sceptique | 11 · 12 · 01 |
+| Chapter ring | The eight | 02–10, with 02 open |
+| Escapement | Le Sas | Internal. Regulates release. Not a member. |
+| Dial | ATLAS | Where judgement reads out as motion. |
 
-Each file has an `OPERATIONAL CORE` for runtime and a `DOCTRINE` section below it for authoring. A router loads the core alone. The three witnesses predate this structure and are pending retrofit.
+| Pos | Subroutine | Function |
+|---|---|---|
+| 11 | Le Continuant | Maintains continuity across long arcs |
+| 12 | Le Rédempteur | Returns to damaged or abandoned work |
+| 01 | Le Sceptique | Tiers every claim; the last check before the dial |
+| 02 | — | Deliberately open |
+| 03 | Le Taxonomiste | Classifies records, preserves source language |
+| 04 | Le Vigile | Defends access, custody, and boundaries |
+| 05 | Le Fripon | Authorized red team, under charter |
+| 06 | Le Renégat | Argues against the mission; owns Reduce and Release |
+| 07 | Le Cartographe | Maps dependencies and provenance |
+| 08 | Le Limier | Reconstructs what happened, in sequence |
+| 09 | Le Forgeron | Builds and repairs durable systems |
+| 10 | Le Messager | Carries findings outward without distortion |
 
-The distinctions that keep them separate: Le Sceptique attacks the claim, Le Fripon attacks the defense, Le Renégat attacks the consensus. Le Limier reconstructs the event, Le Cartographe maps the terrain, Le Forgeron changes the system, Le Messager controls the transmission.
+Each file has an `OPERATIONAL CORE` for runtime and a `DOCTRINE` section below it for authoring. A router loads the core alone.
+
+The distinctions that keep them separate: Le Sceptique attacks the claim, Le Fripon attacks the defence, Le Renégat attacks the consensus. Le Limier reconstructs the event, Le Cartographe maps the terrain, Le Forgeron changes the system, Le Messager controls the transmission.
+
+The door is machinery and the last word is human: structural refusal happens at the escapement, where it needs no judgement, and what survives reaches Le Sceptique, where it needs a person.
 
 ## Use In A Project
 
