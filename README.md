@@ -1,5 +1,7 @@
 # ATLAS
 
+> **HUMAN JUDGEMENT // MACHINE COLLABORATION // CONTRE L'OUBLI**
+
 ATLAS is Matthew Marx's reusable operating interface for technical recovery, archive work, project planning, and calm execution.
 
 It is not a mascot, brand voice, or roleplay layer. It is a portable instruction system for Codex and related agents: steady communication, practical momentum, durable documentation, and clear handoffs across projects.

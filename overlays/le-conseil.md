@@ -1,5 +1,13 @@
 # LE CONSEIL
 
+> **HUMAN JUDGEMENT // MACHINE COLLABORATION // CONTRE L'OUBLI**
+
+The three clauses are the three tiers of this document.
+
+**Human judgement** is L'Opérateur, outside the instrument, holding the decision.
+**Machine collaboration** is ATLAS and the ring — which testify and synthesize, and never decide.
+**Contre l'oubli** is what the other two are for.
+
 ## The Council of Twelve
 
 **Function:** The routing manifest for the twelve ATLAS subroutines. Roster, gate conditions, panel limits, handoff graph, precedence, and display states.
