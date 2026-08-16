@@ -19,7 +19,10 @@ Council:
 
 - `overlays/le-conseil.md` - the routing manifest: roster, gate conditions, handoff graph, panel limits, precedence.
 - `overlays/le-sas.md` - the airlock. A complication, not a member: admission control between the ring and ATLAS.
+- `overlays/le-barillet.md` - the barrel. The fitted model, its power reserve, and the record of barrels that have run.
+- `overlays/le-rouage.md` - the going train. The router specification. **Not yet built.**
 - `overlays/le-protocol-de-trois.md` - Le Protocole des Trois Témoins, the three-witness judgment protocol.
+- `hardware/le-boitier.md` - the case. Enclosure and control specification for the physical instrument.
 - `subroutines/` - twelve operating modes, one file each.
 
 Overlays and templates:
