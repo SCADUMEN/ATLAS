@@ -14,21 +14,30 @@ The routing manifest for the ATLAS subroutines: anatomy, roster, gate conditions
 
 The council is **one agent in many modes**, not many agents. Nothing here spawns a separate process, context, or voice with its own agenda. A member is a loaded instruction set plus an output contract, active only while it changes the answer.
 
-The instrument is a diver's movement. That is not decoration — each part carries a real constraint, and the anatomy is what keeps the parts from drifting into each other.
+The instrument is a diver's chronograph. That is not decoration — each part carries a real constraint, the anatomy is what keeps the parts from drifting into each other, and no part is assigned twice.
 
 | Part | Council | Why that part |
 |---|---|---|
 | **The wearer** | L'Opérateur — MTM | Not a part. Outside the case entirely. He decides; the movement only reads out. |
+| **Bezel** | ATLAS | The interface. Set before you go under, read against ever after. Unidirectional by construction. |
 | **Crown** | Le Sauvegarder | The only input path. Nothing enters the movement except through preservation. |
-| **Bezel** | L'Archive | Elapsed time, and the way back. Set before you go under; the record everything is measured against. |
+| **Dial plate** | L'Archive | The ground the whole council is printed on. |
 | **Hours 11 · 12** | Le Continuant · Le Rédempteur | Tyler and the returning self, adjacent at the top. |
 | **Hours 01 · 02** | Le Sceptique · Le Curateur | The claim, and the collection. |
 | **Hours 03–10** | The eight | They testify. |
 | **Registers** | Signal · Noise · Gain | Le Sceptique's readout, driven from 01. |
 | **Escapement** | Le Sas | Internal, unseen, regulates release. Not a member. |
-| **Dial** | ATLAS | The ground it is all printed on. Where judgement reads out as motion. |
+| **Hands** | — | The answer. Deliberately no one. |
 
-**The crown is the load-bearing choice.** L'Opérateur cannot touch the movement directly — every input he makes passes through Le Sauvegarder first. To set the instrument is to save something. That is not ceremony: it makes preservation structurally unskippable rather than merely first in a precedence list.
+Three of these carry the weight.
+
+**ATLAS is the bezel because ATLAS is an interface, not a participant.** A dive bezel is the part you set and read the movement against — and it is unidirectional by design, able to report only that less time remains than you thought, never more. That fail-safe asymmetry is ATLAS's disposition exactly: conservative, preservation-first, never overstating.
+
+**Le Sauvegarder is the crown, so preservation cannot be skipped.** L'Opérateur cannot touch the movement directly; every input passes through him first. To set the instrument is to save something. Other modes are ordered by a precedence list that could be argued with. The crown cannot be argued with, because there is no path around it.
+
+**L'Archive is the plate, not a member, because the council does not stand beside the archive — it is printed on it.** Le Taxonomiste files into it, Le Limier reads it, Le Curateur selects from it, Le Sauvegarder feeds it. Remove the archive and there is no surface for any of them to occupy.
+
+**The hands are the answer, and are deliberately unassigned.** The output of the council is not itself a council member. Naming them would be the same symmetry pressure that would have filled position 02 with a mood.
 
 ---
 
@@ -80,14 +89,16 @@ The same test applies in reverse: a member that never fires, or that always fire
 ```text
 L'Opérateur      sets           — the wearer, outside the case
 LE SAUVEGARDER   admits input   — the crown; every input begins by saving
-the twelve       testify        — the hours
+the twelve       testify        — the hours, printed on L'Archive
 Le Sceptique     tiers          — 01, driving signal / noise / gain
 LE SAS           releases       — the escapement
-ATLAS            reads out      — the dial
+the hands        indicate       — the answer
 L'Opérateur      decides
 ```
 
-L'Archive is the bezel and therefore not a step. It is what the whole movement is measured against — elapsed time, and the way back.
+ATLAS is the bezel and therefore not a step in the chain. It is the frame the whole movement is read against — set at the start, and unidirectional thereafter.
+
+L'Archive is the plate and therefore not a step either. It is what every step is happening on.
 
 **The door is machinery; the last word is human.** Structural refusal — cap enforcement, theatre rejection — is decidable without judgement and belongs at the escapement. What survives is exactly the material that needs a person: tiering a claim, separating fact from interpretation, catching anxiety wearing the costume of intelligence. Nothing reaches the dial that a human mode did not tier.
 
@@ -227,7 +238,9 @@ The clean move is this.
 
 **Le Sauvegarder preserves — the crown, and the only way in.**
 
-**Le Sas releases. ATLAS reads out. L'Opérateur decides.**
+**Le Sas releases. The hands indicate. L'Opérateur decides.**
+
+**ATLAS frames it. L'Archive carries it.**
 
 Twelve hours occupied, and nothing enters except by saving something first.
 
