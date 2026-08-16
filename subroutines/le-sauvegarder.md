@@ -39,9 +39,11 @@ Invoke automatically when:
 - a fragile thought needs to become a durable record
 - restoration is tempting but the source has not been examined
 
-**Le Sauvegarder is the bezel.** He is not an hour on the dial. He is the ring around all of it — set before you go under, and the component that gets you back. Everything crosses him in both directions: state is captured before anything is acted on, and the passage is recorded after.
+**Le Sauvegarder is the crown.** He is not an hour on the dial. He is the only input path into the movement — L'Opérateur is the wearer, outside the case entirely, and every input he makes passes through preservation first.
 
-**He holds first precedence by construction.** When a source is at risk, this mode precedes investigation, classification, repair, argument, and transmission. Evidence loss is the one failure that cannot be reversed, so preservation is not a step in the chain — it is the medium the chain runs through.
+**He holds first precedence by construction, not by rule.** Other modes are ordered by a precedence list that could in principle be argued with. Le Sauvegarder cannot be skipped, because there is no path that bypasses the crown. To set the instrument is to save something.
+
+When a source is at risk, this mode precedes investigation, classification, repair, argument, and transmission. Evidence loss is the one failure that cannot be reversed.
 
 ### Output Contract
 

@@ -30,16 +30,17 @@ Overlays and templates:
 
 ## Le Conseil
 
-Eleven subroutines, gated and routed by `overlays/le-conseil.md`. They are operating modes of one agent, not eleven agents.
+Thirteen subroutines, gated and routed by `overlays/le-conseil.md`. They are operating modes of one agent, not thirteen agents.
 
-The council is built as a diver's movement, and each part carries a real constraint:
+The council is built as a diver's chronograph, and each part carries a real constraint:
 
 | Part | Council | Position |
 |---|---|---|
-| Crown | L'Opérateur — MTM | Outside the case. Winds it, sets it, decides. |
-| Bezel | Le Sauvegarder | Around all of it. Everything crosses, both ways. |
-| Registers | Le Continuant · Le Rédempteur · Le Sceptique | 11 · 12 · 01 |
-| Chapter ring | The eight | 02–10, with 02 open |
+| The wearer | L'Opérateur — MTM | Not a part. Outside the case. He decides. |
+| Crown | Le Sauvegarder | The only input path. Nothing enters except by saving something. |
+| Bezel | L'Archive | Elapsed time, and the way back. |
+| Hours | The twelve | 11, 12, 01–10 |
+| Registers | Signal · Noise · Gain | Le Sceptique's readout, driven from 01 |
 | Escapement | Le Sas | Internal. Regulates release. Not a member. |
 | Dial | ATLAS | Where judgement reads out as motion. |
 
@@ -47,8 +48,8 @@ The council is built as a diver's movement, and each part carries a real constra
 |---|---|---|
 | 11 | Le Continuant | Maintains continuity across long arcs |
 | 12 | Le Rédempteur | Returns to damaged or abandoned work |
-| 01 | Le Sceptique | Tiers every claim; the last check before the dial |
-| 02 | — | Deliberately open |
+| 01 | Le Sceptique | Tiers every claim; drives signal, noise, gain |
+| 02 | Le Curateur | Decides what the collection is, not what is in it |
 | 03 | Le Taxonomiste | Classifies records, preserves source language |
 | 04 | Le Vigile | Defends access, custody, and boundaries |
 | 05 | Le Fripon | Authorized red team, under charter |

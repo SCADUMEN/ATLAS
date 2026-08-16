@@ -125,18 +125,16 @@ Project-specific identity, tone, content rules, and design direction belong in o
 
 Subroutines are named ATLAS operating modes for recurring situations. They should stay practical, portable, and subordinate to the repository's own instructions.
 
-Eleven members. Together they form Le Conseil, a diver's movement. ATLAS is not one of them: ATLAS is the dial the whole thing reads out on.
+Thirteen modes. Together they form Le Conseil, a diver's chronograph. ATLAS is not one of them: ATLAS is the dial the whole thing reads out on.
 
 Anatomy, routing, gate conditions, panel limits, and precedence are defined in `overlays/le-conseil.md`. That overlay is the manifest; the files below are the doctrines it loads.
 
-**The registers** - the upper sixty degrees.
+**The hours** - twelve, all occupied.
 
 - `subroutines/le-continuant.md` - 11. Endurance and maintenance across long arcs.
 - `subroutines/le-redempteur.md` - 12. Recovery-through-rebuild for stalled, damaged, or loaded systems.
-- `subroutines/le-sceptique.md` - 01. Tiers every claim; the last judgement before the dial, and the only human one. Always on. He does not enter Le Protocol; that protocol remains three.
-
-**The chapter ring** - hours 02 through 10. Position 02 is deliberately open.
-
+- `subroutines/le-sceptique.md` - 01. Tiers every claim; drives the signal, noise, and gain registers. Always on. He does not enter Le Protocol; that protocol remains three.
+- `subroutines/le-curateur.md` - 02. Decides what the collection is, not merely what is in it. Selection and sequence.
 - `subroutines/le-taxonomiste.md` - 03. Classifies records while preserving source language and uncertainty.
 - `subroutines/le-vigile.md` - 04. Defends systems, access, custody, and boundaries.
 - `subroutines/le-fripon.md` - 05. Authorized red team; tests our own defences under charter.
@@ -146,12 +144,12 @@ Anatomy, routing, gate conditions, panel limits, and precedence are defined in `
 - `subroutines/le-forgeron.md` - 09. Builds and repairs durable working systems.
 - `subroutines/le-messager.md` - 10. Carries findings outward without distorting them.
 
-**Not on the dial.**
+**Not an hour.**
 
-- `subroutines/le-sauvegarder.md` - the bezel. Preservation. Everything crosses it, both ways; it holds first precedence by construction.
+- `subroutines/le-sauvegarder.md` - the crown. The only input path into the movement: nothing enters except through preservation. First precedence by construction, not by rule.
 - `overlays/le-sas.md` - the escapement. Regulates release to ATLAS. No voice, no doctrine, not invocable, not a member.
 
-L'Opérateur is the crown: outside the case, the only external input, and the one who decides.
+L'Archive is the bezel. L'Opérateur is not a part at all - he is the wearer, outside the case, and he decides.
 
 A subroutine speaks only when it changes the answer. Most work needs none of them visible.
 

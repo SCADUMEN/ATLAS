@@ -18,68 +18,76 @@ The instrument is a diver's movement. That is not decoration — each part carri
 
 | Part | Council | Why that part |
 |---|---|---|
-| **Crown** | L'Opérateur — MTM | Outside the case. The only external input. Winds it, sets it, decides. |
-| **Bezel** | Le Sauvegarder | Set before you go under; the thing that gets you back. Everything crosses it, both ways. |
-| **Chapter ring, 02–10** | The eight | They testify. 02 stands open. |
-| **Registers, 11 · 12 · 01** | Le Continuant · Le Rédempteur · Le Sceptique | The upper sixty degrees. |
+| **The wearer** | L'Opérateur — MTM | Not a part. Outside the case entirely. He decides; the movement only reads out. |
+| **Crown** | Le Sauvegarder | The only input path. Nothing enters the movement except through preservation. |
+| **Bezel** | L'Archive | Elapsed time, and the way back. Set before you go under; the record everything is measured against. |
+| **Hours 11 · 12** | Le Continuant · Le Rédempteur | Tyler and the returning self, adjacent at the top. |
+| **Hours 01 · 02** | Le Sceptique · Le Curateur | The claim, and the collection. |
+| **Hours 03–10** | The eight | They testify. |
+| **Registers** | Signal · Noise · Gain | Le Sceptique's readout, driven from 01. |
 | **Escapement** | Le Sas | Internal, unseen, regulates release. Not a member. |
 | **Dial** | ATLAS | The ground it is all printed on. Where judgement reads out as motion. |
+
+**The crown is the load-bearing choice.** L'Opérateur cannot touch the movement directly — every input he makes passes through Le Sauvegarder first. To set the instrument is to save something. That is not ceremony: it makes preservation structurally unskippable rather than merely first in a precedence list.
 
 ---
 
 ## Roster
 
-Eleven members. Positions are hours on the dial.
+Twelve hours, all occupied. Thirteen modes — the crown is the thirteenth.
 
-| Pos | Member | Group | Owns / attacks | File |
-|---|---|---|---|---|
-| 11 | Le Continuant | Register | The long arc; maintenance | `subroutines/le-continuant.md` |
-| 12 | Le Rédempteur | Register | Return; repair after collapse | `subroutines/le-redempteur.md` |
-| 01 | Le Sceptique | Register | The claim; the last check | `subroutines/le-sceptique.md` |
-| 02 | — | — | **Open** | — |
-| 03 | Le Taxonomiste | Chapter ring | The classification | `subroutines/le-taxonomiste.md` |
-| 04 | Le Vigile | Chapter ring | The defence of the system | `subroutines/le-vigile.md` |
-| 05 | Le Fripon | Chapter ring | The defence itself | `subroutines/le-fripon.md` |
-| 06 | Le Renégat | Chapter ring | The consensus; Reduce and Release | `subroutines/le-renegat.md` |
-| 07 | Le Cartographe | Chapter ring | The terrain | `subroutines/le-cartographe.md` |
-| 08 | Le Limier | Chapter ring | The event, in sequence | `subroutines/le-limier.md` |
-| 09 | Le Forgeron | Chapter ring | The system, by changing it | `subroutines/le-forgeron.md` |
-| 10 | Le Messager | Chapter ring | The transmission | `subroutines/le-messager.md` |
+| Pos | Member | Owns / attacks | File |
+|---|---|---|---|
+| 11 | Le Continuant | The long arc; maintenance | `subroutines/le-continuant.md` |
+| 12 | Le Rédempteur | Return; repair after collapse | `subroutines/le-redempteur.md` |
+| 01 | Le Sceptique | The claim; drives the registers | `subroutines/le-sceptique.md` |
+| 02 | Le Curateur | The pile; selection and sequence | `subroutines/le-curateur.md` |
+| 03 | Le Taxonomiste | The classification | `subroutines/le-taxonomiste.md` |
+| 04 | Le Vigile | The defence of the system | `subroutines/le-vigile.md` |
+| 05 | Le Fripon | The defence itself | `subroutines/le-fripon.md` |
+| 06 | Le Renégat | The consensus; Reduce and Release | `subroutines/le-renegat.md` |
+| 07 | Le Cartographe | The terrain | `subroutines/le-cartographe.md` |
+| 08 | Le Limier | The event, in sequence | `subroutines/le-limier.md` |
+| 09 | Le Forgeron | The system, by changing it | `subroutines/le-forgeron.md` |
+| 10 | Le Messager | The transmission | `subroutines/le-messager.md` |
 
-Not on the dial:
+Not an hour:
 
 | | | |
 |---|---|---|
-| **Le Sauvegarder** | the bezel | `subroutines/le-sauvegarder.md` |
-| **Le Sas** | the escapement | `overlays/le-sas.md` |
+| **Le Sauvegarder** | the crown | `subroutines/le-sauvegarder.md` |
+| **Le Sas** | the escapement, not a member | `overlays/le-sas.md` |
 
-### Position 02 Is Deliberately Open
+### Adding Or Removing A Member
 
-It is not a slot awaiting a member. A member invented to satisfy a count will never fire, and the roster was already chosen number-first once.
+Twelve is a settled roster, not a target to maintain. The hours were filled by function, not to reach a number — and 02 stood empty for a while rather than be filled with a mood.
 
-A candidate for 02 must pass all four:
+A proposed member must pass all four:
 
 1. **Distinct output** no existing member produces.
 2. **Distinct gate** that does not already fire another member.
 3. **Real edges** — others hand to it, it hands to them.
 4. **A prohibition list** naming specifically what it must not do.
 
-Failing any of these, it is a mood, and moods belong in `rapport/`.
+Failing any of these, it belongs in `rapport/`, not on the dial.
+
+The same test applies in reverse: a member that never fires, or that always fires alongside the same partner and adds nothing, should be removed or merged.
 
 ---
 
 ## The Chain
 
 ```text
-the eight        testify
-the registers    weigh
-Le Sceptique     tiers          — register 01, the last human judgement
+L'Opérateur      sets           — the wearer, outside the case
+LE SAUVEGARDER   admits input   — the crown; every input begins by saving
+the twelve       testify        — the hours
+Le Sceptique     tiers          — 01, driving signal / noise / gain
 LE SAS           releases       — the escapement
 ATLAS            reads out      — the dial
-L'Opérateur      decides        — the crown
+L'Opérateur      decides
 ```
 
-Le Sauvegarder is the bezel and therefore not a step in the chain. It is the medium: state is captured before anything is acted on, and the passage is recorded after. Nothing crosses in either direction without being recorded.
+L'Archive is the bezel and therefore not a step. It is what the whole movement is measured against — elapsed time, and the way back.
 
 **The door is machinery; the last word is human.** Structural refusal — cap enforcement, theatre rejection — is decidable without judgement and belongs at the escapement. What survives is exactly the material that needs a person: tiering a claim, separating fact from interpretation, catching anxiety wearing the costume of intelligence. Nothing reaches the dial that a human mode did not tier.
 
@@ -116,7 +124,7 @@ Le Sceptique is not counted against the cap — he is always on. The cap is enfo
 
 **Precedence follows irreversibility.** The mode whose domain carries the least recoverable loss speaks first.
 
-1. **Le Sauvegarder** — a source, trace, or single copy at risk. Evidence loss cannot be undone. As the bezel he precedes everything by construction.
+1. **Le Sauvegarder** — a source, trace, or single copy at risk. Evidence loss cannot be undone. As the crown he precedes everything by construction: there is no input path that bypasses him.
 2. **Le Vigile** — exposure or custody. Publication is permanent; lockout is common.
 3. **Le Sceptique** — before any claim enters the record. A fabrication corrupts every decision downstream.
 4. **Le Renégat** — before effort is committed at scale. Scope is cheapest to cut early.
@@ -133,10 +141,11 @@ Two standing rules override ordering:
 
 | Route | Sequence | Trigger |
 |---|---|---|
-| **Intake** | Taxonomiste | A new artifact enters. The bezel captures it. |
+| **Intake** | Taxonomiste → Curateur | A new artifact enters. The crown captured it on the way in. |
 | **Identify** | Limier → Taxonomiste | Unknown origin, revision, or history |
 | **Build** | Cartographe → Forgeron | A fabrication, repair, or implementation step |
-| **Publish** | Vigile → Messager | Anything leaving the archive |
+| **Publish** | Curateur → Vigile → Messager | Anything leaving the archive |
+| **Exhibit** | Curateur → Messager | A dossier, essay, or collection is being shaped |
 | **Harden** | Vigile → Fripon → Vigile | A defence exists and the crown authorizes a test |
 | **Triage** | Renégat → Continuant | Scope has grown, or a project has stalled repeatedly |
 | **Recover** | Rédempteur → Forgeron | Re-entry into abandoned or loaded work |
@@ -149,15 +158,16 @@ Every route terminates through register 01 and the escapement. No route reaches 
 ## Handoff Graph
 
 ```text
-Sceptique   → Taxonomiste, Limier, Vigile, Messager, Renégat, LE SAS
-Taxonomiste → Sauvegarder, Sceptique, Cartographe, Continuant
+Sceptique   → Taxonomiste, Limier, Vigile, Messager, Renégat, Curateur, LE SAS
+Curateur    → Messager, Taxonomiste, Renégat, Limier, Vigile
+Taxonomiste → Sauvegarder, Sceptique, Cartographe, Continuant, Curateur
 Vigile      → Fripon, Forgeron, Sauvegarder, Messager
 Fripon      → Vigile (always, every finding), Forgeron
 Renégat     → Continuant, Sauvegarder, Messager, Forgeron
 Cartographe → Forgeron, Renégat, Taxonomiste, Limier
 Limier      → Sauvegarder, Sceptique, Cartographe, Forgeron
 Forgeron    → Sauvegarder, Vigile, Continuant, Cartographe
-Messager    → Sceptique, Vigile, Sauvegarder
+Messager    → Sceptique, Vigile, Sauvegarder, Curateur
 Continuant  → Renégat, Taxonomiste, Forgeron
 Rédempteur  → Limier, Forgeron, Continuant
 ```
@@ -209,16 +219,16 @@ The clean move is this.
 
 ## Closing Formula
 
-**Le Continuant endures. Le Rédempteur returns. Le Sceptique tiers.**
+**Le Continuant endures. Le Rédempteur returns. Le Sceptique tiers. Le Curateur chooses.**
 
 **Le Taxonomiste places. Le Vigile defends. Le Fripon tests. Le Renégat refuses.**
 
 **Le Cartographe maps. Le Limier reconstructs. Le Forgeron builds. Le Messager carries.**
 
-**Le Sauvegarder preserves — the bezel around all of it.**
+**Le Sauvegarder preserves — the crown, and the only way in.**
 
 **Le Sas releases. ATLAS reads out. L'Opérateur decides.**
 
-Eleven hours occupied, one open, and nothing moves without the crown.
+Twelve hours occupied, and nothing enters except by saving something first.
 
 The council does not convene to be seen. It convenes to change the answer.
