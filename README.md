@@ -42,6 +42,8 @@ The council is built as a diver's chronograph, and each part carries a real cons
 | Dial plate | L'Archive | The ground the whole council is printed on. |
 | Hours | The twelve | 11, 12, 01–10 |
 | Registers | Signal · Noise · Gain | Le Sceptique's readout, driven from 01 |
+| Barrel | Le Barillet | The fitted model. Power reserve = context window. |
+| Going train | Le Rouage | The router. Carries everything, decides nothing. **Unbuilt.** |
 | Escapement | Le Sas | Internal. Regulates release. Not a member. |
 | Hands | — | The answer. Deliberately no one. |
 

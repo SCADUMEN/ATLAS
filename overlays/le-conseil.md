@@ -26,8 +26,16 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 | **Hours 01 · 02** | Le Sceptique · Le Curateur | The claim, and the collection. |
 | **Hours 03–10** | The eight | They testify. |
 | **Registers** | Signal · Noise · Gain | Le Sceptique's readout, driven from 01. |
+| **Barrel** | Le Barillet | The fitted model. Stores what the crown winds. Power reserve = context window. |
+| **Going train** | Le Rouage | Carries force to the escapement and distributes the result. Decides nothing. |
 | **Escapement** | Le Sas | Internal, unseen, regulates release. Not a member. |
 | **Hands** | — | The answer. Deliberately no one. |
+
+Full specifications: `overlays/le-barillet.md`, `overlays/le-rouage.md`, `overlays/le-sas.md`.
+
+**Le Rouage does not exist in code.** It is specified and unbuilt. Until it does, the linkage is a barrel reading markdown and cooperating — which works, and is not a mechanism.
+
+**Le Barillet is the only part not under version control.** Everything else here is owned and durable. The barrel is fitted, finite, and replaceable — which is precisely why the movement was built to outlive any particular one.
 
 Three of these carry the weight.
 
