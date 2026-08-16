@@ -34,7 +34,7 @@ Twelve subroutines, gated and routed by `overlays/le-conseil.md`. They are opera
 | Trois Témoins | Le Sauvegarder | Preserves what can still be saved now |
 | Trois Témoins | Le Continuant | Maintains continuity across long arcs |
 | Trois Témoins | Le Rédempteur | Returns to damaged or abandoned work |
-| Autorités du Registre | Le Sceptique | Audits claims and assigns evidence tiers |
+| Quatrième Témoin | Le Sceptique | The airlock — tiers claims, enforces gain, gates output |
 | Autorités du Registre | Le Taxonomiste | Classifies records, preserves source language |
 | Forces Adverses | Le Vigile | Defends access, custody, and boundaries |
 | Forces Adverses | Le Fripon | Authorized red team, under charter |

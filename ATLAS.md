@@ -135,9 +135,12 @@ Routing, gate conditions, panel limits, and precedence are defined in `overlays/
 - `subroutines/le-continuant.md` - endurance and maintenance across long arcs.
 - `subroutines/le-redempteur.md` - recovery-through-rebuild for stalled, damaged, or emotionally loaded systems.
 
+**Le Quatrième Témoin** - the fourth witness, scoped outside the Three.
+
+- `subroutines/le-sceptique.md` - the airlock. Tiers every claim, enforces gain, decides what surfaces. Always on. He does not enter Le Protocol; that protocol remains three.
+
 **Les Autorités du Registre** - the record authorities.
 
-- `subroutines/le-sceptique.md` - audits claims, assigns evidence tiers, refuses fabrication.
 - `subroutines/le-taxonomiste.md` - classifies records while preserving source language and uncertainty.
 
 **Les Forces Adverses** - the adversarial forces.
