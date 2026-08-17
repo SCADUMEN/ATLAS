@@ -8,20 +8,24 @@
 
 Le Conseil was designed as semantics and turned out to be an object. Every control the physical build needs was already specified in `overlays/le-conseil.md`, and specified as the correct *kind* of control — a bezel that rotates, a crown that unscrews, a pusher that authorizes. This file records the enclosure so the build has doctrine like everything else does.
 
-**The reference is a marine chronometer.** Not a costume, and not the first answer — the council was drafted against a diver's chronograph, which got the sealed case and the legibility right and the rest wrong. A watch divides a continuous quantity nobody can stop. This instrument does not: its positions are modes rather than hours, its hand does not sweep, and nothing about it is periodic.
+**The reference is a diver's chronograph.** Not a costume. A marine chronometer was drafted against this file for a while and was returned: it is a fine instrument and the wrong one, because it has neither a rotating bezel nor a crown, and `overlays/le-conseil.md` had already assigned both. Every mechanism the doctrine names is a chronograph part, and the anatomy table maps onto the form with nothing left over and nothing renamed.
 
-A chronometer fits because it is not a watch that happens to be large. It is a mounted reference instrument, and every one of its defining properties was already in the doctrine before the form was named:
+That is the whole argument. The chassis that needs no translation layer is the chassis the doctrine was written for:
 
-| Already committed | Chronometer, as actually built |
+| Already committed | Chronograph, as actually built |
 |---|---|
-| "Reserve is the context window" | The **up-and-down dial** — a power-reserve complication showing hours until rewinding |
-| Preservation cannot be accidental | Wound by a **separate key**, kept with the box, at a fixed time, **and the winding is logged** |
-| "The display never shows a state the router did not produce" | **Never adjusted at sea.** You record its rate; you do not correct it |
-| Le Sas regulates release and has no stake | **Detent escapement** — releases once per beat, frictionless, too delicate to move while running |
-| Le Vigile owns custody | Gimballed box, lock and key, opened by an officer |
-| The instrument is read; L'Opérateur decides | A chronometer indicates. It has one job and no opinion |
+| ATLAS is the bezel, and unidirectional by construction | A **dive bezel** ratchets one way only. It can report that less time remains than you thought, never more |
+| Le Sauvegarder is the crown, and the only way in | A **screw-down crown**, unscrewed deliberately, sealing when it is closed. Nothing enters the movement past it |
+| Le Fripon never self-activates | The **upper pusher** — guarded, momentary, per engagement |
+| Signal · Noise · Gain | **Registers.** The horological term for a chronograph's subdials is the word the doctrine already used |
+| "Reserve is the context window" | The **up-and-down complication**, showing what is left before rewinding |
+| Le Sas regulates release and has no stake | The **escapement**, internal and unseen, releasing once per beat |
+| Le Continuant holds the long arc | The **perpetual calendar** — the complication that does not forget the shape of time, and loses its place if it stops |
+| The instrument is read; L'Opérateur decides | A watch indicates. It has one job and no opinion |
 
-Sealed, legible in bad conditions, and operated deliberately. The gimbals are the requirement the diver's case was standing in for: the instrument stays level regardless of what the ship does.
+Sealed, legible in bad conditions, and operated deliberately.
+
+**The objection this file used to make against a watch still stands, and is survivable.** A watch divides a continuous quantity nobody can stop; this instrument's positions are modes rather than hours and nothing about it is periodic. True — and the answer is that the dial is not periodic even though the movement behind it is. The hand does not sweep; it indicates. Periodicity was already admitted at the escapement, which releases once per beat, and a chronograph is precisely the watch built for measuring an interval that starts when you decide it starts.
 
 ---
 
@@ -31,27 +35,24 @@ Every control maps to a mode, and the mapping constrains the mechanism.
 
 | Control | Mode | Mechanism | Why that mechanism |
 |---|---|---|---|
-| **Winding key** | Le Sauvegarder | Detached key, square socket, arbor on the box below the dial | **A separate object you must go and fetch.** There is no path to the movement that does not begin with retrieving it. Preservation cannot be accidental, and now it cannot be reached for absently either. |
-| **Gimbal ring** | — | Two pivots, 3 and 9 | Not a control. The instrument stays level regardless of what the ship does. |
+| **Crown** | Le Sauvegarder | Screw-down, at 3 | **The only path into the movement.** It must be unscrewed before it will turn, and screwing it back is what seals the case. Preservation cannot be accidental, and it cannot be reached for absently. |
+| **Bezel** | ATLAS | Unidirectional, 60-click ratchet | Not a control so much as a frame. Set before you go under, read against ever after. The ratchet is the fail-safe: it can only ever report that less time remains than you thought. |
 | **Upper pusher** | Le Fripon | Guarded momentary | The only control that authorizes a mode. Guarded because accidental engagement is the exact failure the charter exists to prevent. |
 | **Lower pusher** | Reset | Momentary | Clears the reading. Never touches L'Archive. |
 
-### The Detached Key Is Doctrine, Not Styling
+### The Screw-Down Crown Is Doctrine, Not Styling
 
-To give input, L'Opérateur must retrieve the key, open the box, and wind. To seal the instrument, he puts the key back.
+To give input, L'Opérateur must unscrew the crown. To seal the instrument, he screws it back down.
 
-A crown is attached, and an attached control can be turned absently. A key cannot: it is a discrete object with its own location, and forgetting where it is stops the instrument entirely. That makes preservation a deliberate errand rather than a gesture, and it makes the sealed state the resting state. A chronometer sitting in its closed box is an archive that is protected. That is the correct default and the case should make it obvious at a glance.
+A screw-down crown cannot be turned absently — it has to be released first, and releasing it is the act that unseals the case. That makes preservation deliberate rather than a gesture, and it makes the sealed state the resting state. A watch with its crown screwed home is an archive that is protected. That is the correct default and the case should make it obvious at a glance.
 
-**The winding is logged.** Ships' chronometers were wound at a fixed hour by a named person who signed for it. That is Le Sauvegarder's whole function rendered as a procedure, and it is the reason the crown was never quite the right control: a crown records nothing.
+**The winding is still logged.** A crown records nothing by itself, so the log is procedure rather than mechanism: who wound it, and when. That is Le Sauvegarder's whole function, and it is the one place this chassis asks for discipline where the marine-chronometer draft would have had a detached key enforce it. A fair trade for a form the operator can actually reason about.
 
-### The Bezel Is An Open Question
+### The Bezel Question Is Closed
 
-`overlays/le-conseil.md` assigns ATLAS to the bezel, and a chronometer has no rotating bezel. Two ways out, and this is L'Opérateur's call:
+It was open only because a marine chronometer has no rotating bezel, and `overlays/le-conseil.md` assigns ATLAS to one. The chronograph resolves it by having the part: ATLAS is the bezel, literally, and the anatomy table needs no rewrite.
 
-1. **ATLAS becomes the reference itself.** A chronometer is the standard other instruments are checked against, and is never corrected — you record its rate. That is the bezel's fail-safe asymmetry restated as an operating procedure, and it is arguably stronger.
-2. **Keep a rotating bezel** on the dial ring, breaking from the chronometer reference for one part.
-
-Option 1 costs a rewrite of the anatomy table in `overlays/le-conseil.md`, `ATLAS.md`, and `README.md`. Nothing has been changed there yet.
+The unidirectional ratchet turns out to carry the doctrine better than prose did. `rouage/dial.py` used to print "rate recorded, never reset" on the dial to state the honesty constraint in words; the teeth state it as structure, and a dive dial earns its legibility by carrying less.
 
 ### The Guarded Pusher
 
@@ -70,6 +71,8 @@ Option 1 costs a rewrite of the anatomy table in `overlays/le-conseil.md`, `ATLA
 | **Hands** | Geared stepper on the centre post, full 360° | The answer. Sweeps to what ended the route. |
 | **Escapement** | Single LED behind a window | Pulses once per release. Le Sas made visible. |
 | **Power reserve** | Arc of LEDs, 9 through 12 to 3 | The context window. Colour shifts at low reserve. |
+| **Perpetual calendar** | Aperture, backlit segment or small e-paper | Le Continuant. Off-cardinal, because the complication is not an hour. |
+| **Bezel** | Not lit. Machined and filled, lume pip at zero | ATLAS. Set by the operator, never by the train — so nothing drives it. |
 | **Plate** | Printed or etched, L'ARCHIVE signed under 12 | The ground the hours are printed on |
 
 ### Discrete States Are A Hardware Decision
