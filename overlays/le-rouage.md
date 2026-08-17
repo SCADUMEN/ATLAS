@@ -27,6 +27,24 @@ So the built train handles named invocation, precedence, metering, the seal, and
 
 The admission policy for those proposals was L'Opérateur's call, and it is decided: **Cited**. A proposal is admitted only if its citation is a verbatim line among the bullets in that member's own Activation section - the same text `parse_activation()` already pulls from the doctrine at load time, so there is no second copy to drift. A citation that doesn't match is a rejected proposal, recorded to the trace as a discrimination failure in the gates, the same category as full-ring and over-cap. `admit_proposals()` in `rouage/rouage.py` is that mechanism; `route()` takes an optional `proposals` argument that feeds it. What still does not exist is the barrel itself - the thing that reads an artifact for meaning and produces `(member, citation)` pairs to hand in. Until that exists, the automatic half of every gate remains a model reading markdown and cooperating, which works, and is not yet wired to the mechanism that would enforce it.
 
+
+### Evidence Is A Second Field, Not A Second Citation
+
+A citation proves the **gate** is real. It cannot prove the **premise** was. The barrel can quote Le Limier's bullet — *"an artifact shows modification, damage, or repair whose cause is unknown"* — perfectly verbatim with nothing having been modified at all. The gate exists, the fact is invented, and nothing in the train can tell the difference.
+
+So a proposal may carry a third element: `(member, citation, evidence)`, where evidence is an object id the train resolves and never reads. A commit is not a citation — a citation is a claim about doctrine, evidence is a claim about history, and they answer different questions. Collapsing them would trade a check against parsed doctrine for a check against a repository.
+
+**Resolving is not interpreting**, so the train stays as dumb as this file requires. The verifier is an injected callable rather than something the train reaches for: `rouage.py` still runs outside a repository, the boundary is testable with a two-line fake, and an evidence store that is not git needs no change to the train.
+
+Three limits, recorded so they are not discovered later as surprises:
+
+- **It narrows the gap; it does not close it.** A real object unrelated to the claim still passes. This catches fabrication, not misattribution.
+- **Evidence is optional, because most gates have no artifact.** Le Sceptique fires on a claim being made, Le Renégat on scope growth, Le Curateur on a pile. Requiring it everywhere would darken most of the ring. `require_evidence` exists for callers who want it mandatory; the default is off.
+- **Unverified is stated, never implied.** Evidence supplied without a verifier is recorded as `(unverified)`. A trace showing a bare object id would be claiming a check that never ran.
+
+The barrel need not commit to cite. `git add` then `git write-tree` addresses exactly the staged state; `git hash-object -w` addresses one file. The `-w` is load-bearing — without it the id is computed but nothing is written, so it looks correct and does not resolve. An unwritten object is not evidence: there is nothing for anyone to go and read later.
+
+
 ---
 
 ## The Cycle

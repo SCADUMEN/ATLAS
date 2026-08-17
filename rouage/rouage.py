@@ -24,9 +24,19 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import unicodedata
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Union
+
+# (member, citation) or (member, citation, evidence). Evidence is an object
+# id the barrel claims is the artifact its citation is about - see
+# admit_proposals() for why it is a separate field and not the citation.
+# Union, not `|`: annotations are lazy under __future__, but this alias is a
+# module-level expression and PEP 604 unions need 3.10. The repo runs on 3.9.
+Proposal = Union[tuple[str, str], tuple[str, str, str]]
 
 REPO = Path(__file__).resolve().parent.parent
 CONSEIL = REPO / "overlays" / "le-conseil.md"
@@ -324,7 +334,9 @@ def route(
     ring: Ring,
     utterance: str,
     armed: str | None = None,
-    proposals: list[tuple[str, str]] | None = None,
+    proposals: list[Proposal] | None = None,
+    verify: Callable[[str], bool] | None = None,
+    require_evidence: bool = False,
 ) -> Trace:
     """One turn of the train. Pure: same ring + same input, same trace.
 
@@ -344,7 +356,8 @@ def route(
     candidates = evaluate(ring, utterance, armed)
     trace.candidates = candidates
     if proposals:
-        candidates = candidates + admit_proposals(ring, trace, proposals)
+        candidates = candidates + admit_proposals(
+            ring, trace, proposals, verify, require_evidence)
 
     trace.stages.append("ORDER")
     candidates = order(ring, candidates)
@@ -371,7 +384,9 @@ def route(
 def admit_proposals(
     ring: Ring,
     trace: Trace,
-    proposals: list[tuple[str, str]],
+    proposals: list[Proposal],
+    verify: Callable[[str], bool] | None = None,
+    require_evidence: bool = False,
 ) -> list[Candidate]:
     """Admit the barrel's semantic gate matches into the deterministic train.
 
@@ -429,7 +444,10 @@ def admit_proposals(
     admitted: list[Candidate] = []
     seen = {fold(c.member.name) for c in trace.candidates}
 
-    for name, citation in proposals:
+    for proposal in proposals:
+        name, citation, *rest = proposal
+        evidence = (rest[0].strip() if rest and rest[0] else "")
+
         member = ring.by_name(name)
         if member is None:
             trace.failures.append(f"rejected proposal: unknown member {name!r}")
@@ -447,11 +465,81 @@ def admit_proposals(
             )
             continue
 
+        # A citation proves the gate is real. It cannot prove the premise was.
+        # The barrel can quote Le Limier's bullet perfectly with nothing having
+        # been modified at all - the gate exists, the fact was invented, and
+        # nothing above this line can tell the difference. Evidence is the
+        # second field that narrows that gap: an object id the train resolves
+        # without reading it. Resolving is not interpreting, so the train stays
+        # as dumb as le-rouage.md requires.
+        #
+        # It narrows the gap; it does not close it. A real object that has
+        # nothing to do with the claim still passes. This catches fabrication,
+        # not misattribution, and saying otherwise would overstate the check.
+        note = ""
+        if evidence:
+            if verify is None:
+                # Recorded, explicitly NOT checked. A trace that showed bare
+                # evidence here would be claiming a verification that never
+                # happened, which is the failure the whole instrument is
+                # built against.
+                note = f"evidence {evidence} (unverified)"
+            elif verify(evidence):
+                note = f"evidence {evidence}"
+            else:
+                trace.failures.append(
+                    f"rejected proposal: {member.name} cited evidence that "
+                    f"does not resolve: {evidence!r}"
+                )
+                continue
+        elif require_evidence:
+            trace.failures.append(
+                f"rejected proposal: {member.name} supplied no evidence"
+            )
+            continue
+
         seen.add(folded_name)
         if member.sealed and fold(trace.armed or "") != folded_name:
-            admitted.append(Candidate(member, f"proposed:{cited}", "sealed",
-                                       "proposed without authorization"))
+            unauth = "proposed without authorization"
+            admitted.append(Candidate(
+                member, f"proposed:{cited}", "sealed",
+                f"{unauth}; {note}" if note else unauth))
         else:
-            admitted.append(Candidate(member, f"proposed:{cited}"))
+            admitted.append(Candidate(member, f"proposed:{cited}", note=note))
 
     return admitted
+
+
+def git_evidence(repo: Path = REPO) -> Callable[[str], bool]:
+    """An evidence verifier backed by a real repository.
+
+    Deliberately a separate function the caller opts into, rather than
+    something admit_proposals() reaches for itself. The train has no business
+    knowing what git is: keep it as an injected callable and rouage.py still
+    runs anywhere, the boundary stays testable with a two-line fake, and a
+    future evidence store that is not git needs no change to the train.
+
+    `git cat-file -e` resolves an object or exits non-zero. That covers a
+    commit, a tree, or a blob - which matters, because the barrel should not
+    have to commit in order to cite. `git add` followed by `git write-tree`
+    gives a tree id for exactly the staged state; `git hash-object -w` gives
+    a blob id for one file. Either lets evidence point at what is being
+    looked at without a junk commit for every proposal.
+
+    The `-w` is not optional and the trap is quiet: `git hash-object` without
+    it computes the same content address but writes nothing, so the id looks
+    correct and does not resolve. An unwritten object is not evidence - there
+    is nothing for anyone to go and read later - so rejecting it is right,
+    but the error says 'does not resolve' rather than 'you forgot -w'.
+    """
+    def verify(ref: str) -> bool:
+        try:
+            done = subprocess.run(
+                ["git", "-C", str(repo), "cat-file", "-e", f"{ref}^{{object}}"],
+                capture_output=True, timeout=5,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return False       # no git, no repo, no claim of verification
+        return done.returncode == 0
+
+    return verify

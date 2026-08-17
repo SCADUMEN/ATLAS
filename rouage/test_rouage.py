@@ -19,6 +19,7 @@ from rouage import (
     Trace,
     admit_proposals,
     evaluate,
+    git_evidence,
     fold,
     load_core,
     load_ring,
@@ -277,6 +278,98 @@ class ProposalAdmission(unittest.TestCase):
                                       "reasoned across a gap")],
         )
         self.assertTrue(any("over-cap" in f for f in trace.failures))
+
+
+class EvidenceNarrowsTheGap(unittest.TestCase):
+    """A citation proves the gate is real; evidence is about the premise.
+
+    Cited catches a barrel that invents an activation condition. It cannot
+    catch one that quotes a real condition about a thing that never happened.
+    These cover the second field and, as much as the tests can, its limits.
+    """
+
+    def setUp(self):
+        self.ring = load_ring()
+        self.member = next(m for m in self.ring.members if m.bullets)
+        self.cite = self.member.bullets[0]
+
+    def _trace(self):
+        return Trace(utterance="")
+
+    def test_evidence_is_recorded_as_unverified_when_no_verifier(self):
+        # The trace must not imply a check that never ran.
+        t = self._trace()
+        got = admit_proposals(
+            self.ring, t, [(self.member.name, self.cite, "deadbeef")])
+        self.assertEqual(len(got), 1)
+        self.assertIn("unverified", got[0].note)
+        self.assertIn("deadbeef", got[0].note)
+        self.assertEqual(t.failures, [])
+
+    def test_resolving_evidence_is_admitted_and_not_marked_unverified(self):
+        t = self._trace()
+        got = admit_proposals(
+            self.ring, t, [(self.member.name, self.cite, "abc123")],
+            verify=lambda ref: ref == "abc123")
+        self.assertEqual(len(got), 1)
+        self.assertIn("abc123", got[0].note)
+        self.assertNotIn("unverified", got[0].note)
+
+    def test_unresolvable_evidence_is_rejected_and_reported(self):
+        t = self._trace()
+        got = admit_proposals(
+            self.ring, t, [(self.member.name, self.cite, "nope")],
+            verify=lambda ref: False)
+        self.assertEqual(got, [])
+        self.assertTrue(any("does not resolve" in f for f in t.failures))
+
+    def test_two_tuple_still_works_and_stays_unannotated(self):
+        # Most gates have no artifact. Evidence must stay optional or the
+        # ring goes dark for every member whose condition is not a change.
+        t = self._trace()
+        got = admit_proposals(self.ring, t, [(self.member.name, self.cite)])
+        self.assertEqual(len(got), 1)
+        self.assertEqual(got[0].note, "")
+        self.assertEqual(t.failures, [])
+
+    def test_require_evidence_rejects_a_bare_proposal(self):
+        t = self._trace()
+        got = admit_proposals(
+            self.ring, t, [(self.member.name, self.cite)],
+            require_evidence=True)
+        self.assertEqual(got, [])
+        self.assertTrue(any("no evidence" in f for f in t.failures))
+
+    def test_evidence_does_not_rescue_a_bad_citation(self):
+        # Order matters: the gate is checked before the premise. Good evidence
+        # must never buy admission for a condition that is not in doctrine.
+        t = self._trace()
+        got = admit_proposals(
+            self.ring, t, [(self.member.name, "invented condition", "abc123")],
+            verify=lambda ref: True)
+        self.assertEqual(got, [])
+        self.assertTrue(any("verbatim" in f for f in t.failures))
+
+    def test_evidence_does_not_unseal_le_fripon(self):
+        fripon = next(m for m in self.ring.members if m.sealed and m.bullets)
+        t = self._trace()
+        got = admit_proposals(
+            self.ring, t, [(fripon.name, fripon.bullets[0], "abc123")],
+            verify=lambda ref: True)
+        self.assertEqual(got[0].state, "sealed")
+        self.assertIn("without authorization", got[0].note)
+
+    def test_route_threads_evidence_through(self):
+        t = route(self.ring, "", proposals=[
+            (self.member.name, self.cite, "abc123")],
+            verify=lambda ref: True)
+        admitted = [c for c in t.candidates if c.reason.startswith("proposed:")]
+        self.assertIn("abc123", admitted[0].note)
+
+    def test_git_verifier_resolves_head_and_rejects_nonsense(self):
+        verify = git_evidence()
+        self.assertTrue(verify("HEAD"))
+        self.assertFalse(verify("0000000000000000000000000000000000000000"))
 
 
 class Precedence(unittest.TestCase):
