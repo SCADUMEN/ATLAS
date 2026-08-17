@@ -33,7 +33,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from rouage import CONSEIL, STATES, Trace, load_ring, route
+from rouage import CONSEIL, STATES, Trace, load_ring, load_routes, route
 
 OUT = Path(__file__).resolve().parent / "cadran.html"
 
@@ -55,24 +55,23 @@ ANATOMY_ROW = re.compile(r"^\|\s*\*\*([^*|]+)\*\*\s*\|\s*([^|]+?)\s*\|", re.M)
 CHASSIS: dict[str, str] = {}
 
 INK = {
-    "bg": "#0f1317",
-    "brass_hi": "#b9a06a",
-    "brass_lo": "#6d5c38",
-    "plate": "#161b21",
-    "edge": "#232a32",
-    "ink": "#dce1e7",
-    "dim": "#79838f",
-    "active": "#7fc8a4",
-    "sealed": "#d19a4e",
-    "held": "#6b7684",
-    "dark": "#272e36",
-    # Dissent is not a fault and must not read as one: a fault is the routing
-    # failing, dissent is a member doing its job. So it gets its own hue rather
-    # than borrowing the coral. Violet is the only family not already spoken
-    # for by active/sealed/held, and it is pulled back from full saturation
-    # for the same halation reason as the rest.
-    "dissent": "#a78bc8",
-    "fault": "#cf6b5c",
+    # Tokyo Night ground, CRT neon on top. Cyan, magenta, matrix green and
+    # amber are the four lit hues; amber is FI's own and carries the states
+    # that are held rather than running.
+    "bg": "#0b0c12",
+    "brass_hi": "#c9a86a",
+    "brass_lo": "#6e5a30",
+    "plate": "#14161f",
+    "edge": "#2a2f42",
+    "ink": "#e8ecff",
+    "dim": "#8b93b8",
+    "cyan": "#35e6ff",
+    "active": "#3dff9e",     # matrix green
+    "sealed": "#ffb43d",     # amber
+    "held": "#5f6a92",
+    "dark": "#242a42",
+    "dissent": "#ff4fd8",    # magenta
+    "fault": "#ff5470",
 }
 
 # Every state rouage.STATES can emit needs an entry here. A missing one falls
@@ -173,8 +172,13 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     # a name has to clear a register and still stop short of the dial edge -
     # so they sit closer in than 12 and 6, where the column is empty. The
     # bezel eats the outer band a chronometer left free, so both come in.
-    r_label = size * 0.193
-    r_label_v = size * 0.200
+    # One radius, not two. The flanks used to sit 6px closer in than 12 and 6
+    # to buy clearance, which meant the twelve names never actually formed a
+    # ring - they formed two arcs that nearly matched, which reads as a
+    # mistake rather than as a decision. A dial's text belongs on concentric
+    # baselines; the clearance is bought with type size instead.
+    r_label = size * 0.196
+    r_label_v = r_label
     r_reg = size * 0.134
     rr = size * 0.042
 
@@ -191,9 +195,17 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         <stop offset="1" stop-color="{INK['brass_lo']}"/>
       </linearGradient>
       <radialGradient id="plate" cx="0.5" cy="0.36" r="0.78">
-        <stop offset="0" stop-color="#1c222a"/>
+        <stop offset="0" stop-color="#1e2233"/>
         <stop offset="1" stop-color="{INK['plate']}"/>
       </radialGradient>
+      <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur stdDeviation="2.1" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glowsoft" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur stdDeviation="1.0" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
     </defs>''')
 
     # --- lugs -------------------------------------------------------------
@@ -201,8 +213,8 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     for ang in (-135, -45, 45, 135):
         add(f'<g transform="rotate({ang} {cx:.1f} {cy:.1f})">'
             f'<rect x="{cx + r_case - 18:.1f}" y="{cy - 19:.1f}" '
-            f'width="56" height="36" rx="12" fill="#252b32" '
-            f'stroke="#1a2027" stroke-width="3"/></g>')
+            f'width="56" height="36" rx="12" fill="#232838" '
+            f'stroke="#12151f" stroke-width="3"/></g>')
 
     # --- the crown and the two pushers, on the right flank ----------------
     # le-boitier.md's control table: crown at 3, guarded pusher above it,
@@ -235,7 +247,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     flank(0, "".join(crown))
 
     # --- the case ---------------------------------------------------------
-    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_case:.1f}" fill="#22282f" '
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_case:.1f}" fill="#1b1f2e" '
         f'stroke="url(#brass)" stroke-width="5"/>')
 
     # --- the rotating bezel: ATLAS ---------------------------------------
@@ -252,7 +264,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
             f'stroke="#3d3320" stroke-width="3"/>')
 
     add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_bezel_in:.1f}" '
-        f'fill="#12171d" stroke="#3d3320" stroke-width="2"/>')
+        f'fill="#0f1220" stroke="#3d3320" stroke-width="2"/>')
 
     for m in range(60):    # the 60-minute scale
         a = math.radians(-90 + m * 6)
@@ -281,7 +293,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     add(f'<path d="M {cx:.1f} {cy - r_case + 8:.1f} '
         f'L {cx - 11:.1f} {cy - r_case + 26:.1f} '
         f'L {cx + 11:.1f} {cy - r_case + 26:.1f} Z" '
-        f'fill="{INK["active"]}" opacity="0.9"/>')
+        f'fill="{INK["active"]}" opacity="0.95" filter="url(#glow)"/>')
     if detailed:
         # Must sit outside r_dial: the dial circle is drawn after this and
         # paints over anything inside it. The first pass put this at
@@ -299,7 +311,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     # measure the context window, so the arc is drawn as an empty track.
     add(f'<path d="M {cx-r_reserve:.1f} {cy:.1f} '
         f'A {r_reserve:.1f} {r_reserve:.1f} 0 0 1 {cx+r_reserve:.1f} {cy:.1f}" '
-        f'fill="none" stroke="#1e252d" stroke-width="9" stroke-linecap="round"/>')
+        f'fill="none" stroke="#232840" stroke-width="9" stroke-linecap="round"/>')
     if detailed:
         add(f'<text x="{cx:.1f}" y="{cy - r_reserve + 18:.1f}" text-anchor="middle" '
             f'fill="{INK["dim"]}" font-size="10" font-family="ui-monospace,monospace" '
@@ -320,11 +332,13 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
 
         bxp, byp = polar(cx, cy, r_chapter, pos)
         axp, ayp = polar(cx, cy, r_chapter - r_baton, pos)
-        width = 9 if lit else 7
+        width = 11 if lit else 8
         opacity = "1" if lit else "0.8"
+        halo = ' filter="url(#glow)"' if lit else ''
+        soft = ' filter="url(#glowsoft)"' if lit else ''
         add(f'<line x1="{bxp:.1f}" y1="{byp:.1f}" x2="{axp:.1f}" y2="{ayp:.1f}" '
             f'stroke="{ink}" stroke-width="{width}" stroke-linecap="round" '
-            f'opacity="{opacity}"/>')
+            f'opacity="{opacity}"{halo}/>')
 
         if not detailed:
             continue
@@ -345,7 +359,8 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         name = esc(entry["name"]) if entry else "&#183;"
         tail = "  " + state.upper() if lit else ""
         add(f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anchor}" fill="{ink}" '
-            f'font-size="14.5" font-weight="500" opacity="{1 if lit else 0.55}">'
+            f'font-size="14.5" font-weight="500" '
+            f'opacity="{1 if lit else 0.55}"{soft}>'
             f'{name}</text>')
         add(f'<text x="{lx:.1f}" y="{ly+15:.1f}" text-anchor="{anchor}" '
             f'fill="{INK["dim"]}" font-size="10.5" font-family="ui-monospace,monospace" '
@@ -409,14 +424,14 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         # copies overflowed their circles and ran into each other. One
         # engraving under a group that plainly belongs together says the same
         # thing and is legible, which le-boitier.md ranks first.
-        gx, gy = polar(cx, cy, size * 0.125, "1.5")
+        gx, gy = polar(cx, cy, size * 0.141, "1.5")
         gr = size * 0.033
-        trio = ((-size * 0.0366, -size * 0.0195),
-                (size * 0.0366, -size * 0.0195),
-                (0.0, size * 0.0366))
+        trio = ((0.0, -size * 0.0366),
+                (-size * 0.0366, size * 0.0195),
+                (size * 0.0366, size * 0.0195))
         for label, (ox, oy) in zip(names, trio):
             rx, ry = gx + ox, gy + oy
-            add(f'<circle cx="{rx:.1f}" cy="{ry:.1f}" r="{gr:.1f}" fill="#12171d" '
+            add(f'<circle cx="{rx:.1f}" cy="{ry:.1f}" r="{gr:.1f}" fill="#0e1120" '
                 f'stroke="{INK["edge"]}" stroke-width="2.5"/>')
             add(f'<text x="{rx:.1f}" y="{ry-2:.1f}" text-anchor="middle" '
                 f'fill="{INK["dim"]}" font-size="8.5" '
@@ -426,7 +441,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
                 f'fill="{INK["held"]}" font-size="7" '
                 f'font-family="ui-monospace,monospace" letter-spacing="0.5">'
                 f'UNDRIVEN</text>')
-        add(f'<text x="{gx:.1f}" y="{gy + size*0.0366 + gr + 12:.1f}" '
+        add(f'<text x="{gx:.1f}" y="{gy + size*0.0195 + gr + 13:.1f}" '
             f'text-anchor="middle" fill="{INK["dim"]}" font-size="7.5" '
             f'font-family="ui-monospace,monospace" letter-spacing="1">'
             f'{esc(drives)}</text>')
@@ -451,7 +466,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
 
         kx, ky = polar(cx, cy, size * 0.138, "10.5")
         kr = size * 0.040
-        add(f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="{kr:.1f}" fill="#12171d" '
+        add(f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="{kr:.1f}" fill="#0f1220" '
             f'stroke="{INK["edge"]}" stroke-width="2.5"/>')
         add(f'<text x="{kx:.1f}" y="{ky-11:.1f}" text-anchor="middle" '
             f'fill="{INK["dim"]}" font-size="9" font-family="ui-monospace,monospace" '
@@ -467,11 +482,56 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         add(f'<text x="{wx:.1f}" y="{wy - 17:.1f}" text-anchor="middle" '
             f'fill="{INK["dim"]}" font-size="8" font-family="ui-monospace,monospace" '
             f'letter-spacing="1.5" opacity="0.85">DATE</text>')
-        add(f'<rect x="{wx - 23:.1f}" y="{wy - 11:.1f}" width="46" height="22" '
-            f'rx="3" fill="#0d1116" stroke="{INK["edge"]}" stroke-width="2"/>')
+        add(f'<rect x="{wx - 21:.1f}" y="{wy - 11:.1f}" width="42" height="22" '
+            f'rx="3" fill="#0a0d18" stroke="{INK["edge"]}" stroke-width="2"/>')
         add(f'<text x="{wx:.1f}" y="{wy + 3.5:.1f}" text-anchor="middle" '
             f'fill="{INK["held"]}" font-size="8" font-family="ui-monospace,monospace" '
             f'letter-spacing="1">UNDRIVEN</text>')
+
+    # --- skeleton cutaway: la roue a colonnes ----------------------------
+    # A cutaway is legal here for a reason that is not decorative. The honesty
+    # rule governs LIT elements that claim to show state; a machined part that
+    # indicates nothing is not making a claim, which is why le-boitier.md can
+    # already list this wheel as "not lit, visible through the caseback".
+    #
+    # So the plate is opened over the one mechanism worth seeing work, and the
+    # only thing that moves is driven: the wheel is drawn one column advanced
+    # when a verdict was carried this turn, and at rest when none was. Drawing
+    # a generic train of wheels turning would be gear-porn - a part that looks
+    # busy without being connected to anything, which is the exact failure the
+    # rest of this dial is built to avoid.
+    if detailed:
+        wx2, wy2 = polar(cx, cy, size * 0.132, "7.5")
+        wr = size * 0.044
+        advanced = bool(trace.verdicts)
+
+        add(f'<circle cx="{wx2:.1f}" cy="{wy2:.1f}" r="{wr:.1f}" fill="#0a0d18" '
+            f'stroke="{INK["edge"]}" stroke-width="2.5"/>')
+        spin = 30 if advanced else 0
+        add(f'<g transform="rotate({spin} {wx2:.1f} {wy2:.1f})" opacity="0.95">')
+        for i in range(12):                       # the wheel's teeth
+            a = math.radians(i * 30)
+            add(f'<line x1="{wx2 + (wr-5)*math.cos(a):.1f}" '
+                f'y1="{wy2 + (wr-5)*math.sin(a):.1f}" '
+                f'x2="{wx2 + (wr-12)*math.cos(a):.1f}" '
+                f'y2="{wy2 + (wr-12)*math.sin(a):.1f}" '
+                f'stroke="{INK["brass_lo"]}" stroke-width="2.5"/>')
+        for i in range(6):                        # the columns themselves
+            a = math.radians(i * 60 + 30)
+            add(f'<circle cx="{wx2 + (wr*0.42)*math.cos(a):.1f}" '
+                f'cy="{wy2 + (wr*0.42)*math.sin(a):.1f}" r="3.4" '
+                f'fill="url(#brass)"/>')
+        add(f'<circle cx="{wx2:.1f}" cy="{wy2:.1f}" r="4" '
+            f'fill="{INK["brass_hi"]}"/>')
+        add('</g>')
+        add(f'<text x="{wx2:.1f}" y="{wy2 - wr - 18:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="7.5" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1">'
+            f'{esc(owner_of(anatomy, "column wheel"))}</text>')
+        add(f'<text x="{wx2:.1f}" y="{wy2 - wr - 8:.1f}" text-anchor="middle" '
+            f'fill="{INK["dissent"] if advanced else INK["held"]}" font-size="7" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1">'
+            f'{"ADVANCED" if advanced else "AT REST"}</text>')
 
     # --- the hand ---------------------------------------------------------
     # le-conseil.md: the hand sweeps to what ended the route. It can, now that
@@ -499,6 +559,16 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     # this is a key to them rather than a second set of indications.
     if detailed:
         ly_c = cy + r_case + 44
+        # The Scuba Dude is a figure on a Vostok's dial. This instrument
+        # cannot do that: le-conseil.md puts L'Operateur outside the case
+        # entirely, "not a part". But the crown is the one thing he touches,
+        # and he is the only one who may turn it - so his mark goes there and
+        # nowhere else. A maker's mark on the dial would put the wearer inside
+        # the movement, which is the one place doctrine says he is not.
+        add(f'<text x="{cx + r_case + 46:.1f}" y="{cy + 4:.1f}" '
+            f'fill="{INK["brass_hi"]}" font-size="10" '
+            f'font-family="ui-monospace,monospace" letter-spacing="2" '
+            f'opacity="0.9">MTM</text>')
         add(f'<text x="{cx - 360:.1f}" y="{ly_c:.1f}" fill="{fripon_ink}" '
             f'font-size="10.5" font-family="ui-monospace,monospace" '
             f'letter-spacing="1.5">02 PUSHER &#183; LE FRIPON &#183; '
@@ -511,6 +581,38 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
             f'fill="{INK["dim"]}" font-size="10.5" '
             f'font-family="ui-monospace,monospace" letter-spacing="1.5">'
             f'04 PUSHER &#183; RESET</text>')
+
+    # --- route ring on the rehaut ----------------------------------------
+    # The Eco-Drive prints its twelve months around the rehaut and indicates
+    # one. The nine named routes are this instrument's equivalent vocabulary,
+    # and unlike the months they are trace-driven: trace.route says which is
+    # running. Printed dim, lit when taken - so the ring shows what the
+    # instrument CAN do as well as what it is doing, which is the same reason
+    # a dark hour still carries a numeral.
+    #
+    # The lower sector is skipped: Le Sas and Le Frein already hold the rehaut
+    # at 6, and a ring that ran under them would be a ring nobody could read.
+    if detailed:
+        names = list(load_routes())
+        span, start = 232.0, -116.0        # degrees, centred on 12
+        for i, rname in enumerate(names):
+            a = math.radians(start + span * (i / (len(names) - 1)) - 90)
+            rx, ry = cx + (r_chapter + 12) * math.cos(a), cy + (r_chapter + 12) * math.sin(a)
+            taken = trace.route == rname
+            rot = math.degrees(a) + 90
+            # Past the vertical the tangent runs backwards and the legend sets
+            # upside down. Flipping 180 is what a curved dial legend does on
+            # the far side of the ring; without it half the vocabulary reads
+            # bottom-to-top, which is worse than not printing it.
+            if rot > 90 or rot < -90:
+                rot += 180
+            add(f'<text x="{rx:.1f}" y="{ry + 3:.1f}" text-anchor="middle" '
+                f'fill="{INK["cyan"] if taken else INK["dim"]}" '
+                f'font-size="{9 if taken else 8}" '
+                f'font-family="ui-monospace,monospace" letter-spacing="1" '
+                f'opacity="{1 if taken else 0.62}" '
+                f'transform="rotate({rot:.1f} {rx:.1f} {ry:.1f})">'
+                f'{esc(rname.upper())}</text>')
 
     # --- le frein: the brake ---------------------------------------------
     # A halt is a whole-ring state, not a per-position one, so it cannot be
@@ -611,7 +713,8 @@ body {
 .spine dt { font-family: var(--data); font-size: 10px; letter-spacing: .15em;
   text-transform: uppercase; color: var(--dim); margin-top: 15px; }
 .spine dt:first-child { margin-top: 0; }
-.spine dd { margin: 3px 0 0; font-size: 14.5px; }
+.spine dd { margin: 3px 0 0; font-size: 14.5px;
+  font-variant-numeric: tabular-nums; }
 .spine dd code { font-size: 12.5px; }
 h1 { font-family: var(--display); font-size: clamp(42px, 6vw, 62px);
   line-height: 1.02; margin: -8px 0 10px; letter-spacing: -.005em; }
@@ -649,21 +752,28 @@ h2 { font-family: var(--display); font-size: 15px; letter-spacing: .1em;
 .reading { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 30px 42px; margin-bottom: 48px; align-items: start; }
 .group { background: var(--field); border: 1px solid var(--soft); padding: 16px 18px 14px; }
+/* align-items: baseline, not the flex default. Three type sizes in two
+   families sit in this row - a mono label, a body-face owner, a mono note -
+   and stretch puts each at the top of its own box, so no two share a
+   baseline. This is the line that makes the column read as typeset rather
+   than assembled. */
 .row { display: flex; justify-content: space-between; gap: 14px;
+  align-items: baseline;
   padding: 6px 0; border-bottom: 1px dotted var(--soft); font-size: 14px; }
 .row:last-child { border-bottom: 0; }
 .k { font-family: var(--data); font-size: 11.5px; color: var(--dim);
-  letter-spacing: .06em; }
+  letter-spacing: .06em; white-space: nowrap;
+  font-variant-numeric: tabular-nums; }
 .v { text-align: right; }
 .v .note-s { font-family: var(--data); font-size: 10.5px; color: var(--dim);
   margin-left: 8px; letter-spacing: .06em; }
 .tag { font-family: var(--data); font-size: 10.5px; letter-spacing: .13em;
-  text-transform: uppercase; }
+  text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .utt { font-family: var(--data); font-size: 13px; line-height: 1.65;
   word-break: break-word; }
 .cycle { list-style: none; margin: 0; padding: 0; }
 .cycle li { display: flex; gap: 12px; padding: 4px 0; font-size: 13.5px;
-  align-items: baseline; }
+  align-items: baseline; font-variant-numeric: tabular-nums; }
 .cycle .n { font-family: var(--data); font-size: 10.5px; color: var(--brass);
   min-width: 20px; }
 .cycle .to { font-family: var(--data); font-size: 10.5px; color: var(--dim);

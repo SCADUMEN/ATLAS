@@ -97,7 +97,13 @@ the ring rather than about any position on it.
 
 Six discrete states map to six LED colours with no interpretation layer — dark, consulted, active, sealed, held, dissent. A continuous display — brightness proportional to confidence — would need calibration and would be unreadable across twelve markers at a glance.
 
-Legibility under bad conditions is a diver's requirement and it is also an astigmatism requirement: uniform stroke weights, no hairlines, ground lifted off pure black, colour pulled back from full saturation to prevent halation.
+Legibility under bad conditions is a diver's requirement and it is also an astigmatism requirement: uniform stroke weights, no hairlines, ground lifted off pure black.
+
+**Halation is now deliberate, and that reverses what this file used to say.** The original constraint was to pull colour back from full saturation to prevent it. The instrument is instead lit in saturated cyan, magenta, matrix green and amber, and lit markers bloom on purpose.
+
+The constraint has not been abandoned so much as re-aimed. Halation was never bad in itself — it is bad when a marker's glow reaches the label beside it, because then two indications become one smear and the reader cannot tell which is which. So the bloom is tuned to the largest radius that still stops short of its neighbours, and that is the same legibility test the old line was making, applied to a dial that glows.
+
+If the built instrument shows this to be wrong in the eye rather than on a screen — an LED behind diffused acrylic blooms differently from a Gaussian filter — the LED is the authority and this reverts. **Recorded as a decision, not as a discovery.**
 
 ---
 
