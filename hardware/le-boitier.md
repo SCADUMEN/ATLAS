@@ -8,7 +8,20 @@
 
 Le Conseil was designed as semantics and turned out to be an object. Every control the physical build needs was already specified in `overlays/le-conseil.md`, and specified as the correct *kind* of control — a bezel that rotates, a crown that unscrews, a pusher that authorizes. This file records the enclosure so the build has doctrine like everything else does.
 
-**The reference is a diver's chronograph with a perpetual-calendar register layout.** Not a costume: a diver's case is sealed, legible in bad conditions, and operated by feel. All three are requirements here.
+**The reference is a marine chronometer.** Not a costume, and not the first answer — the council was drafted against a diver's chronograph, which got the sealed case and the legibility right and the rest wrong. A watch divides a continuous quantity nobody can stop. This instrument does not: its positions are modes rather than hours, its hand does not sweep, and nothing about it is periodic.
+
+A chronometer fits because it is not a watch that happens to be large. It is a mounted reference instrument, and every one of its defining properties was already in the doctrine before the form was named:
+
+| Already committed | Chronometer, as actually built |
+|---|---|
+| "Reserve is the context window" | The **up-and-down dial** — a power-reserve complication showing hours until rewinding |
+| Preservation cannot be accidental | Wound by a **separate key**, kept with the box, at a fixed time, **and the winding is logged** |
+| "The display never shows a state the router did not produce" | **Never adjusted at sea.** You record its rate; you do not correct it |
+| Le Sas regulates release and has no stake | **Detent escapement** — releases once per beat, frictionless, too delicate to move while running |
+| Le Vigile owns custody | Gimballed box, lock and key, opened by an officer |
+| The instrument is read; L'Opérateur decides | A chronometer indicates. It has one job and no opinion |
+
+Sealed, legible in bad conditions, and operated deliberately. The gimbals are the requirement the diver's case was standing in for: the instrument stays level regardless of what the ship does.
 
 ---
 
@@ -18,16 +31,27 @@ Every control maps to a mode, and the mapping constrains the mechanism.
 
 | Control | Mode | Mechanism | Why that mechanism |
 |---|---|---|---|
-| **Bezel** | ATLAS | Rotary encoder, 120 detents, unidirectional ratchet | The interface is set, not typed. Unidirectional because ATLAS can only report *less* remaining than you thought. |
-| **Crown** | Le Sauvegarder | Screw-down, push-pull, rotary encoder | Input requires deliberately unsealing the case. Preservation cannot be accidental. |
+| **Winding key** | Le Sauvegarder | Detached key, square socket, arbor on the box below the dial | **A separate object you must go and fetch.** There is no path to the movement that does not begin with retrieving it. Preservation cannot be accidental, and now it cannot be reached for absently either. |
+| **Gimbal ring** | — | Two pivots, 3 and 9 | Not a control. The instrument stays level regardless of what the ship does. |
 | **Upper pusher** | Le Fripon | Guarded momentary | The only control that authorizes a mode. Guarded because accidental engagement is the exact failure the charter exists to prevent. |
 | **Lower pusher** | Reset | Momentary | Clears the reading. Never touches L'Archive. |
 
-### The Screw-Down Crown Is Doctrine, Not Styling
+### The Detached Key Is Doctrine, Not Styling
 
-To give input, L'Opérateur must unscrew the crown. To seal the instrument, he screws it back down. Water resistance is archive integrity.
+To give input, L'Opérateur must retrieve the key, open the box, and wind. To seal the instrument, he puts the key back.
 
-This makes preservation a two-step physical act with a tactile confirmation, and it makes the sealed state the resting state. An instrument sitting on the bench with its crown screwed down is an archive that is protected. That is the correct default and the case should make it obvious at a glance.
+A crown is attached, and an attached control can be turned absently. A key cannot: it is a discrete object with its own location, and forgetting where it is stops the instrument entirely. That makes preservation a deliberate errand rather than a gesture, and it makes the sealed state the resting state. A chronometer sitting in its closed box is an archive that is protected. That is the correct default and the case should make it obvious at a glance.
+
+**The winding is logged.** Ships' chronometers were wound at a fixed hour by a named person who signed for it. That is Le Sauvegarder's whole function rendered as a procedure, and it is the reason the crown was never quite the right control: a crown records nothing.
+
+### The Bezel Is An Open Question
+
+`overlays/le-conseil.md` assigns ATLAS to the bezel, and a chronometer has no rotating bezel. Two ways out, and this is L'Opérateur's call:
+
+1. **ATLAS becomes the reference itself.** A chronometer is the standard other instruments are checked against, and is never corrected — you record its rate. That is the bezel's fail-safe asymmetry restated as an operating procedure, and it is arguably stronger.
+2. **Keep a rotating bezel** on the dial ring, breaking from the chronometer reference for one part.
+
+Option 1 costs a rewrite of the anatomy table in `overlays/le-conseil.md`, `ATLAS.md`, and `README.md`. Nothing has been changed there yet.
 
 ### The Guarded Pusher
 
@@ -82,9 +106,15 @@ Controls mount through the short face: pusher, crown, pusher, vertically arrange
 
 ### Prototype 0 — Round Panel
 
-A 4 in round IPS panel rendering the existing interface at real size. The published artifact is the firmware UI. This validates dial layout, label legibility, and state colours before anything is cut, and it is the cheapest way to find out that a marker is unreadable at arm's length.
+A 4 in round IPS panel rendering the existing interface at real size. This validates dial layout, label legibility, and state colours before anything is cut, and it is the cheapest way to find out that a marker is unreadable at arm's length.
 
 Build this first. Le Sauvegarder would insist.
+
+**Started.** `rouage/dial.py` renders the dial as SVG from a routing trace and nothing else. It is not firmware, but it is the layout under test, and it is honest by construction: the registers and the up-and-down arc are drawn undriven because the train cannot drive them.
+
+```sh
+python3 rouage/dial.py "what happened here"
+```
 
 ### Later
 

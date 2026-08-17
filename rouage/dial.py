@@ -1,0 +1,866 @@
+"""LE CADRAN - the dial. Diver's chronograph.
+
+Renders a routing trace. Nothing else.
+
+hardware/le-boitier.md: the display is driven by the routing trace 'never by a
+demo loop, an idle animation, or a startup sequence that lights markers for
+effect.' This module takes a Trace and returns SVG. It has no other input, so
+there is nothing it could invent.
+
+Anything the train does not yet drive is drawn UNDRIVEN and says so on its face:
+
+  - The three registers are Le Sceptique's, from stage 7 (TIER), a person.
+  - The up-and-down arc is the context window. The train does not measure it.
+  - Consulted and Dissent are real states the train cannot yet emit.
+
+Drawing any of those lit would make this a prop.
+
+    python3 rouage/dial.py                       # specimen sheet
+    python3 rouage/dial.py "what happened here"
+    python3 rouage/dial.py "red team this" --arm "Le Fripon"
+
+Legibility constraints are from le-boitier.md and are not styling: uniform
+stroke weights, no hairlines, ground lifted off pure black, colour pulled back
+from full saturation to prevent halation.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+from rouage import CONSEIL, Trace, load_ring, route
+
+OUT = Path(__file__).resolve().parent / "cadran.html"
+
+# The anatomy table in le-conseil.md, scoped by its header row. Unscoped, the
+# 'Not an hour' table below it also matches and silently reassigns the crown.
+ANATOMY_HEADER = re.compile(r"^\|\s*Part\s*\|\s*Council\s*\|.*$", re.M)
+ANATOMY_ROW = re.compile(r"^\|\s*\*\*([^*|]+)\*\*\s*\|\s*([^|]+?)\s*\|", re.M)
+
+# Chassis mechanism -> the part it stands for in the anatomy table.
+#
+# Deliberately empty. le-conseil.md is written for a diver's chronograph and
+# this chassis IS one, so every mechanism answers to the name doctrine already
+# gave it and nothing needs translating. The marine-chronometer draft needed
+# two entries here - bezel->gimbal ring, crown->winding arbor - because a
+# chronometer has neither a rotating bezel nor a crown. Those entries being
+# gone is the argument for this form: the arguable step is the one that
+# disappeared. The hook stays so a future chassis has somewhere to declare its
+# substitutions rather than making them silently.
+CHASSIS: dict[str, str] = {}
+
+INK = {
+    "bg": "#0f1317",
+    "brass_hi": "#b9a06a",
+    "brass_lo": "#6d5c38",
+    "plate": "#161b21",
+    "edge": "#232a32",
+    "ink": "#dce1e7",
+    "dim": "#79838f",
+    "active": "#7fc8a4",
+    "sealed": "#d19a4e",
+    "held": "#6b7684",
+    "dark": "#272e36",
+    "fault": "#cf6b5c",
+}
+
+STATE_INK = {
+    "active": INK["active"],
+    "sealed": INK["sealed"],
+    "held": INK["held"],
+    "dark": INK["dark"],
+}
+
+
+def polar(cx: float, cy: float, r: float, pos: str) -> tuple[float, float]:
+    """Dial position -> point. 12 at top, clockwise, 30 degrees per hour.
+
+    Fractional positions are allowed so that parts which are not hours can sit
+    between them - '11.5' is the gap between 11 and 12.
+    """
+    hour = float(pos) % 12
+    a = math.radians(-90 + hour * 30)
+    return cx + r * math.cos(a), cy + r * math.sin(a)
+
+
+def esc(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def load_anatomy(conseil: Path = CONSEIL) -> dict[str, str]:
+    """Parse the anatomy table: part -> the council entity that owns it.
+
+    Ownership is doctrine, so it is read from doctrine. Hardcoding this table
+    would let the dial keep engraving an owner that le-conseil.md had already
+    reassigned, which is the same drift the train avoids for the roster.
+    """
+    text = conseil.read_text(encoding="utf-8")
+    header = ANATOMY_HEADER.search(text)
+    if header is None:
+        raise ValueError("le-conseil.md: anatomy table not found")
+
+    block: list[str] = []
+    for line in text[header.end():].splitlines():
+        line = line.strip()
+        if not line:                 # the newline the header match left behind
+            continue
+        if not line.startswith("|"):  # first prose line ends the table
+            break
+        block.append(line)
+
+    return {part.strip().casefold(): owner.strip()
+            for part, owner in ANATOMY_ROW.findall("\n".join(block))}
+
+
+def owner_of(anatomy: dict[str, str], mechanism: str) -> str:
+    """Engraving for one mechanism. Never invents; says so when doctrine is
+    silent, because an unlabelled part and an unassigned part are not the
+    same fact and the instrument must not conflate them."""
+    part = CHASSIS.get(mechanism, mechanism)
+    owner = anatomy.get(part)
+    if owner is None:
+        return "UNASSIGNED IN DOCTRINE"
+    if owner.strip("—- ") == "":       # the hands: deliberately no one
+        return "DELIBERATELY NO ONE"
+    return owner.upper()
+
+
+def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
+             anatomy: dict[str, str] | None = None) -> str:
+    """One chronograph. Every lit element traces to a field in `trace`.
+
+    Mechanism ownership comes from `anatomy` (le-conseil.md). An engraving is
+    not a drive signal: naming who owns a subdial says nothing about whether
+    a needle may move in it, and the undriven ones stay undriven.
+    """
+    states = {p["position"]: p for p in trace.to_dict()["positions"]}
+    unsealed = trace.armed is not None
+    if anatomy is None and detailed:
+        anatomy = load_anatomy()
+
+    W = size
+    H = int(size * 0.93)
+    cx, cy = W / 2, size * 0.439
+
+    r_case = size * 0.395        # outer edge of the rotating bezel
+    r_bezel_in = size * 0.340    # where the bezel stops and the dial begins
+    r_dial = size * 0.336
+    r_chapter = size * 0.306
+    r_baton = size * 0.032
+    r_reserve = size * 0.258
+    # Two label radii. The horizontal flanks are the tight axis - at 3 and 9
+    # a name has to clear a register and still stop short of the dial edge -
+    # so they sit closer in than 12 and 6, where the column is empty. The
+    # bezel eats the outer band a chronometer left free, so both come in.
+    r_label = size * 0.193
+    r_label_v = size * 0.200
+    r_reg = size * 0.134
+    rr = size * 0.042
+
+    o: list[str] = []
+    add = o.append
+    add(f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" '
+        f'font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif">')
+
+    add(f'''<defs>
+      <linearGradient id="brass" x1="0" y1="0" x2="0.35" y2="1">
+        <stop offset="0" stop-color="{INK['brass_hi']}"/>
+        <stop offset="0.4" stop-color="{INK['brass_lo']}"/>
+        <stop offset="0.7" stop-color="{INK['brass_hi']}"/>
+        <stop offset="1" stop-color="{INK['brass_lo']}"/>
+      </linearGradient>
+      <radialGradient id="plate" cx="0.5" cy="0.36" r="0.78">
+        <stop offset="0" stop-color="#1c222a"/>
+        <stop offset="1" stop-color="{INK['plate']}"/>
+      </radialGradient>
+    </defs>''')
+
+    # --- lugs -------------------------------------------------------------
+    # A diver's watch is worn, so it has lugs. Drawn first, behind the case.
+    for ang in (-135, -45, 45, 135):
+        add(f'<g transform="rotate({ang} {cx:.1f} {cy:.1f})">'
+            f'<rect x="{cx + r_case - 18:.1f}" y="{cy - 19:.1f}" '
+            f'width="56" height="36" rx="12" fill="#252b32" '
+            f'stroke="#1a2027" stroke-width="3"/></g>')
+
+    # --- the crown and the two pushers, on the right flank ----------------
+    # le-boitier.md's control table: crown at 3, guarded pusher above it,
+    # reset below. All three are chronograph parts, which is why that table
+    # never quite fitted a chronometer - a chronometer has no pushers at all.
+    #
+    # The upper pusher is the only control that lights, and it lights from
+    # trace.armed. That is the honest wiring: arming is Le Fripon's state,
+    # not the crown's. The chronometer draft lit the winding arbor for it.
+    def flank(ang: float, body: str) -> None:
+        add(f'<g transform="rotate({ang} {cx:.1f} {cy:.1f})">{body}</g>')
+
+    fripon_ink = INK["active"] if unsealed else INK["brass_lo"]
+    flank(-30, (  # 02 - Le Fripon, guarded
+        f'<rect x="{cx + r_case - 6:.1f}" y="{cy - 21:.1f}" width="30" '
+        f'height="42" rx="5" fill="#2a2416" stroke="#3d3320" stroke-width="2"/>'
+        f'<rect x="{cx + r_case + 2:.1f}" y="{cy - 11:.1f}" width="24" '
+        f'height="22" rx="4" fill="{fripon_ink}"/>'))
+    flank(30, (   # 04 - reset
+        f'<rect x="{cx + r_case - 2:.1f}" y="{cy - 11:.1f}" width="26" '
+        f'height="22" rx="4" fill="url(#brass)" stroke="#3d3320" '
+        f'stroke-width="2"/>'))
+    crown = [f'<rect x="{cx + r_case - 4:.1f}" y="{cy - 26:.1f}" width="36" '
+             f'height="52" rx="6" fill="url(#brass)" stroke="#3d3320" '
+             f'stroke-width="2.5"/>']
+    for i in range(4):     # fluting, so it reads as a thing you grip
+        fx = cx + r_case + 3 + i * 7.5
+        crown.append(f'<line x1="{fx:.1f}" y1="{cy-20:.1f}" x2="{fx:.1f}" '
+                     f'y2="{cy+20:.1f}" stroke="#3d3320" stroke-width="2"/>')
+    flank(0, "".join(crown))
+
+    # --- the case ---------------------------------------------------------
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_case:.1f}" fill="#22282f" '
+        f'stroke="url(#brass)" stroke-width="5"/>')
+
+    # --- the rotating bezel: ATLAS ---------------------------------------
+    # Unidirectional by construction. The teeth are the grip; the ratchet is
+    # the doctrine. le-conseil.md: it can report only that less time remains
+    # than you thought, never more. The train does not set it - L'Operateur
+    # does, before going under - so it is drawn at its reference position.
+    for i in range(72):    # coin edge
+        a = math.radians(i * 5)
+        add(f'<line x1="{cx + (r_case-1)*math.cos(a):.1f}" '
+            f'y1="{cy + (r_case-1)*math.sin(a):.1f}" '
+            f'x2="{cx + (r_case-9)*math.cos(a):.1f}" '
+            f'y2="{cy + (r_case-9)*math.sin(a):.1f}" '
+            f'stroke="#3d3320" stroke-width="3"/>')
+
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_bezel_in:.1f}" '
+        f'fill="#12171d" stroke="#3d3320" stroke-width="2"/>')
+
+    for m in range(60):    # the 60-minute scale
+        a = math.radians(-90 + m * 6)
+        outer = r_case - 12
+        inner = outer - (14 if m % 5 == 0 else 8)
+        add(f'<line x1="{cx + outer*math.cos(a):.1f}" '
+            f'y1="{cy + outer*math.sin(a):.1f}" '
+            f'x2="{cx + inner*math.cos(a):.1f}" '
+            f'y2="{cy + inner*math.sin(a):.1f}" '
+            f'stroke="{INK["dim"]}" stroke-width="{3.5 if m % 5 == 0 else 2}" '
+            f'opacity="{0.95 if m % 5 == 0 else 0.55}"/>')
+
+    if detailed:
+        for m in (10, 20, 30, 40, 50):
+            a = math.radians(-90 + m * 6)
+            # Between the dial edge and the inner end of the tick marks. Any
+            # further out and the dial circle, drawn after this, paints over
+            # them - which is exactly what the first pass did.
+            nr = r_case - 36
+            add(f'<text x="{cx + nr*math.cos(a):.1f}" '
+                f'y="{cy + nr*math.sin(a) + 5:.1f}" text-anchor="middle" '
+                f'fill="{INK["ink"]}" font-size="15" font-weight="500" '
+                f'opacity="0.9">{m}</text>')
+
+    # The lume pip at zero. On a real bezel this is the only part that glows.
+    add(f'<path d="M {cx:.1f} {cy - r_case + 8:.1f} '
+        f'L {cx - 11:.1f} {cy - r_case + 26:.1f} '
+        f'L {cx + 11:.1f} {cy - r_case + 26:.1f} Z" '
+        f'fill="{INK["active"]}" opacity="0.9"/>')
+    if detailed:
+        # Must sit outside r_dial: the dial circle is drawn after this and
+        # paints over anything inside it. The first pass put this at
+        # r_case-52, which is inside the dial, and it vanished.
+        add(f'<text x="{cx:.1f}" y="{cy - r_bezel_in - 7:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="10" '
+            f'font-family="ui-monospace,monospace" letter-spacing="2">'
+            f'&#9664; {esc(owner_of(anatomy, "bezel"))}</text>')
+
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_dial:.1f}" fill="url(#plate)" '
+        f'stroke="{INK["edge"]}" stroke-width="3"/>')
+
+    # --- up-and-down arc: the power reserve, 9 through 12 to 3 -----------
+    # le-boitier.md specifies an arc, not a subdial. The train does not
+    # measure the context window, so the arc is drawn as an empty track.
+    add(f'<path d="M {cx-r_reserve:.1f} {cy:.1f} '
+        f'A {r_reserve:.1f} {r_reserve:.1f} 0 0 1 {cx+r_reserve:.1f} {cy:.1f}" '
+        f'fill="none" stroke="#1e252d" stroke-width="9" stroke-linecap="round"/>')
+    if detailed:
+        add(f'<text x="{cx:.1f}" y="{cy - r_reserve + 18:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="10" font-family="ui-monospace,monospace" '
+            f'letter-spacing="2">UP &#183; DOWN</text>')
+        add(f'<text x="{cx:.1f}" y="{cy - r_reserve + 31:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="9" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1.5">{esc(owner_of(anatomy, "barrel"))} '
+            f'&#183; UNDRIVEN</text>')
+
+
+    # --- chapter ring -----------------------------------------------------
+    for hour in range(1, 13):
+        pos = f"{hour:02d}"
+        entry = states.get(pos)
+        state = entry["state"] if entry else "dark"
+        ink = STATE_INK.get(state, INK["dark"])
+        lit = state != "dark"
+
+        bxp, byp = polar(cx, cy, r_chapter, pos)
+        axp, ayp = polar(cx, cy, r_chapter - r_baton, pos)
+        width = 9 if lit else 7
+        opacity = "1" if lit else "0.8"
+        add(f'<line x1="{bxp:.1f}" y1="{byp:.1f}" x2="{axp:.1f}" y2="{ayp:.1f}" '
+            f'stroke="{ink}" stroke-width="{width}" stroke-linecap="round" '
+            f'opacity="{opacity}"/>')
+
+        if not detailed:
+            continue
+
+        # Labels on their own annulus, inside the batons and clear of the
+        # registers. Each name is set AWAY from the centre: hours 1-5 are on
+        # the right flank and run rightward, 7-11 on the left and run left.
+        # Anchoring them the other way walks every name back across the
+        # registers and the hand, which is what put Le Sceptique on the 12.
+        lx, ly = polar(cx, cy, r_label if hour % 6 else r_label_v, pos)
+        anchor = "middle"
+        if 1 <= hour <= 5:
+            anchor, lx = "start", lx + 8
+        elif 7 <= hour <= 11:
+            anchor, lx = "end", lx - 8
+        name = entry["name"] if entry else "&#183;"
+        tail = "  " + state.upper() if lit else ""
+        add(f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anchor}" fill="{ink}" '
+            f'font-size="14.5" font-weight="500" opacity="{1 if lit else 0.55}">'
+            f'{esc(name)}</text>')
+        add(f'<text x="{lx:.1f}" y="{ly+15:.1f}" text-anchor="{anchor}" '
+            f'fill="{INK["dim"]}" font-size="10.5" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1.5">{pos}{tail}</text>')
+
+    # --- plate signature --------------------------------------------------
+    if detailed:
+        add(f'<text x="{cx:.1f}" y="{cy - size*0.140:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="12" font-family="ui-monospace,monospace" '
+            f'letter-spacing="6">{esc(owner_of(anatomy, "dial plate"))}</text>')
+        add(f'<text x="{cx:.1f}" y="{cy - size*0.140 + 14:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="9" font-family="ui-monospace,monospace" '
+            f'letter-spacing="2">DIAL PLATE</text>')
+        # 'Rate recorded, never reset' left with the chronometer. It was that
+        # chassis's honesty procedure; a diver's equivalent is the bezel's
+        # one-way ratchet, which is structure rather than a printed sentence.
+        # A dive dial earns its legibility by carrying less, not more.
+
+    # --- registers: housings only, undriven ------------------------------
+    # Names come from the anatomy row, not from this file. The driver is the
+    # occupant of 01 - the register belongs to the position, and whoever
+    # holds the position inherits it.
+    if detailed:
+        names = [n.strip().upper()
+                 for n in owner_of(anatomy, "registers").split("·")]
+        seats = ("09", "03", "06")
+        if len(names) != len(seats):        # doctrine changed shape; say so
+            names = ["UNREADABLE"] * len(seats)
+        driver = (states.get("01") or {}).get("name", "")
+        drives = driver.upper() if driver else "FROM 01"
+
+        for label, rpos in zip(names, seats):
+            rx, ry = polar(cx, cy, r_reg, rpos)
+            add(f'<circle cx="{rx:.1f}" cy="{ry:.1f}" r="{rr:.1f}" fill="#12171d" '
+                f'stroke="{INK["edge"]}" stroke-width="2.5"/>')
+            add(f'<text x="{rx:.1f}" y="{ry-9:.1f}" text-anchor="middle" '
+                f'fill="{INK["dim"]}" font-size="10.5" font-family="ui-monospace,monospace" '
+                f'letter-spacing="1.5">{esc(label)}</text>')
+            add(f'<text x="{rx:.1f}" y="{ry+4:.1f}" text-anchor="middle" '
+                f'fill="{INK["dim"]}" font-size="8.5" font-family="ui-monospace,monospace" '
+                f'letter-spacing="0.5" opacity="0.85">{esc(drives)}</text>')
+            add(f'<text x="{rx:.1f}" y="{ry+16:.1f}" text-anchor="middle" '
+                f'fill="{INK["held"]}" font-size="8.5" font-family="ui-monospace,monospace" '
+                f'letter-spacing="1">UNDRIVEN</text>')
+
+    # --- perpetual calendar, between 11 and 12 ---------------------------
+    # An aperture, not a subdial. The three cardinal subdials are taken by the
+    # registers and 12 carries the plate signature, so a fourth round housing
+    # does not fit - but a date shows through a window anyway, and an empty
+    # window is self-evidently undriven in a way a blank subdial is not.
+    #
+    # Off-cardinal on purpose: it sits between two hours rather than on one,
+    # because the complication is not an hour. Same reasoning that puts the
+    # crown off the chapter ring - Le Sauvegarder is not an hour either.
+    #
+    # 1:30, where a chronograph conventionally puts its date. 11:30 was tried
+    # first, to seat it between its owner at 11 and Le Redempteur at 12, but
+    # the barrel's reserve legend already holds that column and the two
+    # collided. The dial is full; this is the gap that was actually free.
+    if detailed:
+        wx, wy = polar(cx, cy, size * 0.170, "1.5")
+        add(f'<rect x="{wx - 25:.1f}" y="{wy - 11:.1f}" width="50" height="22" '
+            f'rx="3" fill="#0d1116" stroke="{INK["edge"]}" stroke-width="2"/>')
+        add(f'<text x="{wx:.1f}" y="{wy + 3.5:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="8" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1">UNDRIVEN</text>')
+        add(f'<text x="{wx:.1f}" y="{wy + 22:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="8" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1">{esc(owner_of(anatomy, "perpetual calendar"))}</text>')
+
+    # --- the hand ---------------------------------------------------------
+    ranked = [c.member.position for c in trace.admitted()
+              if c.member.position != "crown"]
+    # Stops short of the label annulus. The hand always points at an admitted
+    # member, so a hand long enough to touch the chapter ring is a hand that
+    # always crosses that member's own name - it would strike out the one
+    # label the reading depends on. le-boitier.md ranks legibility first.
+    if ranked:
+        hx, hy = polar(cx, cy, r_label - 10, ranked[0])
+        add(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{hx:.1f}" y2="{hy:.1f}" '
+            f'stroke="{INK["ink"]}" stroke-width="4.5" stroke-linecap="round"/>')
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="9" fill="{INK["brass_hi"]}"/>')
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.5" fill="{INK["plate"]}"/>')
+
+    # --- control legend, below the case ----------------------------------
+    # The three flank controls named. They are drawn on the case itself, so
+    # this is a key to them rather than a second set of indications.
+    if detailed:
+        ly_c = cy + r_case + 44
+        add(f'<text x="{cx - 360:.1f}" y="{ly_c:.1f}" fill="{fripon_ink}" '
+            f'font-size="10.5" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1.5">02 PUSHER &#183; LE FRIPON &#183; '
+            f'{"ARMED" if unsealed else "SEALED"}</text>')
+        add(f'<text x="{cx:.1f}" y="{ly_c:.1f}" text-anchor="middle" '
+            f'fill="{INK["brass_hi"]}" font-size="10.5" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1.5">'
+            f'03 CROWN &#183; {esc(owner_of(anatomy, "crown"))}</text>')
+        add(f'<text x="{cx + 360:.1f}" y="{ly_c:.1f}" text-anchor="end" '
+            f'fill="{INK["dim"]}" font-size="10.5" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1.5">'
+            f'04 PUSHER &#183; RESET</text>')
+
+    # --- escapement band --------------------------------------------------
+    # The escapement is internal and unseen, so it gets a band and not a
+    # subdial. It reports one of two things it actually did: released, or
+    # faulted. Silence here would be the escapement's own failure mode.
+    if detailed:
+        released = any(s.startswith("RELEASE") for s in trace.stages)
+        if trace.failures:
+            band, band_ink = "FAULT", INK["fault"]
+        elif released:
+            band, band_ink = "RELEASED", INK["dim"]
+        else:
+            band, band_ink = "NO RELEASE", INK["held"]
+
+        # On the rehaut - the flange between the chapter ring and the dial
+        # edge. Fixed position now: this chassis has a wider chord there than
+        # the chronometer did, so the state fits without the band moving.
+        add(f'<text x="{cx:.1f}" y="{cy + size*0.315:.1f}" text-anchor="middle" '
+            f'fill="{band_ink}" font-size="10" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1.5">'
+            f'{esc(owner_of(anatomy, "escapement"))} &#183; {band}</text>')
+
+        # The fault itself reads inward, where the chord is wide enough for a
+        # sentence. A lamp says THAT the escapement faulted; the instrument
+        # still has to say WHICH, or the trace is the only place it exists.
+        if trace.failures:
+            add(f'<text x="{cx:.1f}" y="{cy + size*0.258:.1f}" text-anchor="middle" '
+                f'fill="{INK["fault"]}" font-size="8" opacity="0.9" '
+                f'font-family="ui-monospace,monospace" letter-spacing="0.5">'
+                f'{esc(trace.failures[0].upper())}</text>')
+
+    add("</svg>")
+    return "\n".join(o)
+
+
+# The page is an object record, not a dashboard. overlays/forgotten-industries.md
+# asks for museum object record / repair manual / technical field documentation
+# and rules out cyberpunk excess and RGB. So: an engineer's computation sheet,
+# with the instrument recessed into it as a dark plate. Archive cream was the
+# obvious move and therefore the wrong one - FI's material world is anodised
+# aluminium, brass fittings and pale green engineering pads, not parchment.
+CSS = """
+:root {
+  --sheet:  #d2d8ca;
+  --field:  #e2e6db;
+  --rule:   #a9b49c;
+  --soft:   #c0c8b6;
+  --ink:    #1e231b;
+  --dim:    #5b6252;
+  --brass:  #7a6532;
+  --oxide:  #8f3722;
+  --plate:  #0f1317;
+  --display: Rockwell, "Rockwell Nova", "Roboto Slab", Georgia, serif;
+  --body: "Gill Sans", "Gill Sans MT", GillSans, Optima, "Segoe UI", system-ui, sans-serif;
+  --data: Menlo, ui-monospace, "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--body);
+  font-size: 16px; line-height: 1.6;
+  padding: 40px 28px 96px;
+  background-color: var(--sheet);
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(30,35,27,.05) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(30,35,27,.05) 23px 24px);
+}
+.sheet { max-width: 1180px; margin: 0 auto; }
+
+/* masthead ------------------------------------------------------------- */
+.masthead { display: flex; justify-content: space-between; align-items: baseline;
+  gap: 20px; flex-wrap: wrap;
+  border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+.mark { font-family: var(--display); font-size: 19px; letter-spacing: .07em;
+  text-transform: uppercase; }
+.ref { font-family: var(--data); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--dim); }
+.motto { font-family: var(--data); font-size: 10.5px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--brass);
+  border-bottom: 1px solid var(--rule); padding: 7px 0 9px; margin-bottom: 42px; }
+
+/* record head ---------------------------------------------------------- */
+.record { display: grid; grid-template-columns: 232px 1fr; gap: 46px;
+  align-items: start; margin-bottom: 46px; }
+.spine dl { margin: 0; }
+.spine dt { font-family: var(--data); font-size: 10px; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--dim); margin-top: 15px; }
+.spine dt:first-child { margin-top: 0; }
+.spine dd { margin: 3px 0 0; font-size: 14.5px; }
+.spine dd code { font-size: 12.5px; }
+h1 { font-family: var(--display); font-size: clamp(42px, 6vw, 62px);
+  line-height: 1.02; margin: -8px 0 10px; letter-spacing: -.005em; }
+.deck { font-size: 19px; line-height: 1.45; margin: 0 0 18px; max-width: 30ch; }
+.lede p { margin: 0 0 14px; max-width: 62ch; color: var(--dim); font-size: 15.5px; }
+
+/* plates --------------------------------------------------------------- */
+figure { margin: 0 0 44px; }
+.plate { position: relative; background: var(--plate);
+  border: 1px solid var(--rule); padding: 22px; }
+.reg { position: absolute; width: 15px; height: 15px; border: 0 solid var(--brass); }
+.reg.tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+.reg.tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+.reg.bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+.reg.br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+.plate svg { display: block; width: 100%; height: auto; }
+/* The scroller sits inside the plate, not on it, so the registration marks
+   stay pinned to the plate's corners instead of scrolling away with the
+   object. Plate 1's dial is capped at a readable size rather than blown up
+   to the sheet width; the strip's svgs sit in figures and still fill. */
+.scroll { overflow-x: auto; }
+.scroll > svg { max-width: 620px; margin: 0 auto; }
+figcaption { font-family: var(--data); font-size: 11px; line-height: 1.6;
+  color: var(--dim); margin-top: 9px; letter-spacing: .04em; }
+figcaption b { color: var(--ink); font-weight: 400; letter-spacing: .14em;
+  text-transform: uppercase; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px; }
+.strip figcaption { margin-top: 7px; text-align: center; }
+
+/* reading -------------------------------------------------------------- */
+h2 { font-family: var(--display); font-size: 15px; letter-spacing: .1em;
+  text-transform: uppercase; margin: 0 0 12px; font-weight: 400;
+  border-bottom: 1px solid var(--rule); padding-bottom: 7px; }
+.reading { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px 42px; margin-bottom: 48px; align-items: start; }
+.group { background: var(--field); border: 1px solid var(--soft); padding: 16px 18px 14px; }
+.row { display: flex; justify-content: space-between; gap: 14px;
+  padding: 6px 0; border-bottom: 1px dotted var(--soft); font-size: 14px; }
+.row:last-child { border-bottom: 0; }
+.k { font-family: var(--data); font-size: 11.5px; color: var(--dim);
+  letter-spacing: .06em; }
+.v { text-align: right; }
+.v .note-s { font-family: var(--data); font-size: 10.5px; color: var(--dim);
+  margin-left: 8px; letter-spacing: .06em; }
+.tag { font-family: var(--data); font-size: 10.5px; letter-spacing: .13em;
+  text-transform: uppercase; }
+.utt { font-family: var(--data); font-size: 13px; line-height: 1.65;
+  word-break: break-word; }
+.cycle { list-style: none; margin: 0; padding: 0; }
+.cycle li { display: flex; gap: 12px; padding: 4px 0; font-size: 13.5px;
+  align-items: baseline; }
+.cycle .n { font-family: var(--data); font-size: 10.5px; color: var(--brass);
+  min-width: 20px; }
+.cycle .to { font-family: var(--data); font-size: 10.5px; color: var(--dim);
+  margin-left: auto; }
+.none { color: var(--dim); font-style: italic; font-size: 14px; }
+.fault { color: var(--oxide); font-family: var(--data); font-size: 12.5px;
+  line-height: 1.65; }
+
+/* field notes ---------------------------------------------------------- */
+.notes { border-top: 2px solid var(--ink); padding-top: 26px; }
+.notes .col { columns: 2; column-gap: 44px; max-width: 100%; }
+.notes p { margin: 0 0 15px; font-size: 14.5px; line-height: 1.7;
+  color: var(--dim); break-inside: avoid; }
+.notes b { color: var(--ink); font-weight: 600; }
+code { font-family: var(--data); font-size: .9em; color: var(--brass); }
+footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
+  display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  font-family: var(--data); font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim); }
+
+@media (max-width: 860px) {
+  .record { grid-template-columns: 1fr; gap: 28px; }
+  .notes .col { columns: 1; }
+  h1 { margin-top: 0; }
+}
+/* Landscape gate. The sheet is a technical drawing: the plate, the spine and
+   the two-column notes all assume a long edge. Rather than reflow it into a
+   column that no longer reads as a drawing, ask for the device to be turned.
+   It is escapable on purpose - a hard orientation lock strands anyone whose
+   rotation is locked, which is a real accessibility failure, not an edge case. */
+.gate { display: none; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; }
+@media (orientation: portrait) and (max-width: 900px) {
+  .gate { display: flex; position: fixed; inset: 0; z-index: 50;
+    align-items: center; justify-content: center; padding: 32px;
+    background-color: var(--sheet);
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0 23px, rgba(30,35,27,.05) 23px 24px),
+      repeating-linear-gradient(90deg, transparent 0 23px, rgba(30,35,27,.05) 23px 24px); }
+  #portrait-ok:checked ~ .gate { display: none; }
+  .gate-inner { max-width: 34ch; border: 1px solid var(--rule);
+    background: var(--field); padding: 26px 24px; position: relative; }
+  .gate .mark { font-size: 15px; margin-bottom: 20px; }
+  .gate h2 { font-family: var(--display); font-size: 25px; letter-spacing: 0;
+    text-transform: none; border: 0; padding: 0; margin: 0 0 10px; }
+  .gate p { margin: 0 0 18px; font-size: 15px; color: var(--dim); }
+  .gate label { font-family: var(--data); font-size: 10.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--brass); border-bottom: 1px solid var(--brass);
+    padding-bottom: 2px; cursor: pointer; }
+  #portrait-ok:focus-visible ~ .gate label { outline: 2px solid var(--brass);
+    outline-offset: 3px; }
+}
+
+/* Phones. The dial is vector and stays sharp at any size, but its engravings
+   are set for a 620px plate - let it shrink to a 375px screen and they drop
+   under 5px and stop being readable. So the object holds a legible minimum
+   and pans instead, which is also how you read a real dial: you move it,
+   you do not shrink it. Only the plate scrolls; the sheet never does. */
+@media (max-width: 700px) {
+  body { padding: 22px 14px 64px; }
+  .plate { padding: 12px; }
+  .scroll > svg { min-width: 560px; max-width: none; }
+  .strip { grid-template-columns: none; grid-auto-flow: column;
+    grid-auto-columns: 190px; }
+  .group { padding: 14px 15px 12px; }
+  .reading { gap: 22px; }
+  figure { margin-bottom: 34px; }
+}
+"""
+
+# State colours for the sheet. The SVG palette is tuned for a dark plate and
+# is unreadable on pale green, so the page keeps its own.
+STATE_TEXT = {
+    "active": "#2f6d4e",
+    "sealed": "#8a5a12",
+    "held": "#6a7162",
+    "dark": "#98a190",
+}
+
+
+MECHANISMS = (
+    ("Bezel", "bezel", "unidirectional"),
+    ("Dial plate", "dial plate", "ground"),
+    ("Up-and-down arc", "barrel", "undriven"),
+    ("Registers", "registers", "undriven"),
+    ("Crown", "crown", "input"),
+    ("Going train", "going train", "driving"),
+    ("Escapement", "escapement", "release"),
+    ("Perpetual calendar", "perpetual calendar", "undriven"),
+    ("Hands", "hands", "answer"),
+)
+
+
+def readout(trace: Trace, anatomy: dict[str, str]) -> str:
+    d = trace.to_dict()
+    lit = [p for p in d["positions"] if p["state"] != "dark"]
+
+    rows = "".join(
+        f'<div class="row"><span>{esc(p["name"])}</span>'
+        f'<span class="tag" style="color:{STATE_TEXT.get(p["state"], "#98a190")}">'
+        f'{p["state"].upper()}</span></div>' for p in lit)
+    reasons = "".join(
+        f'<div class="row"><span class="k">{p["position"]}</span>'
+        f'<span class="k">{esc(p["reason"])}</span></div>' for p in lit)
+    mechs = "".join(
+        f'<div class="row"><span class="k">{esc(part)}</span>'
+        f'<span class="v">{esc(owner_of(anatomy, key))}'
+        f'<span class="note-s">{note}</span></span></div>'
+        for part, key, note in MECHANISMS)
+
+    # The cycle is the one thing here that is genuinely a sequence, so it is
+    # the one thing numbered. Numbering the rest would be decoration.
+    steps = []
+    for i, stage in enumerate(d["stages"], 1):
+        name, _, target = stage.partition("->")
+        tail = f'<span class="to">&#8594; {esc(target)}</span>' if target else ""
+        steps.append(f'<li><span class="n">{i:02d}</span>'
+                     f'<span>{esc(name)}</span>{tail}</li>')
+    cycle = f'<ol class="cycle">{"".join(steps)}</ol>'
+
+    faults = ("".join(f"<div>{esc(f)}</div>" for f in d["failures"])
+              if d["failures"] else '<div class="none">None recorded.</div>')
+
+    return f"""
+    <div class="group"><h2>Input</h2>
+      <div class="utt">{esc(d['utterance'])}</div>
+      <div class="row" style="margin-top:10px"><span class="k">armed</span>
+        <span class="k">{esc(d['armed']) if d['armed'] else '&#8212;'}</span></div></div>
+    <div class="group"><h2>Mechanisms</h2>{mechs}</div>
+    <div class="group"><h2>Positions &#183; {len(lit)} of 13 lit</h2>{rows}</div>
+    <div class="group"><h2>Why each fired</h2>{reasons}</div>
+    <div class="group"><h2>Cycle</h2>{cycle}</div>
+    <div class="group"><h2>Faults</h2><div class="fault">{faults}</div></div>
+    """
+
+
+SPECIMENS = [
+    ("what happened here", None, "named &#183; one hour fires"),
+    ("red team my backups", None, "named, unarmed &#183; SEALED"),
+    ("red team my backups", "Le Fripon", "armed &#183; ACTIVE"),
+    ("rename this file", None, "routine &#183; convenes no one"),
+    ("preserve this, map this, security check, argue against this, classify this",
+     None, "five named, cap of four &#183; held, reported"),
+]
+
+
+REGS = ('<span class="reg tl"></span><span class="reg tr"></span>'
+        '<span class="reg bl"></span><span class="reg br"></span>')
+
+
+def render(trace: Trace) -> str:
+    ring = load_ring()
+    anatomy = load_anatomy()
+    spec = "".join(
+        f'<figure>{dial_svg(route(ring, u, a), 240, detailed=False)}'
+        f'<figcaption>{cap}</figcaption></figure>' for u, a, cap in SPECIMENS)
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Le Cadran &#183; Object Record &#183; Forgotten Industries</title>
+<style>{CSS}</style></head>
+<body>
+<input type="checkbox" id="portrait-ok" class="vh">
+<div class="gate"><div class="gate-inner">
+  <div class="mark">Forgotten Industries</div>
+  <h2>Turn the sheet</h2>
+  <p>This is a technical drawing. The plate, the record spine and the notes are
+  all set across the long edge &#8212; rotate to landscape to read it.</p>
+  <label for="portrait-ok">Read in portrait anyway</label>
+</div></div>
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="mark">Forgotten Industries</div>
+    <div class="ref">Object record &#183; ATLAS / Le Conseil &#183; ref CDN-01</div>
+  </header>
+  <div class="motto">Human judgement // Machine collaboration // Contre l'oubli</div>
+
+  <div class="record">
+    <aside class="spine"><dl>
+      <dt>Object</dt><dd>Le Cadran &#8212; the dial</dd>
+      <dt>Class</dt><dd>Display. Prototype 0.</dd>
+      <dt>Form</dt><dd>Diver's chronograph</dd>
+      <dt>Status</dt><dd>Rendering. Not built.</dd>
+      <dt>Drive</dt><dd>Routing trace only</dd>
+      <dt>Source</dt><dd><code>rouage/rouage.py</code></dd>
+      <dt>Doctrine</dt><dd><code>overlays/le-conseil.md</code></dd>
+      <dt>Enclosure</dt><dd><code>hardware/le-boitier.md</code></dd>
+    </dl></aside>
+    <div class="lede">
+      <h1>Le Cadran</h1>
+      <p class="deck">Twelve positions that are operating modes, not hours.</p>
+      <p>The council is one agent in many modes, laid out as a diver's
+      chronograph because each part of that movement carries a real constraint.
+      This sheet records the dial: what it shows, what drives it, and what it
+      refuses to show.</p>
+      <p>Every lit element traces to a field in a routing trace emitted by the
+      going train. Anything the train cannot drive is drawn undriven and says
+      so on its face. There is no demo loop and no idle animation &#8212; an
+      instrument displaying invented state is a prop.</p>
+    </div>
+  </div>
+
+  <figure>
+    <div class="plate">{REGS}
+      <div class="scroll">{dial_svg(trace, anatomy=anatomy)}</div></div>
+    <figcaption><b>Plate 1</b> &#8212; the dial under one routing trace.
+    Dark positions are genuinely dark: the gate did not fire.</figcaption>
+  </figure>
+
+  <div class="reading">{readout(trace, anatomy)}</div>
+
+  <figure>
+    <div class="plate">{REGS}<div class="scroll strip">{spec}</div></div>
+    <figcaption><b>Plate 2</b> &#8212; specimens. One train, five inputs.</figcaption>
+  </figure>
+
+  <section class="notes">
+    <h2>Field notes</h2>
+    <div class="col">
+    <p><b>Nothing on this chassis needs translating.</b>
+    <code>overlays/le-conseil.md</code> is written for a diver's chronograph
+    and this is one, so every mechanism answers to the name doctrine already
+    gave it and <code>CHASSIS</code> is empty. The marine-chronometer draft
+    needed two entries in it &#8212; bezel&#8594;gimbal ring, crown&#8594;winding
+    arbor &#8212; because a chronometer has neither a rotating bezel nor a
+    crown. Those entries being gone is the argument for this form: the arguable
+    step is the one that disappeared.</p>
+    <p><b>The bezel is unidirectional, and that is the honesty constraint as
+    structure rather than a sentence.</b> A dive bezel ratchets one way only,
+    so it can report that less time remains than you thought and never more.
+    That fail-safe asymmetry is ATLAS's disposition exactly. The chronometer
+    draft had to print &ldquo;rate recorded, never reset&rdquo; on the dial to
+    say the same thing in words; here the teeth say it, and a dive dial earns
+    its legibility by carrying less.</p>
+    <p><b>The crown is the only way in, and the pushers are the only controls that
+    authorize.</b> Le Sauvegarder is the crown at 3 &#8212; there is no path to
+    the movement that does not pass through preservation. The guarded pusher at
+    2 is Le Fripon and it is the one control that lights, driven from
+    <code>trace.armed</code>. That is the honest wiring: arming is Le Fripon's
+    state, not the crown's. The chronometer draft lit the winding arbor for it,
+    which put the light on the wrong control.</p>
+    <p><b>Every mechanism is engraved with the member that owns it, and the
+    ownership is parsed, not written here.</b> The bezel, the plate, the arc,
+    the registers, the crown and the escapement all read their owner out of the
+    anatomy table in <code>overlays/le-conseil.md</code> at render time, the
+    same way the train reads the roster and the cap. Reassign a part in the
+    doctrine and the engraving follows; there is no second copy to drift.</p>
+    <p><b>An engraving is not a drive signal.</b> Naming who owns a subdial says
+    nothing about whether a needle may move in it &#8212; a watch carries the
+    maker's assignment on a dead register without claiming it is running.
+    So the registers and the arc now say whose they are <em>and</em> that they
+    are undriven. Signal, Noise and Gain come from stage 7, which is Le
+    Sceptique, which is a person. The arc is the context window, which the train
+    does not measure. Drawing a needle in either would be the exact failure
+    <code>hardware/le-boitier.md</code> names.</p>
+    <p><b>Consulted and Dissent never appear</b> for the same reason: real states
+    in <code>overlays/le-conseil.md</code> that the train does not yet emit.</p>
+    <p><b>The hand is an interim reading</b> &#8212; doctrine says it sweeps to what
+    ended the route, and routes are not built, so it points at the
+    highest-precedence admitted hour. Deterministic, and from the trace alone.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Forgotten Industries &#183; ATLAS &#183; Le Conseil</span>
+    <span>A thing documented is a thing not yet lost.</span>
+  </footer>
+</div></body></html>"""
+
+
+def main() -> None:
+    args = list(sys.argv[1:])
+    armed = None
+    if "--arm" in args:
+        i = args.index("--arm")
+        armed = args[i + 1]
+        args = args[:i] + args[i + 2:]
+    utterance = " ".join(args) or \
+        "preserve this, map this, security check, argue against this"
+
+    trace = route(load_ring(), utterance, armed)
+    OUT.write_text(render(trace), encoding="utf-8")
+
+    d = trace.to_dict()
+    print(f"lit     {len([p for p in d['positions']])} of 13")
+    print(f"faults  {json.dumps(d['failures'])}")
+    print(f"wrote   {OUT}")
+    if sys.platform == "darwin":
+        subprocess.run(["open", str(OUT)], check=False)
+
+
+if __name__ == "__main__":
+    main()

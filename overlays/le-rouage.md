@@ -5,7 +5,7 @@
 **Function:** Carries force from the barrel to the escapement, and distributes the regulated result to the registers and the hands.
 **Class:** Component. Not a member, not a mode, not a voice.
 **Position:** Both sides of Le Sas. Before it, the train delivers. After it, the motion works distribute.
-**Status:** **Specified. Not built.**
+**Status:** **Partially built.** The deterministic train runs in `rouage/`. The barrel boundary is unresolved.
 
 Le Rouage is the linkage. Every part of Le Conseil connects to every other part through it, and nothing reaches Le Sas except by way of the train.
 
@@ -19,11 +19,13 @@ Fixed ratios. Deterministic transmission. A wheel that made choices would destro
 
 ## Current State
 
-**This component does not exist in code.**
+**Half of this component exists in code.** See `rouage/`.
 
-The thirteen subroutines describe *when* a mode should engage. Nothing reads those descriptions and acts on them. At present the linkage is a model reading markdown and cooperating — a movement with no train, where the parts land in the right relationship because the barrel is being careful.
+Every activation block turns out to have two halves. The quoted invocation phrases — `"Le Limier"`, `"the bloodhound"` — are matchable, and the train matches them. The automatic conditions beneath them — *"an artifact shows modification whose cause is unknown"* — are not matchable without reading for meaning, which the prohibitions below forbid the train from doing.
 
-That works, and it is not a mechanism. This file is the specification for the thing that would make it one.
+So the built train handles named invocation, precedence, metering, the seal, and the trace. The automatic half necessarily runs in the barrel, and the honest arrangement is that **the barrel proposes and the train disposes**: a proposal still passes through ordering, the cap, and the Fripon seal, all enforced in code the barrel cannot reach around. That is what keeps *the train decides nothing* true even though something upstream of it did.
+
+The admission policy for those proposals is undecided and is L'Opérateur's call. Until it is decided, the automatic half of every gate remains a model reading markdown and cooperating — which works, and is not yet a mechanism.
 
 ---
 

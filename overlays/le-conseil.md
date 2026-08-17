@@ -29,11 +29,12 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 | **Barrel** | Le Barillet | The fitted model. Stores what the crown winds. Power reserve = context window. |
 | **Going train** | Le Rouage | Carries force to the escapement and distributes the result. Decides nothing. |
 | **Escapement** | Le Sas | Internal, unseen, regulates release. Not a member. |
+| **Perpetual calendar** | Le Continuant | The long arc, and the only part that outlives a barrel. Stops, and it loses its place. |
 | **Hands** | — | The answer. Deliberately no one. |
 
 Full specifications: `overlays/le-barillet.md`, `overlays/le-rouage.md`, `overlays/le-sas.md`.
 
-**Le Rouage does not exist in code.** It is specified and unbuilt. Until it does, the linkage is a barrel reading markdown and cooperating — which works, and is not a mechanism.
+**Le Rouage is half built.** The deterministic train — named invocation, precedence, the cap, the seal, the trace — runs in `rouage/`. The automatic half of each gate cannot be matched without interpretation, so it stays with the barrel, proposing into a train that still orders, caps, and seals it. The admission policy for those proposals is undecided.
 
 **Le Barillet is the only part not under version control.** Everything else here is owned and durable. The barrel is fitted, finite, and replaceable — which is precisely why the movement was built to outlive any particular one.
 
