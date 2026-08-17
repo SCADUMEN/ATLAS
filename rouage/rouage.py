@@ -569,6 +569,46 @@ def roue_a_colonnes(
     )
 
 
+def record_winding(trace: Trace, log: Path, when: str) -> None:
+    """Stages 1 and 10 - WIND and RECORD. Le Sauvegarder's log.
+
+    `hardware/le-boitier.md` demoted this from mechanism to procedure when the
+    detached winding key became a screw-down crown: a key had to be fetched,
+    a crown does not, so nothing enforces that a winding is recorded. That was
+    logged as a fair trade. It is still the only mandatory role in the council
+    with no mechanism at all, so here is the mechanism - and it stays a
+    procedure in the sense that matters, because **the caller invokes it and
+    the train never does.**
+
+    Two things are deliberately parameters rather than things this reaches for:
+
+      - `when`. route() is pure: same ring, same input, same trace. A clock
+        inside it would make a turn unreproducible and quietly break the
+        property every test depends on. The caller stamps the time, so the
+        time is an input like any other.
+      - `log`. Archive I/O belongs to the crown, not the train. Naming the
+        path at the call site keeps that true and keeps this testable without
+        writing into anyone's archive.
+
+    One JSON object per line, appended. A log that rewrites is a log that can
+    lose an entry, and this is the crown's: evidence loss cannot be undone.
+    """
+    entry = {
+        "when": when,
+        "utterance": trace.utterance,
+        "route": trace.route,
+        "armed": trace.armed,
+        "admitted": [c.member.position for c in trace.admitted()],
+        "verdicts": trace.verdicts,
+        "halted": trace.halted,
+        "notices": trace.notices,
+        "failures": trace.failures,
+    }
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
 def route(
     ring: Ring,
     utterance: str,
@@ -632,6 +672,22 @@ def route(
 # --------------------------------------------------------------------------
 # The barrel boundary
 # --------------------------------------------------------------------------
+
+def citations(ring: Ring) -> dict[str, tuple[str, ...]]:
+    """The menu of quotable bullets, per member.
+
+    admit_proposals() requires a citation verbatim, which is only a fair
+    requirement if the barrel can see exactly what it is quoting. Without this
+    a session has to reproduce a doctrine line from memory and any drift - a
+    changed dash, a trimmed clause - is a rejection it cannot diagnose.
+
+    The train still reads nothing for meaning. This hands over the same
+    strings parse_activation() already extracted, and the barrel decides which
+    one fired. Deciding that is the semantic half, which is the barrel's whole
+    job and is exactly what the train must not do.
+    """
+    return {m.name: m.bullets for m in ring.members if m.bullets}
+
 
 def admit_proposals(
     ring: Ring,

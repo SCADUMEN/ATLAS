@@ -10,7 +10,10 @@ dependency to install on the board in the case.
     python3 -m unittest discover rouage -v
 """
 
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from rouage import (
     CORE_HEADING,
@@ -21,6 +24,8 @@ from rouage import (
     evaluate,
     git_evidence,
     load_routes,
+    citations,
+    record_winding,
     resolve_step,
     roue_a_colonnes,
     fold,
@@ -522,6 +527,54 @@ class NamedRoutes(unittest.TestCase):
         t = route(self.ring, "what happened here")
         self.assertIsNone(t.route)
         self.assertNotIn("ROUTE->named", t.stages)
+
+
+class TheBarrelContract(unittest.TestCase):
+    """citations() is what makes 'verbatim' a fair requirement."""
+
+    def test_every_citation_offered_is_actually_admissible(self):
+        # The menu must be exactly what admit_proposals accepts. If these ever
+        # diverge, the barrel is being asked to quote something that will be
+        # rejected, which is a trap rather than a check.
+        ring = load_ring()
+        for name, bullets in citations(ring).items():
+            for bullet in bullets:
+                t = Trace(utterance="")
+                got = admit_proposals(ring, t, [(name, bullet)])
+                self.assertEqual(len(got), 1, f"{name}: {bullet[:40]!r}")
+                self.assertEqual(t.failures, [])
+
+    def test_the_menu_covers_the_whole_ring(self):
+        self.assertEqual(len(citations(load_ring())), 12)
+
+
+class TheWindingLog(unittest.TestCase):
+    """Le Sauvegarder's mechanism. The caller invokes it; the train does not."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp()) / "nested" / "winding.jsonl"
+
+    def test_a_winding_is_appended_not_rewritten(self):
+        ring = load_ring()
+        record_winding(route(ring, "run Publish"), self.tmp, "2026-08-16T10:00:00Z")
+        record_winding(route(ring, "what happened here"), self.tmp, "2026-08-16T11:00:00Z")
+        lines = self.tmp.read_text(encoding="utf-8").strip().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(json.loads(lines[0])["route"], "Publish")
+
+    def test_the_time_is_an_input_so_the_turn_stays_reproducible(self):
+        ring = load_ring()
+        record_winding(route(ring, "run Publish"), self.tmp, "FIXED")
+        self.assertEqual(json.loads(self.tmp.read_text())["when"], "FIXED")
+
+    def test_a_halt_is_recorded(self):
+        ring = load_ring()
+        t = route(ring, "preserve this, map this, security check, argue against this",
+                  verdicts=[("Le Renégat", "Archive")])
+        record_winding(t, self.tmp, "FIXED")
+        entry = json.loads(self.tmp.read_text())
+        self.assertTrue(entry["halted"])
+        self.assertEqual(entry["verdicts"], [["Le Renégat", "Archive"]])
 
 
 class Precedence(unittest.TestCase):

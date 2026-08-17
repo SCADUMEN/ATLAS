@@ -64,6 +64,25 @@ It is a component and not any member's complication, for the reason `le-sas.md` 
 A verdict from a member that did not convene is rejected. Concluding something requires having been in the room.
 
 
+### The Barrel's Contract
+
+The barrel is the model, not a module. `overlays/le-barillet.md` is explicit: it is whatever is executing Le Conseil this session, it is the only part not under version control, and it has no doctrine. So there is nothing to write called `barrel.py`, and the gap was never code — it was that **nothing said how to hand a proposal over.**
+
+A proposal is `(member, citation, evidence)`:
+
+- **member** — the full name, as the roster writes it. Folded, so accents are forgiving.
+- **citation** — a bullet from that member's own Activation section, **verbatim**. Not a paraphrase and not a summary. `citations(ring)` returns the exact menu, because requiring a quote while making the barrel reproduce it from memory is not a fair check — it is a trap.
+- **evidence** — optional. An object id for the artifact the citation is about. `git add` then `git write-tree` addresses the staged state without a commit; `git hash-object -w` addresses one file. The `-w` writes it, and an unwritten object is not evidence.
+
+What the barrel must not do:
+
+- **Propose a member whose bullet did not fire.** The citation check catches an invented condition, never an invented fact. That asymmetry is the barrel's to honour; the train cannot see it.
+- **Paraphrase to make a bullet fit.** A citation that has been adjusted to match the situation is the situation being adjusted to match the citation.
+- **Propose to reach a number.** Two to four is a default, not a target, and a member appears only when it changes the answer.
+
+What the barrel cannot do, by construction: unseal Le Fripon, exceed the cap, reorder precedence, or reach the dial. All four are enforced downstream in code it cannot reach around, which is what keeps *the train decides nothing* true even though something upstream did.
+
+
 ---
 
 ## The Cycle

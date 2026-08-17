@@ -12,18 +12,18 @@ python3 -m unittest discover rouage -v
 
 | Stage | State |
 |---|---|
-| 1 WIND | Recorded. Archive I/O belongs to the crown, not the train. |
+| 1 WIND | **Built** — `record_winding()`. The caller invokes it; the train never does. |
 | 2 EVALUATE | **Built** — literal phrase matching, half the gate. See below. |
 | 2b ROUTE | **Built** — the nine named routes, matched by name. |
 | 3 ORDER | **Built** — precedence parsed from `le-conseil.md`. |
 | 4 METER | **Built** — cap, seal, full-ring reporting. |
 | 5 LOAD | **Built** — cores only, asserted. |
-| 6 COLLECT | Delegated. The barrel generates; the train cannot. |
+| 6 COLLECT | Delegated, with a contract. `citations()` gives the barrel the exact quotable menu. |
 | 7 TIER | Delegated to Le Sceptique. A person, by design. |
 | 8a VERDICT | **Built** — la roue à colonnes: verdicts, dissent, le frein. |
 | 8 RELEASE | **Built** — Le Sas conditions, minus the tier check, which needs 6–7. |
 | 9 DISTRIBUTE | **Built** — emits the trace. |
-| 10 RECORD | Recorded. Archive I/O. |
+| 10 RECORD | **Built** — same call. Append-only, time supplied by the caller. |
 
 Nothing about the roster, the precedence ladder, the panel cap, or the activation
 phrases is written down in the code. All four are parsed from the markdown at

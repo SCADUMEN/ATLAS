@@ -46,7 +46,9 @@ To give input, L'Opérateur must unscrew the crown. To seal the instrument, he s
 
 A screw-down crown cannot be turned absently — it has to be released first, and releasing it is the act that unseals the case. That makes preservation deliberate rather than a gesture, and it makes the sealed state the resting state. A watch with its crown screwed home is an archive that is protected. That is the correct default and the case should make it obvious at a glance.
 
-**The winding is still logged.** A crown records nothing by itself, so the log is procedure rather than mechanism: who wound it, and when. That is Le Sauvegarder's whole function, and it is the one place this chassis asks for discipline where the marine-chronometer draft would have had a detached key enforce it. A fair trade for a form the operator can actually reason about.
+**The winding is logged, and now there is a mechanism for it.** A crown records nothing by itself — a key had to be fetched, a crown does not — so this chassis asked for discipline where the chronometer draft would have had the key enforce it. `record_winding()` in `rouage/rouage.py` closes that: one JSON object per turn, appended, never rewritten, because a log that rewrites is a log that can lose an entry and this is the crown's.
+
+It stays a procedure in the sense that matters: **the caller invokes it and the train never does.** Archive I/O belongs to the crown. The timestamp is a parameter rather than a clock the function reaches for, because `route()` is pure and a hidden clock would make a turn unreproducible.
 
 ### The Bezel Question Is Closed
 
