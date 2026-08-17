@@ -338,9 +338,25 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         add(f'<text x="{cx:.1f}" y="{cy - size*0.140:.1f}" text-anchor="middle" '
             f'fill="{INK["dim"]}" font-size="12" font-family="ui-monospace,monospace" '
             f'letter-spacing="6">{esc(owner_of(anatomy, "dial plate"))}</text>')
-        add(f'<text x="{cx:.1f}" y="{cy - size*0.140 + 14:.1f}" text-anchor="middle" '
-            f'fill="{INK["held"]}" font-size="9" font-family="ui-monospace,monospace" '
-            f'letter-spacing="2">DIAL PLATE</text>')
+        # The certification line, where a rated dial carries it. A chronometer
+        # marking is not decoration: it attests the movement was tested against
+        # a standard and its rate recorded. This one has a standard - the four
+        # admission conditions in le-sas.md - but the trace carries no evidence
+        # the movement was measured against it, so the dial declines the claim.
+        # Same move as UNDRIVEN: state the thing you cannot show.
+        #
+        # 'DIAL PLATE' used to sit between these and has gone. The mechanism
+        # list already says the plate is L'Archive, and with the calendar pair
+        # flanking this column a fourth line made the dial's most crowded axis
+        # unreadable. Signature then certification is how a rated dial reads.
+        # Two short lines rather than one for the same reason: a single line
+        # runs straight into the apertures' owner engravings.
+        add(f'<text x="{cx:.1f}" y="{cy - size*0.140 + 15:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="8" font-family="ui-monospace,monospace" '
+            f'letter-spacing="2" opacity="0.8">CHRONOMETER</text>')
+        add(f'<text x="{cx:.1f}" y="{cy - size*0.140 + 26:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="8" font-family="ui-monospace,monospace" '
+            f'letter-spacing="2">UNCERTIFIED</text>')
         # 'Rate recorded, never reset' left with the chronometer. It was that
         # chassis's honesty procedure; a diver's equivalent is the bezel's
         # one-way ratchet, which is structure rather than a printed sentence.
@@ -383,20 +399,36 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     # because the complication is not an hour. Same reasoning that puts the
     # crown off the chapter ring - Le Sauvegarder is not an hour either.
     #
-    # 1:30, where a chronograph conventionally puts its date. 11:30 was tried
-    # first, to seat it between its owner at 11 and Le Redempteur at 12, but
-    # the barrel's reserve legend already holds that column and the two
-    # collided. The dial is full; this is the gap that was actually free.
+    # A matched pair at 1:30 and 10:30. 11:30 was tried first, to seat it
+    # between its owner at 11 and Le Redempteur at 12, but the barrel's reserve
+    # legend already holds that column and the two collided.
+    #
+    # Two windows because the complication needs two readings, not because two
+    # balance better than one. DATE is where the cycle stands; LEAP is the
+    # four-year position, and it is the whole difference between a perpetual
+    # calendar and an annual one - drop it and the mechanism forgets, which is
+    # the one thing this instrument is named against. A second aperture opened
+    # only for symmetry would be a part that speaks because the dial looks
+    # better with it, which le-conseil.md rules out for members and the same
+    # reasoning covers parts.
     if detailed:
-        wx, wy = polar(cx, cy, size * 0.170, "1.5")
-        add(f'<rect x="{wx - 25:.1f}" y="{wy - 11:.1f}" width="50" height="22" '
-            f'rx="3" fill="#0d1116" stroke="{INK["edge"]}" stroke-width="2"/>')
-        add(f'<text x="{wx:.1f}" y="{wy + 3.5:.1f}" text-anchor="middle" '
-            f'fill="{INK["held"]}" font-size="8" font-family="ui-monospace,monospace" '
-            f'letter-spacing="1">UNDRIVEN</text>')
-        add(f'<text x="{wx:.1f}" y="{wy + 22:.1f}" text-anchor="middle" '
-            f'fill="{INK["dim"]}" font-size="8" font-family="ui-monospace,monospace" '
-            f'letter-spacing="1">{esc(owner_of(anatomy, "perpetual calendar"))}</text>')
+        owner = esc(owner_of(anatomy, "perpetual calendar"))
+        for seat, field in (("1.5", "DATE"), ("10.5", "LEAP")):
+            wx, wy = polar(cx, cy, size * 0.170, seat)
+            add(f'<text x="{wx:.1f}" y="{wy - 17:.1f}" text-anchor="middle" '
+                f'fill="{INK["dim"]}" font-size="8" '
+                f'font-family="ui-monospace,monospace" letter-spacing="1.5" '
+                f'opacity="0.85">{field}</text>')
+            add(f'<rect x="{wx - 25:.1f}" y="{wy - 11:.1f}" width="50" height="22" '
+                f'rx="3" fill="#0d1116" stroke="{INK["edge"]}" stroke-width="2"/>')
+            add(f'<text x="{wx:.1f}" y="{wy + 3.5:.1f}" text-anchor="middle" '
+                f'fill="{INK["held"]}" font-size="8" '
+                f'font-family="ui-monospace,monospace" letter-spacing="1">'
+                f'UNDRIVEN</text>')
+            add(f'<text x="{wx:.1f}" y="{wy + 22:.1f}" text-anchor="middle" '
+                f'fill="{INK["dim"]}" font-size="8" '
+                f'font-family="ui-monospace,monospace" letter-spacing="1">'
+                f'{owner}</text>')
 
     # --- the hand ---------------------------------------------------------
     ranked = [c.member.position for c in trace.admitted()
