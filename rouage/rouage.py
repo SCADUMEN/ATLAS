@@ -243,6 +243,10 @@ class Trace:
     stages: list[str] = field(default_factory=list)
     candidates: list[Candidate] = field(default_factory=list)
     failures: list[str] = field(default_factory=list)
+    # Recorded, but not faults. A brake engagement and an authorized widening
+    # are the movement working, not the routing failing. Putting them in
+    # failures made the escapement report FAULT for a correct halt.
+    notices: list[str] = field(default_factory=list)
     armed: str | None = None
     verdicts: list[Verdict] = field(default_factory=list)
     halted: list[str] = field(default_factory=list)
@@ -257,6 +261,7 @@ class Trace:
             "armed": self.armed,
             "stages": self.stages,
             "failures": self.failures,
+            "notices": self.notices,
             "positions": [
                 {
                     "position": c.member.position,
@@ -341,7 +346,7 @@ def meter(ring: Ring, candidates: list[Candidate], trace: Trace) -> list[Candida
     effective = ring.cap
     if trace.cap_authorized is not None and trace.cap_authorized > ring.cap:
         effective = trace.cap_authorized
-        trace.failures.append(
+        trace.notices.append(
             f"cap widened by authorization: {ring.cap} -> {effective}"
         )
 
@@ -442,7 +447,7 @@ def roue_a_colonnes(
             c.note = f"halted by {halting_member}"
             trace.halted.append(c.member.name)
 
-    trace.failures.append(
+    trace.notices.append(
         f"brake engaged: {halting_member} halted "
         f"{len(trace.halted)} field operator(s) - awaiting L'Operateur"
     )

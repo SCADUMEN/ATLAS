@@ -33,7 +33,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from rouage import CONSEIL, Trace, load_ring, route
+from rouage import CONSEIL, STATES, Trace, load_ring, route
 
 OUT = Path(__file__).resolve().parent / "cadran.html"
 
@@ -66,15 +66,31 @@ INK = {
     "sealed": "#d19a4e",
     "held": "#6b7684",
     "dark": "#272e36",
+    # Dissent is not a fault and must not read as one: a fault is the routing
+    # failing, dissent is a member doing its job. So it gets its own hue rather
+    # than borrowing the coral. Violet is the only family not already spoken
+    # for by active/sealed/held, and it is pulled back from full saturation
+    # for the same halation reason as the rest.
+    "dissent": "#a78bc8",
     "fault": "#cf6b5c",
 }
 
+# Every state rouage.STATES can emit needs an entry here. A missing one falls
+# through to `dark`, which on this dial means "the gate did not fire" - so an
+# unmapped state does not render as unknown, it renders as its own opposite.
+# That is the display lying, which le-boitier.md calls the difference between
+# a gauge and a prop.
 STATE_INK = {
+    "consulted": INK["held"],
     "active": INK["active"],
     "sealed": INK["sealed"],
     "held": INK["held"],
+    "dissent": INK["dissent"],
     "dark": INK["dark"],
 }
+
+_UNMAPPED = set(STATES) - set(STATE_INK)
+assert not _UNMAPPED, f"dial cannot render states the train emits: {_UNMAPPED}"
 
 
 def polar(cx: float, cy: float, r: float, pos: str) -> tuple[float, float]:
@@ -324,11 +340,13 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
             anchor, lx = "start", lx + 8
         elif 7 <= hour <= 11:
             anchor, lx = "end", lx - 8
-        name = entry["name"] if entry else "&#183;"
+        # Already an entity, so it must not go through esc() - that turns the
+        # ampersand into &amp; and prints "&#183;" on every dark position.
+        name = esc(entry["name"]) if entry else "&#183;"
         tail = "  " + state.upper() if lit else ""
         add(f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anchor}" fill="{ink}" '
             f'font-size="14.5" font-weight="500" opacity="{1 if lit else 0.55}">'
-            f'{esc(name)}</text>')
+            f'{name}</text>')
         add(f'<text x="{lx:.1f}" y="{ly+15:.1f}" text-anchor="{anchor}" '
             f'fill="{INK["dim"]}" font-size="10.5" font-family="ui-monospace,monospace" '
             f'letter-spacing="1.5">{pos}{tail}</text>')
@@ -486,6 +504,19 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
             f'fill="{INK["dim"]}" font-size="10.5" '
             f'font-family="ui-monospace,monospace" letter-spacing="1.5">'
             f'04 PUSHER &#183; RESET</text>')
+
+    # --- le frein: the brake ---------------------------------------------
+    # A halt is a whole-ring state, not a per-position one, so it cannot be
+    # carried by marker colour alone - the dissenter goes violet, but the
+    # members it stopped are only 'held', which is what an over-cap member
+    # looks like too. The band is what distinguishes being held because the
+    # room was full from being held because someone pulled the brake.
+    if detailed and trace.halted:
+        add(f'<text x="{cx:.1f}" y="{cy + size*0.262:.1f}" text-anchor="middle" '
+            f'fill="{INK["dissent"]}" font-size="9" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1.5">'
+            f'{esc(owner_of(anatomy, "brake"))} &#183; '
+            f'{len(trace.halted)} HELD &#183; AWAITING L\'OP&#201;RATEUR</text>')
 
     # --- escapement band --------------------------------------------------
     # The escapement is internal and unseen, so it gets a band and not a
@@ -709,6 +740,8 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
 # State colours for the sheet. The SVG palette is tuned for a dark plate and
 # is unreadable on pale green, so the page keeps its own.
 STATE_TEXT = {
+    "consulted": "#6a7162",
+    "dissent": "#6b3f8c",
     "active": "#2f6d4e",
     "sealed": "#8a5a12",
     "held": "#6a7162",
@@ -724,6 +757,8 @@ MECHANISMS = (
     ("Crown", "crown", "input"),
     ("Going train", "going train", "driving"),
     ("Escapement", "escapement", "release"),
+    ("Column wheel", "column wheel", "verdicts"),
+    ("Brake", "brake", "the halt"),
     ("Perpetual calendar", "perpetual calendar", "undriven"),
     ("Hands", "hands", "answer"),
 )
@@ -758,6 +793,9 @@ def readout(trace: Trace, anatomy: dict[str, str]) -> str:
 
     faults = ("".join(f"<div>{esc(f)}</div>" for f in d["failures"])
               if d["failures"] else '<div class="none">None recorded.</div>')
+    notices = ("".join(f'<div class="row"><span>{esc(n)}</span></div>'
+                       for n in d["notices"])
+               if d["notices"] else '<div class="none">None recorded.</div>')
 
     return f"""
     <div class="group"><h2>Input</h2>
@@ -768,6 +806,7 @@ def readout(trace: Trace, anatomy: dict[str, str]) -> str:
     <div class="group"><h2>Positions &#183; {len(lit)} of 13 lit</h2>{rows}</div>
     <div class="group"><h2>Why each fired</h2>{reasons}</div>
     <div class="group"><h2>Cycle</h2>{cycle}</div>
+    <div class="group"><h2>Notices</h2>{notices}</div>
     <div class="group"><h2>Faults</h2><div class="fault">{faults}</div></div>
     """
 
@@ -779,6 +818,9 @@ SPECIMENS = [
     ("rename this file", None, "routine &#183; convenes no one"),
     ("preserve this, map this, security check, argue against this, classify this",
      None, "five named, cap of four &#183; held, reported"),
+    ("preserve this, map this, security check, argue against this", None,
+     "Le Reneg&#225;t returns Archive &#183; DISSENT, brake engaged",
+     [("Le Renégat", "Archive")]),
 ]
 
 
@@ -798,8 +840,8 @@ def render(trace: Trace, standalone: bool = True) -> str:
     ring = load_ring()
     anatomy = load_anatomy()
     spec = "".join(
-        f'<figure>{dial_svg(route(ring, u, a), 240, detailed=False)}'
-        f'<figcaption>{cap}</figcaption></figure>' for u, a, cap in SPECIMENS)
+        f'<figure>{dial_svg(route(ring, sp[0], sp[1], verdicts=sp[3] if len(sp) > 3 else None), 240, detailed=False)}'
+        f'<figcaption>{sp[2]}</figcaption></figure>' for sp in SPECIMENS)
     head = ("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -901,8 +943,18 @@ def render(trace: Trace, standalone: bool = True) -> str:
     Sceptique, which is a person. The arc is the context window, which the train
     does not measure. Drawing a needle in either would be the exact failure
     <code>hardware/le-boitier.md</code> names.</p>
-    <p><b>Consulted and Dissent never appear</b> for the same reason: real states
-    in <code>overlays/le-conseil.md</code> that the train does not yet emit.</p>
+    <p><b>Dissent appears now, and it is violet rather than red.</b> A fault is
+    the routing failing; dissent is a member doing its job, so it must not
+    borrow the fault colour. The state arrives from <em>la roue &#224;
+    colonnes</em>, the column wheel &#8212; the part that carries what a member
+    concluded and routes the consequence without forming a verdict itself.
+    <b>Consulted still never appears</b>: marking a member weighed-but-not-surfaced
+    is a semantic call, so it belongs to the barrel, which does not exist.</p>
+    <p><b>A halt needs a band, not a colour.</b> The dissenter goes violet, but
+    the members it stopped are only <em>held</em> &#8212; which is exactly what
+    an over-cap member looks like. Marker colour cannot distinguish being held
+    because the room was full from being held because someone pulled the brake,
+    so <em>le frein</em> states it in words and names the count.</p>
     <p><b>The hand is an interim reading</b> &#8212; doctrine says it sweeps to what
     ended the route, and routes are not built, so it points at the
     highest-precedence admitted hour. Deterministic, and from the trace alone.</p>

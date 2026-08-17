@@ -70,14 +70,30 @@ The unidirectional ratchet turns out to carry the doctrine better than prose did
 | **Three registers** | Round LCD modules or LED rings | Signal · Noise · Gain, driven from 01 |
 | **Hands** | Geared stepper on the centre post, full 360° | The answer. Sweeps to what ended the route. |
 | **Escapement** | Single LED behind a window | Pulses once per release. Le Sas made visible. |
+| **Column wheel** | Not lit. Machined, visible through the caseback | La Roue à Colonnes. It holds state and decides nothing, so there is nothing for it to indicate on the front. |
+| **Brake** | Band above 6, its own colour | Le Frein. A halt is a whole-ring state, so it cannot be carried by marker colour alone — see below. |
 | **Power reserve** | Arc of LEDs, 9 through 12 to 3 | The context window. Colour shifts at low reserve. |
 | **Perpetual calendar** | Aperture, backlit segment or small e-paper | Le Continuant. Off-cardinal, because the complication is not an hour. |
 | **Bezel** | Not lit. Machined and filled, lume pip at zero | ATLAS. Set by the operator, never by the train — so nothing drives it. |
 | **Plate** | Printed or etched, L'ARCHIVE signed under 12 | The ground the hours are printed on |
 
+### A Halt Needs A Band, Not A Colour
+
+Le Renégat's Archive or Release halts the field operators. The dissenter can be
+given its own colour — violet, since a fault is the routing failing and dissent
+is a member doing its job, and the two must not share a hue. But **the members
+it stopped go to `held`, which is exactly what an over-cap member looks like.**
+
+Marker colour cannot distinguish *held because the room was full* from *held
+because someone pulled the brake*. Those need different responses from
+L'Opérateur, so the instrument has to say which. The band states it in words and
+names the count. This is the one indication on the dial that is a sentence
+rather than a light, and it is a sentence because the state it reports is about
+the ring rather than about any position on it.
+
 ### Discrete States Are A Hardware Decision
 
-Seven discrete states map to seven LED colours with no interpretation layer. A continuous display — brightness proportional to confidence — would need calibration and would be unreadable across twelve markers at a glance.
+Six discrete states map to six LED colours with no interpretation layer — dark, consulted, active, sealed, held, dissent. A continuous display — brightness proportional to confidence — would need calibration and would be unreadable across twelve markers at a glance.
 
 Legibility under bad conditions is a diver's requirement and it is also an astigmatism requirement: uniform stroke weights, no hairlines, ground lifted off pure black, colour pulled back from full saturation to prevent halation.
 

@@ -394,7 +394,7 @@ class TheColumnWheel(unittest.TestCase):
     def test_halting_verdict_engages_the_brake(self):
         t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Release")])
         self.assertTrue(t.halted)
-        self.assertTrue(any("brake engaged" in f for f in t.failures))
+        self.assertTrue(any("brake engaged" in n for n in t.notices))
 
     def test_reduce_is_a_verdict_but_does_not_halt(self):
         t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Reduce")])
@@ -450,8 +450,8 @@ class TheCapIsADefaultNotAnAbsolute(unittest.TestCase):
 
     def test_authorization_widens_the_cap_and_is_recorded(self):
         t = route(self.ring, self.UTT, armed="Le Fripon", authorize_cap=6)
-        self.assertTrue(any("cap widened by authorization" in f
-                            for f in t.failures))
+        self.assertTrue(any("cap widened by authorization" in n
+                            for n in t.notices))
         over = [c for c in t.candidates if "over cap" in c.note]
         self.assertEqual(over, [])
 
