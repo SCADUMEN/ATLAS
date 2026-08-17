@@ -14,6 +14,7 @@ python3 -m unittest discover rouage -v
 |---|---|
 | 1 WIND | Recorded. Archive I/O belongs to the crown, not the train. |
 | 2 EVALUATE | **Built** — literal phrase matching, half the gate. See below. |
+| 2b ROUTE | **Built** — the nine named routes, matched by name. |
 | 3 ORDER | **Built** — precedence parsed from `le-conseil.md`. |
 | 4 METER | **Built** — cap, seal, full-ring reporting. |
 | 5 LOAD | **Built** — cores only, asserted. |

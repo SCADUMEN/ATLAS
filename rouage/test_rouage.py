@@ -20,6 +20,8 @@ from rouage import (
     admit_proposals,
     evaluate,
     git_evidence,
+    load_routes,
+    resolve_step,
     roue_a_colonnes,
     fold,
     load_core,
@@ -462,6 +464,64 @@ class TheCapIsADefaultNotAnAbsolute(unittest.TestCase):
         narrow = route(self.ring, self.UTT, armed="Le Fripon", authorize_cap=1)
         self.assertEqual([c.state for c in wide.candidates],
                          [c.state for c in narrow.candidates])
+
+
+class NamedRoutes(unittest.TestCase):
+    """Nine routes in doctrine. The named half is matchable, like a gate."""
+
+    def setUp(self):
+        self.ring = load_ring()
+        self.routes = load_routes()
+
+    def test_every_route_in_doctrine_parses(self):
+        self.assertEqual(len(self.routes), 9)
+
+    def test_every_step_resolves_to_a_member(self):
+        for name, steps in self.routes.items():
+            for step in steps:
+                self.assertIsNotNone(resolve_step(self.ring, step),
+                                     f"{name}: {step!r} matches no member")
+
+    def test_a_named_route_admits_its_sequence(self):
+        t = route(self.ring, "run Publish")
+        names = {c.member.name for c in t.candidates}
+        self.assertLessEqual({"Le Curateur", "Le Vigile", "Le Messager"}, names)
+        self.assertEqual(t.route, "Publish")
+
+    def test_the_hand_ends_where_the_route_ends(self):
+        self.assertEqual(route(self.ring, "run Publish").route_end, "10")
+
+    def test_a_repeated_step_lights_one_seat_but_still_ends_there(self):
+        # Harden is Vigile -> Fripon -> Vigile. A seat cannot be occupied
+        # twice, but the route still ends at Vigile.
+        t = route(self.ring, "Harden this")
+        vigiles = [c for c in t.candidates if c.member.name == "Le Vigile"]
+        self.assertEqual(len(vigiles), 1)
+        self.assertEqual(t.route_end, "04")
+
+    def test_a_route_does_not_unseal_le_fripon(self):
+        t = route(self.ring, "Harden this")
+        fripon = next(c for c in t.candidates if c.member.name == "Le Fripon")
+        self.assertEqual(fripon.state, "sealed")
+
+    def test_an_armed_route_step_is_admitted(self):
+        t = route(self.ring, "Harden this", armed="Le Fripon")
+        fripon = next(c for c in t.candidates if c.member.name == "Le Fripon")
+        self.assertEqual(fripon.state, "active")
+
+    def test_judgement_delegates_and_admits_no_one(self):
+        # Its sequence cell is a protocol file, not members. Inventing a
+        # sequence it does not have would be the train deciding something.
+        t = route(self.ring, "Judgement please")
+        self.assertEqual(self.routes["Judgement"], ())
+        self.assertEqual(t.route, "Judgement")
+        self.assertIsNone(t.route_end)
+        self.assertTrue(any("delegated to protocol" in n for n in t.notices))
+
+    def test_no_route_named_leaves_the_trace_unrouted(self):
+        t = route(self.ring, "what happened here")
+        self.assertIsNone(t.route)
+        self.assertNotIn("ROUTE->named", t.stages)
 
 
 class Precedence(unittest.TestCase):

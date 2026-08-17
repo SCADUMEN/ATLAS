@@ -179,6 +179,12 @@ Two standing rules override ordering:
 
 Every route terminates through register 01 and the escapement. No route reaches the dial directly.
 
+A route has the same two halves a gate has. The **triggers** above are semantic and belong to the barrel. The **route's own name is matchable**, so the named half runs in `rouage/` today: naming a route admits its sequence in the route's order rather than in precedence order, because saying who goes first is the entire point of having named it. No route names more than three distinct members and the cap is four, so the two orderings never actually contend.
+
+A member repeated in a sequence — Harden is Vigile → Fripon → Vigile — is admitted once. A candidate is a seat on the dial and a seat cannot be occupied twice. The route's shape is kept in the trace, and the hand still ends where the sequence ends.
+
+**Judgement has no sequence for the train.** Its cell is a protocol file, not a list of members, so it is recorded and delegated. Inventing a sequence it does not have would be the train deciding something.
+
 ---
 
 ## Handoff Graph

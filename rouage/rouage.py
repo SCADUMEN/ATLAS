@@ -49,6 +49,12 @@ HALTING = ("archive", "release")
 # le-conseil.md Display States. 'dark' is absence and never stored.
 STATES = ("consulted", "active", "sealed", "held", "dissent")
 
+# The Named Routes table. Sequences are written with bare surnames and an
+# arrow, so they are parsed the same way as everything else: from doctrine,
+# never restated here.
+ROUTES_HEADER = re.compile(r"^\|\s*Route\s*\|\s*Sequence\s*\|.*$", re.M)
+ROUTE_ROW = re.compile(r"^\|\s*\*\*([^*|]+)\*\*\s*\|\s*([^|]+?)\s*\|", re.M)
+
 REPO = Path(__file__).resolve().parent.parent
 CONSEIL = REPO / "overlays" / "le-conseil.md"
 
@@ -202,6 +208,48 @@ def load_ring(conseil: Path = CONSEIL) -> Ring:
     return Ring(tuple(members), precedence, cap)
 
 
+def load_routes(conseil: Path = CONSEIL) -> dict[str, tuple[str, ...]]:
+    """Parse the Named Routes table: route name -> ordered member surnames.
+
+    A route whose sequence cell is a file reference rather than a list of
+    members maps to an empty tuple. Judgement is the case: it delegates to
+    `overlays/le-protocol-de-trois.md`, so there is no sequence for the train
+    to run and pretending otherwise would invent one.
+    """
+    text = conseil.read_text(encoding="utf-8")
+    header = ROUTES_HEADER.search(text)
+    if header is None:
+        raise ValueError("le-conseil.md: named routes table not found")
+
+    block: list[str] = []
+    for line in text[header.end():].splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if not line.startswith("|"):
+            break
+        block.append(line)
+
+    routes: dict[str, tuple[str, ...]] = {}
+    for name, seq in ROUTE_ROW.findall("\n".join(block)):
+        if "`" in seq:                      # a protocol reference, not a path
+            routes[name.strip()] = ()
+            continue
+        steps = tuple(part.strip() for part in seq.split("\u2192") if part.strip())
+        routes[name.strip()] = steps
+    return routes
+
+
+def resolve_step(ring: Ring, surname: str) -> Member | None:
+    """'Taxonomiste' -> Le Taxonomiste. The routes table writes bare surnames
+    while the roster writes full names, so this is the join between them."""
+    target = fold(surname)
+    for m in ring.members:
+        if fold(m.name) == target or fold(m.name).endswith(" " + target):
+            return m
+    return None
+
+
 def load_core(member: Member) -> str:
     """Return the OPERATIONAL CORE text alone.
 
@@ -248,6 +296,8 @@ class Trace:
     # failures made the escapement report FAULT for a correct halt.
     notices: list[str] = field(default_factory=list)
     armed: str | None = None
+    route: str | None = None
+    route_end: str | None = None
     verdicts: list[Verdict] = field(default_factory=list)
     halted: list[str] = field(default_factory=list)
     cap_authorized: int | None = None
@@ -262,6 +312,8 @@ class Trace:
             "stages": self.stages,
             "failures": self.failures,
             "notices": self.notices,
+            "route": self.route,
+            "route_end": self.route_end,
             "positions": [
                 {
                     "position": c.member.position,
@@ -363,6 +415,70 @@ def meter(ring: Ring, candidates: list[Candidate], trace: Trace) -> list[Candida
             f"over-cap: {len(counted)} convened, cap {effective}, {over} held"
         )
     return candidates
+
+
+def take_route(ring: Ring, trace: Trace, utterance: str) -> list[Candidate]:
+    """Stage 2b. A route named in the utterance runs its sequence.
+
+    Routes have the same two halves as gates. The triggers in the table - "a
+    new artifact enters", "anything leaving the archive" - are semantic and
+    belong to the barrel. **The route's own name is matchable**, exactly like
+    an invocation phrase, so the named half is buildable with the mechanism
+    that already exists and that is what this is.
+
+    Order is the route's, not precedence's. That is the point of a route: it
+    says who goes first, and re-sorting it would leave the name meaning
+    nothing. In practice there is no conflict, because no route in doctrine
+    names more than three distinct members and the cap is four.
+
+    A member repeated in a sequence - Harden is Vigile, Fripon, Vigile - is
+    admitted once. A candidate is a seat on the dial and a seat cannot be
+    occupied twice; the route's shape is preserved in trace.route rather than
+    by lighting a position twice.
+    """
+    routes = load_routes()
+    folded = fold(utterance)
+    hit = next((name for name in routes
+                if fold(name) in folded), None)
+    if hit is None:
+        return []
+
+    trace.route = hit
+    steps = routes[hit]
+    if not steps:
+        # Judgement delegates to the three-witness protocol. Recorded, and no
+        # members admitted, because inventing a sequence it does not have
+        # would be the train deciding something.
+        trace.notices.append(
+            f"route {hit}: delegated to protocol, no sequence for the train"
+        )
+        return []
+
+    admitted: list[Candidate] = []
+    seen: set[str] = set()
+    for surname in steps:
+        member = resolve_step(ring, surname)
+        if member is None:
+            trace.failures.append(
+                f"route {hit}: step {surname!r} matches no member"
+            )
+            continue
+        if fold(member.name) in seen:
+            continue
+        seen.add(fold(member.name))
+        if member.sealed and fold(trace.armed or "") != fold(member.name):
+            admitted.append(Candidate(member, f"route:{hit}", "sealed",
+                                      "route step without authorization"))
+        else:
+            admitted.append(Candidate(member, f"route:{hit}"))
+
+    # The hand sweeps to what ended the route. The last STEP is the end even
+    # when it repeats an earlier one - Harden ends at Vigile - so this reads
+    # from the sequence, not from the deduplicated candidates.
+    last = resolve_step(ring, steps[-1])
+    trace.route_end = last.position if last else None
+    trace.notices.append(f"route {hit}: {' -> '.join(steps)}")
+    return admitted
 
 
 def roue_a_colonnes(
@@ -480,6 +596,12 @@ def route(
     trace.stages.append("WIND")
     trace.stages.append("EVALUATE")
     candidates = evaluate(ring, utterance, armed)
+    routed = take_route(ring, trace, utterance)
+    if routed:
+        seen = {fold(c.member.name) for c in routed}
+        candidates = routed + [c for c in candidates
+                               if fold(c.member.name) not in seen]
+        trace.stages.append("ROUTE->named")
     trace.candidates = candidates
     if proposals:
         candidates = candidates + admit_proposals(

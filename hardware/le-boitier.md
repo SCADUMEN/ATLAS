@@ -66,7 +66,7 @@ The unidirectional ratchet turns out to carry the doctrine better than prose did
 
 | Element | Implementation | Notes |
 |---|---|---|
-| **Twelve hour markers** | Addressable RGB LEDs behind diffused acrylic batons | Seven states map to seven colours. Dark is genuinely off. |
+| **Twelve hour markers** | Addressable RGB LEDs behind diffused acrylic batons | Six states map to six colours. Dark is genuinely off. |
 | **Three registers** | Round LCD modules or LED rings | Signal · Noise · Gain, driven from 01 |
 | **Hands** | Geared stepper on the centre post, full 360° | The answer. Sweeps to what ended the route. |
 | **Escapement** | Single LED behind a window | Pulses once per release. Le Sas made visible. |

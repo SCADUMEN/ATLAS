@@ -474,8 +474,15 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
             f'letter-spacing="1">UNDRIVEN</text>')
 
     # --- the hand ---------------------------------------------------------
+    # le-conseil.md: the hand sweeps to what ended the route. It can, now that
+    # routes exist - so route_end wins when there is one. The old reading
+    # (highest-precedence admitted hour) stays as the fallback for turns that
+    # named no route, which is most of them, and it is no longer an admitted
+    # stand-in for a mechanism that did not exist.
     ranked = [c.member.position for c in trace.admitted()
               if c.member.position != "crown"]
+    if trace.route_end:
+        ranked = [trace.route_end] + [p for p in ranked if p != trace.route_end]
     # Stops short of the label annulus. The hand always points at an admitted
     # member, so a hand long enough to touch the chapter ring is a hand that
     # always crosses that member's own name - it would strike out the one
@@ -955,9 +962,16 @@ def render(trace: Trace, standalone: bool = True) -> str:
     an over-cap member looks like. Marker colour cannot distinguish being held
     because the room was full from being held because someone pulled the brake,
     so <em>le frein</em> states it in words and names the count.</p>
-    <p><b>The hand is an interim reading</b> &#8212; doctrine says it sweeps to what
-    ended the route, and routes are not built, so it points at the
-    highest-precedence admitted hour. Deterministic, and from the trace alone.</p>
+    <p><b>The hand sweeps to what ended the route</b>, which is what doctrine
+    always said and the dial could not do until routes existed. The nine named
+    routes are parsed from <code>overlays/le-conseil.md</code> and matched by
+    name &#8212; a route has the same two halves as a gate, and its own name is
+    the matchable one. Turns that name no route fall back to the
+    highest-precedence admitted hour.</p>
+    <p><b>Harden ends where it began.</b> Its sequence is Vigile &#8594; Fripon
+    &#8594; Vigile, so the hand reads 04 while the position is lit once &#8212;
+    a candidate is a seat and a seat cannot be occupied twice. The route's shape
+    is kept in the trace rather than by lighting a marker twice.</p>
     </div>
   </section>
 
