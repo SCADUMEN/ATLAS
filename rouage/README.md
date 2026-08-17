@@ -21,7 +21,7 @@ python3 -m unittest discover rouage -v
 | 6 COLLECT | Delegated, with a contract. `citations()` gives the barrel the exact quotable menu. |
 | 7 TIER | Delegated to Le Sceptique. A person, by design. |
 | 8a VERDICT | **Built** — la roue à colonnes: verdicts, dissent, le frein. |
-| 8 RELEASE | **Built** — Le Sas conditions, minus the tier check, which needs 6–7. |
+| 8 RELEASE | **Built** — including the tier check. Le Sas checks tiers *exist*, which is structural; assigning them is Le Sceptique's. |
 | 9 DISTRIBUTE | **Built** — emits the trace. |
 | 10 RECORD | **Built** — same call. Append-only, time supplied by the caller. |
 

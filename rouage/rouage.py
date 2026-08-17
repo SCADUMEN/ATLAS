@@ -609,6 +609,58 @@ def record_winding(trace: Trace, log: Path, when: str) -> None:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
+def le_sas(ring: Ring, trace: Trace, tiered: list[str] | None) -> None:
+    """Stage 8 - RELEASE. Le Sas's first admission condition, at last.
+
+    le-sas.md lists four conditions. The cap has been enforced since METER.
+    Load-bearing and non-theatrical are semantic and stay the barrel's. The
+    first one - **Tiered** - was recorded as needing stages 6 and 7, and that
+    was half right in a way worth correcting: the *assignment* of a tier is Le
+    Sceptique's and is a person's job, but the file is explicit that "Le Sas
+    checks that they exist, never what they say."
+
+    Checking existence is not interpretation. So the check is the train's and
+    always was; what was missing was a channel for tiers to arrive on, exactly
+    as it was for proposals and for verdicts.
+
+    `tiered` names the members whose output has been tiered. Anything admitted
+    and absent from that list is held: "untiered material does not pass."
+
+    Passing None skips the check entirely, and that is not the same as passing
+    an empty list. None means no tiering was supplied and the train cannot
+    know - so it holds nothing and claims nothing. An empty list means tiering
+    was supplied and nothing was tiered, which holds everything. A gate that
+    treated "I was not told" as "nothing qualifies" would be inventing a
+    finding, and one that treated it as "everything qualifies" would be
+    waving material through on an assumption.
+    """
+    if tiered is None:
+        return
+
+    ok = {fold(name) for name in tiered}
+    for c in trace.candidates:
+        if c.state != "active" or c.member.standing:
+            continue
+        # The crown is exempt, for the same reason le frein cannot stop it.
+        # Holding Le Sauvegarder for want of a tier would make untiered
+        # material block preservation - and preservation comes first precisely
+        # because evidence loss cannot be undone. You preserve, then you tier.
+        # A gate that can hold the crown is a gate that can lose the archive.
+        if c.member.position == "crown":
+            continue
+        if fold(c.member.name) not in ok:
+            c.state = "held"
+            c.note = "untiered - did not pass Le Sas"
+
+    untiered = [c.member.name for c in trace.candidates
+                if c.note == "untiered - did not pass Le Sas"]
+    if untiered:
+        trace.failures.append(
+            f"untiered: {len(untiered)} admitted member(s) carried no tier "
+            "and were held"
+        )
+
+
 def route(
     ring: Ring,
     utterance: str,
@@ -618,6 +670,7 @@ def route(
     require_evidence: bool = False,
     verdicts: list[Verdict] | None = None,
     authorize_cap: int | None = None,
+    tiered: list[str] | None = None,
 ) -> Trace:
     """One turn of the train. Pure: same ring + same input, same trace.
 
@@ -663,6 +716,7 @@ def route(
         roue_a_colonnes(ring, trace, verdicts)
         trace.stages.append("VERDICT->colonnes")
 
+    le_sas(ring, trace, tiered)
     trace.stages.append("RELEASE->sas")
     trace.stages.append("DISTRIBUTE")
     trace.stages.append("RECORD->crown")

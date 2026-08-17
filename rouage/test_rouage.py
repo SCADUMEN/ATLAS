@@ -577,6 +577,50 @@ class TheWindingLog(unittest.TestCase):
         self.assertEqual(entry["verdicts"], [["Le Renégat", "Archive"]])
 
 
+class LeSasChecksTiersExist(unittest.TestCase):
+    """Condition 1. Le Sas checks that tiers exist, never what they say."""
+
+    U = "preserve this, map this, security check"
+
+    def setUp(self):
+        self.ring = load_ring()
+
+    def _untiered(self, t):
+        return [c.member.name for c in t.candidates
+                if c.note.startswith("untiered")]
+
+    def test_none_is_not_the_same_as_empty(self):
+        # None means no tiering was supplied and the train cannot know, so it
+        # holds nothing and claims nothing. Empty means tiering was supplied
+        # and nothing qualified.
+        self.assertEqual(self._untiered(route(self.ring, self.U, tiered=None)), [])
+        self.assertNotEqual(self._untiered(route(self.ring, self.U, tiered=[])), [])
+
+    def test_untiered_material_does_not_pass(self):
+        t = route(self.ring, self.U, tiered=["Le Vigile"])
+        self.assertIn("Le Cartographe", self._untiered(t))
+        self.assertTrue(any("untiered" in f for f in t.failures))
+
+    def test_tiered_material_passes(self):
+        t = route(self.ring, self.U,
+                  tiered=["Le Vigile", "Le Cartographe", "Le Sauvegarder"])
+        self.assertEqual(self._untiered(t), [])
+
+    def test_the_crown_is_never_held_for_want_of_a_tier(self):
+        # Untiered material must not block preservation. You preserve, then
+        # you tier. A gate that can hold the crown can lose the archive.
+        t = route(self.ring, self.U, tiered=[])
+        crown = next(c for c in t.candidates if c.member.position == "crown")
+        self.assertEqual(crown.state, "active")
+
+    def test_the_standing_witness_is_not_held(self):
+        # Le Sceptique assigns the tiers. Holding him for not having one
+        # would be circular.
+        t = route(self.ring, self.U, tiered=[])
+        sceptique = next(c for c in t.candidates if c.member.position == "01")
+        self.assertEqual(sceptique.state, "active")
+
+
 class Precedence(unittest.TestCase):
     """'Precedence follows irreversibility.'"""
 
