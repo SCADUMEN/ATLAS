@@ -335,7 +335,10 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
 
     # --- plate signature --------------------------------------------------
     if detailed:
-        add(f'<text x="{cx:.1f}" y="{cy - size*0.140:.1f}" text-anchor="middle" '
+        # Moved below centre. The 12 column is the date aperture's now, and the
+        # registers leaving 6 freed the whole lower half - which is where a
+        # signature and its certification sit on a real dial anyway.
+        add(f'<text x="{cx:.1f}" y="{cy + size*0.144:.1f}" text-anchor="middle" '
             f'fill="{INK["dim"]}" font-size="12" font-family="ui-monospace,monospace" '
             f'letter-spacing="6">{esc(owner_of(anatomy, "dial plate"))}</text>')
         # The certification line, where a rated dial carries it. A chronometer
@@ -351,10 +354,10 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         # unreadable. Signature then certification is how a rated dial reads.
         # Two short lines rather than one for the same reason: a single line
         # runs straight into the apertures' owner engravings.
-        add(f'<text x="{cx:.1f}" y="{cy - size*0.140 + 15:.1f}" text-anchor="middle" '
+        add(f'<text x="{cx:.1f}" y="{cy + size*0.144 + 15:.1f}" text-anchor="middle" '
             f'fill="{INK["dim"]}" font-size="8" font-family="ui-monospace,monospace" '
             f'letter-spacing="2" opacity="0.8">CHRONOMETER</text>')
-        add(f'<text x="{cx:.1f}" y="{cy - size*0.140 + 26:.1f}" text-anchor="middle" '
+        add(f'<text x="{cx:.1f}" y="{cy + size*0.144 + 26:.1f}" text-anchor="middle" '
             f'fill="{INK["held"]}" font-size="8" font-family="ui-monospace,monospace" '
             f'letter-spacing="2">UNCERTIFIED</text>')
         # 'Rate recorded, never reset' left with the chronometer. It was that
@@ -366,69 +369,91 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     # Names come from the anatomy row, not from this file. The driver is the
     # occupant of 01 - the register belongs to the position, and whoever
     # holds the position inherits it.
+    # They cluster at the top right, beside 01, because 01 is what drives them.
+    # Cardinal 3/6/9 was tri-compax convention and nothing more - it scattered
+    # one member's readout across three corners of a dial whose other parts sit
+    # with their owners. Smaller, and set along the tangent so the group reads
+    # as one instrument rather than three unrelated subdials.
     if detailed:
         names = [n.strip().upper()
                  for n in owner_of(anatomy, "registers").split("·")]
-        seats = ("09", "03", "06")
-        if len(names) != len(seats):        # doctrine changed shape; say so
-            names = ["UNREADABLE"] * len(seats)
+        if len(names) != 3:                 # doctrine changed shape; say so
+            names = ["UNREADABLE"] * 3
         driver = (states.get("01") or {}).get("name", "")
         drives = driver.upper() if driver else "FROM 01"
 
-        for label, rpos in zip(names, seats):
-            rx, ry = polar(cx, cy, r_reg, rpos)
-            add(f'<circle cx="{rx:.1f}" cy="{ry:.1f}" r="{rr:.1f}" fill="#12171d" '
+        # A triangle, not a row. Strung along the tangent they read as a
+        # diagonal smear from 12 down to 3 rather than as one group in the
+        # corner, which defeats the point of moving them beside 01.
+        #
+        # The driver is engraved once beneath the group, not inside all three.
+        # At this size the owner's name is wider than a 54px housing, so three
+        # copies overflowed their circles and ran into each other. One
+        # engraving under a group that plainly belongs together says the same
+        # thing and is legible, which le-boitier.md ranks first.
+        gx, gy = polar(cx, cy, size * 0.125, "1.5")
+        gr = size * 0.033
+        trio = ((-size * 0.0366, -size * 0.0195),
+                (size * 0.0366, -size * 0.0195),
+                (0.0, size * 0.0366))
+        for label, (ox, oy) in zip(names, trio):
+            rx, ry = gx + ox, gy + oy
+            add(f'<circle cx="{rx:.1f}" cy="{ry:.1f}" r="{gr:.1f}" fill="#12171d" '
                 f'stroke="{INK["edge"]}" stroke-width="2.5"/>')
-            add(f'<text x="{rx:.1f}" y="{ry-9:.1f}" text-anchor="middle" '
-                f'fill="{INK["dim"]}" font-size="10.5" font-family="ui-monospace,monospace" '
-                f'letter-spacing="1.5">{esc(label)}</text>')
-            add(f'<text x="{rx:.1f}" y="{ry+4:.1f}" text-anchor="middle" '
-                f'fill="{INK["dim"]}" font-size="8.5" font-family="ui-monospace,monospace" '
-                f'letter-spacing="0.5" opacity="0.85">{esc(drives)}</text>')
-            add(f'<text x="{rx:.1f}" y="{ry+16:.1f}" text-anchor="middle" '
-                f'fill="{INK["held"]}" font-size="8.5" font-family="ui-monospace,monospace" '
-                f'letter-spacing="1">UNDRIVEN</text>')
+            add(f'<text x="{rx:.1f}" y="{ry-2:.1f}" text-anchor="middle" '
+                f'fill="{INK["dim"]}" font-size="8.5" '
+                f'font-family="ui-monospace,monospace" letter-spacing="1">'
+                f'{esc(label)}</text>')
+            add(f'<text x="{rx:.1f}" y="{ry+10:.1f}" text-anchor="middle" '
+                f'fill="{INK["held"]}" font-size="7" '
+                f'font-family="ui-monospace,monospace" letter-spacing="0.5">'
+                f'UNDRIVEN</text>')
+        add(f'<text x="{gx:.1f}" y="{gy + size*0.0366 + gr + 12:.1f}" '
+            f'text-anchor="middle" fill="{INK["dim"]}" font-size="7.5" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1">'
+            f'{esc(drives)}</text>')
 
-    # --- perpetual calendar, between 11 and 12 ---------------------------
-    # An aperture, not a subdial. The three cardinal subdials are taken by the
-    # registers and 12 carries the plate signature, so a fourth round housing
-    # does not fit - but a date shows through a window anyway, and an empty
-    # window is self-evidently undriven in a way a blank subdial is not.
+    # --- perpetual calendar: subdial at 10:30, date aperture under 12 -----
+    # The complication spans both its owners. The cycle dial sits at the top
+    # left beside 11, which owns it; the date reads through an aperture on the
+    # 12 column, and 12 is Le Redempteur - the hour that owns return after
+    # collapse, which is exactly what a perpetual calendar needs once it has
+    # stopped and lost its place. Nothing else on the dial has a failure mode
+    # that lands on a different member from its owner.
     #
-    # Off-cardinal on purpose: it sits between two hours rather than on one,
-    # because the complication is not an hour. Same reasoning that puts the
-    # crown off the chapter ring - Le Sauvegarder is not an hour either.
+    # LEAP rather than MONTH on the dial: the four-year position is the whole
+    # difference between a perpetual calendar and an annual one. Drop it and
+    # the mechanism forgets, which is the one thing this instrument is named
+    # against.
     #
-    # A matched pair at 1:30 and 10:30. 11:30 was tried first, to seat it
-    # between its owner at 11 and Le Redempteur at 12, but the barrel's reserve
-    # legend already holds that column and the two collided.
-    #
-    # Two windows because the complication needs two readings, not because two
-    # balance better than one. DATE is where the cycle stands; LEAP is the
-    # four-year position, and it is the whole difference between a perpetual
-    # calendar and an annual one - drop it and the mechanism forgets, which is
-    # the one thing this instrument is named against. A second aperture opened
-    # only for symmetry would be a part that speaks because the dial looks
-    # better with it, which le-conseil.md rules out for members and the same
-    # reasoning covers parts.
+    # Both undriven. The train emits no date, and a window showing nothing is
+    # self-evidently undriven in a way a blank subdial is not.
     if detailed:
         owner = esc(owner_of(anatomy, "perpetual calendar"))
-        for seat, field in (("1.5", "DATE"), ("10.5", "LEAP")):
-            wx, wy = polar(cx, cy, size * 0.170, seat)
-            add(f'<text x="{wx:.1f}" y="{wy - 17:.1f}" text-anchor="middle" '
-                f'fill="{INK["dim"]}" font-size="8" '
-                f'font-family="ui-monospace,monospace" letter-spacing="1.5" '
-                f'opacity="0.85">{field}</text>')
-            add(f'<rect x="{wx - 25:.1f}" y="{wy - 11:.1f}" width="50" height="22" '
-                f'rx="3" fill="#0d1116" stroke="{INK["edge"]}" stroke-width="2"/>')
-            add(f'<text x="{wx:.1f}" y="{wy + 3.5:.1f}" text-anchor="middle" '
-                f'fill="{INK["held"]}" font-size="8" '
-                f'font-family="ui-monospace,monospace" letter-spacing="1">'
-                f'UNDRIVEN</text>')
-            add(f'<text x="{wx:.1f}" y="{wy + 22:.1f}" text-anchor="middle" '
-                f'fill="{INK["dim"]}" font-size="8" '
-                f'font-family="ui-monospace,monospace" letter-spacing="1">'
-                f'{owner}</text>')
+
+        kx, ky = polar(cx, cy, size * 0.138, "10.5")
+        kr = size * 0.040
+        add(f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="{kr:.1f}" fill="#12171d" '
+            f'stroke="{INK["edge"]}" stroke-width="2.5"/>')
+        add(f'<text x="{kx:.1f}" y="{ky-11:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="9" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1.5">LEAP</text>')
+        add(f'<text x="{kx:.1f}" y="{ky+1:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="7" font-family="ui-monospace,monospace" '
+            f'letter-spacing="0.5" opacity="0.85">{owner}</text>')
+        add(f'<text x="{kx:.1f}" y="{ky+13:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="7" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1">UNDRIVEN</text>')
+
+        wx, wy = cx, cy - size * 0.048
+        add(f'<text x="{wx:.1f}" y="{wy - 17:.1f}" text-anchor="middle" '
+            f'fill="{INK["dim"]}" font-size="8" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1.5" opacity="0.85">DATE</text>')
+        add(f'<rect x="{wx - 23:.1f}" y="{wy - 11:.1f}" width="46" height="22" '
+            f'rx="3" fill="#0d1116" stroke="{INK["edge"]}" stroke-width="2"/>')
+        add(f'<text x="{wx:.1f}" y="{wy + 3.5:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="8" font-family="ui-monospace,monospace" '
+            f'letter-spacing="1">UNDRIVEN</text>')
 
     # --- the hand ---------------------------------------------------------
     ranked = [c.member.position for c in trace.admitted()
