@@ -29,6 +29,8 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 | **Barrel** | Le Barillet | The fitted model. Stores what the crown winds. Power reserve = context window. |
 | **Going train** | Le Rouage | Carries force to the escapement and distributes the result. Decides nothing. |
 | **Escapement** | Le Sas | Internal, unseen, regulates release. Not a member. |
+| **Column wheel** | La Roue à Colonnes | Carries what members concluded and routes the consequence. Holds state, decides nothing. Not a member. |
+| **Brake** | Le Frein | What Le Renégat's Archive or Release engages. Never stops the crown. |
 | **Perpetual calendar** | Le Continuant | The long arc, and the only part that outlives a barrel. Stops, and it loses its place. |
 | **Hands** | — | The answer. Deliberately no one. |
 
@@ -128,11 +130,15 @@ The three registers predate the split and carry gate blocks prepended above thei
 
 ## Panel Limits
 
-**Two to four members convene at once.**
+**Two to four members convene at once — by default.**
 
 One is the common case. Most work convenes none of them visibly.
 
 A member appears only when it changes the answer. If a member's output would match ATLAS unaided, it does not convene.
+
+**The cap is a default, not an absolute.** A genuinely complex turn may need five, and a turn that needs five is not theatre. Widening is therefore allowed but never automatic: it takes the same explicit authorization Le Fripon's engagement takes, and the widening is recorded in the trace. An unauthorized fifth member is still held. **Theatre cannot widen itself**, which is the property the cap was actually protecting — not the number four.
+
+Widening only ever goes up. A caller cannot narrow the ring below the default, because that would be a way to suppress a member the gates admitted.
 
 **Every register lit at once is an error state, not a climax.** It means the gate failed to discriminate. Le Sas reports it as a routing failure.
 
@@ -209,7 +215,7 @@ The council is meant to be legible as an instrument. Each state corresponds to r
 | **Consulted** | Weighed internally, not surfaced. |
 | **Active** | Gate fired, core loaded. |
 | **Sealed** | Le Fripon, unauthorized. Locked rather than merely inactive. |
-| **Dissent** | Le Renégat returning Reduce, Archive, or Release. |
+| **Dissent** | Le Renégat returning Archive or Release. Emitted by La Roue à Colonnes, which also engages Le Frein. |
 
 **Absence is signal.** Suppressed members are not named and not listed as absent. The dark position carries the information.
 

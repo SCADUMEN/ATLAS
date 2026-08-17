@@ -20,6 +20,7 @@ from rouage import (
     admit_proposals,
     evaluate,
     git_evidence,
+    roue_a_colonnes,
     fold,
     load_core,
     load_ring,
@@ -370,6 +371,97 @@ class EvidenceNarrowsTheGap(unittest.TestCase):
         verify = git_evidence()
         self.assertTrue(verify("HEAD"))
         self.assertFalse(verify("0000000000000000000000000000000000000000"))
+
+
+class TheColumnWheel(unittest.TestCase):
+    """La roue a colonnes: verdicts, dissent, and le frein.
+
+    The train could represent whether a member convened but never what it
+    concluded. le-conseil.md names two standing rules that override ordering
+    and only one - the Fripon seal - was enforced anywhere.
+    """
+
+    UTT = "preserve this, map this, security check, argue against this"
+
+    def setUp(self):
+        self.ring = load_ring()
+
+    def test_halting_verdict_marks_dissent(self):
+        t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Archive")])
+        seat = next(c for c in t.candidates if c.member.position == "06")
+        self.assertEqual(seat.state, "dissent")
+
+    def test_halting_verdict_engages_the_brake(self):
+        t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Release")])
+        self.assertTrue(t.halted)
+        self.assertTrue(any("brake engaged" in f for f in t.failures))
+
+    def test_reduce_is_a_verdict_but_does_not_halt(self):
+        t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Reduce")])
+        self.assertEqual(t.verdicts, [("Le Renégat", "Reduce")])
+        self.assertEqual(t.halted, [])
+
+    def test_the_brake_never_stops_the_crown(self):
+        # Precedence #1: evidence loss cannot be undone. A brake that can stop
+        # preservation is a brake that can lose the archive.
+        t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Archive")])
+        crown = next(c for c in t.candidates if c.member.position == "crown")
+        self.assertEqual(crown.state, "active")
+        self.assertNotIn("Le Sauvegarder", t.halted)
+
+    def test_the_dissenter_stays_lit(self):
+        # Otherwise the halt erases its own cause from the dial.
+        t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Archive")])
+        self.assertNotIn("Le Renégat", t.halted)
+
+    def test_standing_witness_is_not_a_field_operator(self):
+        t = route(self.ring, self.UTT, verdicts=[("Le Renégat", "Archive")])
+        sceptique = next(c for c in t.candidates if c.member.position == "01")
+        self.assertEqual(sceptique.state, "active")
+
+    def test_verdict_from_a_member_that_did_not_convene_is_rejected(self):
+        t = route(self.ring, "rename this file", verdicts=[("Le Renégat", "Archive")])
+        self.assertEqual(t.verdicts, [])
+        self.assertTrue(any("did not convene" in f for f in t.failures))
+
+    def test_unknown_member_verdict_is_rejected(self):
+        t = route(self.ring, self.UTT, verdicts=[("Le Fantome", "Archive")])
+        self.assertTrue(any("unknown member" in f for f in t.failures))
+
+    def test_no_verdicts_leaves_the_stage_out_entirely(self):
+        t = route(self.ring, self.UTT)
+        self.assertNotIn("VERDICT->colonnes", t.stages)
+        self.assertEqual(t.verdicts, [])
+
+
+class TheCapIsADefaultNotAnAbsolute(unittest.TestCase):
+    """Complex turns may need more than four. Theatre may not widen itself."""
+
+    UTT = "preserve this, map this, security check, argue against this, red team this"
+
+    def setUp(self):
+        self.ring = load_ring()
+
+    def test_unauthorized_fifth_member_is_still_held(self):
+        t = route(self.ring, self.UTT, armed="Le Fripon")
+        counted = [c for c in t.candidates
+                   if not c.member.standing and c.member.position != "crown"]
+        self.assertTrue(any(c.state == "held" for c in counted))
+
+    def test_authorization_widens_the_cap_and_is_recorded(self):
+        t = route(self.ring, self.UTT, armed="Le Fripon", authorize_cap=6)
+        self.assertTrue(any("cap widened by authorization" in f
+                            for f in t.failures))
+        over = [c for c in t.candidates if "over cap" in c.note]
+        self.assertEqual(over, [])
+
+    def test_authorization_below_the_default_does_not_narrow_it(self):
+        # Widening is the only direction. A caller cannot quietly shrink the
+        # ring to suppress a member the gates admitted.
+        wide = route(self.ring, self.UTT, armed="Le Fripon")
+        narrow = route(self.ring, self.UTT, armed="Le Fripon", authorize_cap=1)
+        self.assertEqual([c.state for c in wide.candidates],
+                         [c.state for c in narrow.candidates])
 
 
 class Precedence(unittest.TestCase):

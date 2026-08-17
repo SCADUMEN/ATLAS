@@ -38,6 +38,17 @@ from typing import Union
 # module-level expression and PEP 604 unions need 3.10. The repo runs on 3.9.
 Proposal = Union[tuple[str, str], tuple[str, str, str]]
 
+# What a member concluded, as opposed to whether it convened. The train had no
+# representation of this at all, which is why three separate things could not
+# work: Le Renegat's halt, the Dissent display state, and Consulted.
+Verdict = tuple[str, str]        # (member_name, verdict)
+
+# Le Renegat's verdicts, from le-conseil.md. Only two of the three halt.
+HALTING = ("archive", "release")
+
+# le-conseil.md Display States. 'dark' is absence and never stored.
+STATES = ("consulted", "active", "sealed", "held", "dissent")
+
 REPO = Path(__file__).resolve().parent.parent
 CONSEIL = REPO / "overlays" / "le-conseil.md"
 
@@ -112,7 +123,10 @@ CROWN_ROW = re.compile(
 )
 PRECEDENCE_SECTION = re.compile(r"^##\s+Precedence\s*$(.*?)(?=^##\s|\Z)", re.M | re.S)
 PRECEDENCE_ITEM = re.compile(r"^\d+\.\s+\*\*([^*]+)\*\*", re.M)
-CAP_PHRASE = re.compile(r"\*\*(\w+) to (\w+) members convene at once\.\*\*")
+# Trailing text inside the bold is tolerated so doctrine can qualify the
+# sentence - "...convene at once - by default." - without the parser
+# losing the numbers. The two number words stay the only thing read.
+CAP_PHRASE = re.compile(r"\*\*(\w+) to (\w+) members convene at once[^*]*\*\*")
 
 NUMBER_WORDS = {
     "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
@@ -230,6 +244,9 @@ class Trace:
     candidates: list[Candidate] = field(default_factory=list)
     failures: list[str] = field(default_factory=list)
     armed: str | None = None
+    verdicts: list[Verdict] = field(default_factory=list)
+    halted: list[str] = field(default_factory=list)
+    cap_authorized: int | None = None
 
     def admitted(self) -> list[Candidate]:
         return [c for c in self.candidates if c.state == "active"]
@@ -315,19 +332,120 @@ def meter(ring: Ring, candidates: list[Candidate], trace: Trace) -> list[Candida
             "discrimination failure in the gates"
         )
 
+    # The cap is a default, not an absolute. le-conseil.md's real target is
+    # theatre - "every register lit at once is an error state, not a climax" -
+    # and a complex turn that genuinely needs five members is not theatre.
+    # So widening is allowed but never automatic: it takes the same explicit
+    # authorization Le Fripon's engagement takes, and it is recorded. An
+    # unauthorized fifth member is still held. Theatre cannot widen itself.
+    effective = ring.cap
+    if trace.cap_authorized is not None and trace.cap_authorized > ring.cap:
+        effective = trace.cap_authorized
+        trace.failures.append(
+            f"cap widened by authorization: {ring.cap} -> {effective}"
+        )
+
     counted = [c for c in candidates if not c.member.standing and c.state == "active"]
 
     for i, c in enumerate(counted):
-        if i >= ring.cap:
+        if i >= effective:
             c.state = "held"
-            c.note = f"over cap ({len(counted)} convened, cap {ring.cap})"
+            c.note = f"over cap ({len(counted)} convened, cap {effective})"
 
     over = sum(1 for c in counted if c.state == "held")
     if over:
         trace.failures.append(
-            f"over-cap: {len(counted)} convened, cap {ring.cap}, {over} held"
+            f"over-cap: {len(counted)} convened, cap {effective}, {over} held"
         )
     return candidates
+
+
+def roue_a_colonnes(
+    ring: Ring,
+    trace: Trace,
+    verdicts: list[Verdict],
+) -> None:
+    """LA ROUE A COLONNES - the column wheel. Stage 8b, between METER and
+    RELEASE. Records what members concluded and routes the consequence.
+
+    A chronograph's column wheel is a state machine: each press rotates it and
+    its columns route the levers. It holds which state the movement is in. It
+    decides nothing, which is the whole reason this is the right part - the
+    train had no representation of a member's *conclusion*, only of whether it
+    convened, and three things were impossible as a result: Le Renegat's halt,
+    the Dissent display state, and Consulted.
+
+    **This is not a judge.** le-conseil.md: "No member issues a decision. The
+    movement reads out; L'Operateur decides." A verdict is carried here, never
+    formed here. And it is a component rather than any member's complication
+    for the reason le-sas.md gives about the latch: a verdict channel owned by
+    Le Renegat would be a channel with a stake in what passes through it.
+
+    Two consequences, both mechanical:
+
+      - Any member returning a verdict is marked `dissent` if that verdict
+        halts, so the dial can show the state le-conseil.md already names.
+      - **Le frein, the brake.** le-conseil.md Precedence: "Le Renegat's
+        verdict of Archive or Release halts the field operators until
+        L'Operateur accepts or overrides it." That is one of exactly two
+        standing rules that override ordering; the other - Le Fripon never
+        self-activating - has been enforced in code since the seal. This one
+        was not enforced anywhere, so the manifest promised a halt that could
+        not happen. It happens now.
+
+    A verdict from a member that did not convene is rejected: concluding
+    something requires having been in the room.
+    """
+    by_pos = {c.member.position: c for c in trace.candidates}
+    halting_member: str | None = None
+
+    for name, verdict in verdicts:
+        member = ring.by_name(name)
+        if member is None:
+            trace.failures.append(f"rejected verdict: unknown member {name!r}")
+            continue
+
+        seat = by_pos.get(member.position)
+        if seat is None or seat.state not in ("active", "consulted"):
+            trace.failures.append(
+                f"rejected verdict: {member.name} did not convene"
+            )
+            continue
+
+        trace.verdicts.append((member.name, verdict))
+        if verdict.strip().casefold() in HALTING:
+            seat.state = "dissent"
+            seat.note = f"verdict: {verdict}"
+            halting_member = member.name
+
+    if halting_member is None:
+        return
+
+    # The brake. Field operators are the hours that go and do things, so three
+    # things are exempt and each for its own reason:
+    #
+    #   - the standing witness, who is not a field operator;
+    #   - the dissenter itself, which must stay lit or the halt would erase
+    #     its own cause from the dial;
+    #   - **the crown.** Halting Le Sauvegarder would make a halt suspend
+    #     preservation, which is exactly backwards. He is precedence #1
+    #     because evidence loss cannot be undone, and le-conseil.md is explicit
+    #     that there is no path around him. A brake that can stop the crown is
+    #     a brake that can lose the archive.
+    for c in trace.candidates:
+        if (c.member.standing
+                or c.member.position == "crown"
+                or c.member.name == halting_member):
+            continue
+        if c.state == "active":
+            c.state = "held"
+            c.note = f"halted by {halting_member}"
+            trace.halted.append(c.member.name)
+
+    trace.failures.append(
+        f"brake engaged: {halting_member} halted "
+        f"{len(trace.halted)} field operator(s) - awaiting L'Operateur"
+    )
 
 
 def route(
@@ -337,6 +455,8 @@ def route(
     proposals: list[Proposal] | None = None,
     verify: Callable[[str], bool] | None = None,
     require_evidence: bool = False,
+    verdicts: list[Verdict] | None = None,
+    authorize_cap: int | None = None,
 ) -> Trace:
     """One turn of the train. Pure: same ring + same input, same trace.
 
@@ -349,7 +469,8 @@ def route(
     They are recorded as stages the train reached and handed off, never as
     stages the train performed.
     """
-    trace = Trace(utterance=utterance, armed=armed)
+    trace = Trace(utterance=utterance, armed=armed,
+                  cap_authorized=authorize_cap)
 
     trace.stages.append("WIND")
     trace.stages.append("EVALUATE")
@@ -371,6 +492,10 @@ def route(
 
     trace.stages.append("COLLECT->barrel")
     trace.stages.append("TIER->01")
+    if verdicts:
+        roue_a_colonnes(ring, trace, verdicts)
+        trace.stages.append("VERDICT->colonnes")
+
     trace.stages.append("RELEASE->sas")
     trace.stages.append("DISTRIBUTE")
     trace.stages.append("RECORD->crown")

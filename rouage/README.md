@@ -19,6 +19,7 @@ python3 -m unittest discover rouage -v
 | 5 LOAD | **Built** — cores only, asserted. |
 | 6 COLLECT | Delegated. The barrel generates; the train cannot. |
 | 7 TIER | Delegated to Le Sceptique. A person, by design. |
+| 8a VERDICT | **Built** — la roue à colonnes: verdicts, dissent, le frein. |
 | 8 RELEASE | **Built** — Le Sas conditions, minus the tier check, which needs 6–7. |
 | 9 DISTRIBUTE | **Built** — emits the trace. |
 | 10 RECORD | Recorded. Archive I/O. |
@@ -64,6 +65,8 @@ artifact for meaning and produces the `(member, citation)` pairs to hand in.
 ## What The Build Found In The Doctrine
 
 Two things a reader would not catch:
+
+**The cap is a default, not an absolute** — decided after the fact, and the doctrine now says so. Widening takes the same explicit authorization Le Fripon's engagement takes, and is recorded. An unauthorized fifth member is still held: theatre cannot widen itself, which is the property the cap was protecting rather than the number four. Narrowing is refused outright, since that would be a way to suppress a member the gates admitted.
 
 **The cap has no enforceable floor.** `le-conseil.md` says "Two to four members
 convene at once," then "One is the common case." Only the ceiling is enforceable;

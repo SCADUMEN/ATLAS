@@ -45,6 +45,25 @@ Three limits, recorded so they are not discovered later as surprises:
 The barrel need not commit to cite. `git add` then `git write-tree` addresses exactly the staged state; `git hash-object -w` addresses one file. The `-w` is load-bearing — without it the id is computed but nothing is written, so it looks correct and does not resolve. An unwritten object is not evidence: there is nothing for anyone to go and read later.
 
 
+### La Roue À Colonnes — The Verdict Channel
+
+The train could represent **whether a member convened**. It had no representation of **what a member concluded**. Three things were impossible as a result, and they looked unrelated until the cause was named: Le Renégat's halt, the `Dissent` display state, and `Consulted`.
+
+`le-conseil.md` Precedence names exactly two standing rules that override ordering. *Le Fripon never self-activates* has been enforced in code since the seal. *Le Renégat's verdict of Archive or Release halts the field operators* was enforced nowhere — so the manifest promised a halt that could not happen. It happens now.
+
+**The column wheel is the right part because it decides nothing.** In a chronograph it is a state machine: each press rotates it, its columns route the levers, and it holds which state the movement is in. A verdict is carried here, never formed here. `le-conseil.md`: *"No member issues a decision. The movement reads out; L'Opérateur decides."*
+
+It is a component and not any member's complication, for the reason `le-sas.md` gives about the latch: a verdict channel owned by Le Renégat would be a channel with a stake in what passes through it. That is the same failure that forced Le Sas apart from Le Sceptique.
+
+**Le Frein** — the brake — is what a halting verdict engages. Three things are exempt, each for its own reason:
+
+- the standing witness, who is not a field operator;
+- the dissenter itself, which must stay lit or the halt would erase its own cause from the dial;
+- **the crown.** Halting Le Sauvegarder would make a halt suspend preservation, which is backwards. He is precedence #1 because evidence loss cannot be undone. A brake that can stop the crown is a brake that can lose the archive.
+
+A verdict from a member that did not convene is rejected. Concluding something requires having been in the room.
+
+
 ---
 
 ## The Cycle
