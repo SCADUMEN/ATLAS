@@ -130,11 +130,20 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
    the two-column notes all assume a long edge. Rather than reflow it into a
    column that no longer reads as a drawing, ask for the device to be turned.
    It is escapable on purpose - a hard orientation lock strands anyone whose
-   rotation is locked, which is a real accessibility failure, not an edge case. */
+   rotation is locked, which is a real accessibility failure, not an edge case.
+
+   The pointer test is load-bearing, not belt-and-braces. 'orientation:
+   portrait' is true of ANY viewport taller than it is wide, so the first
+   version of this gate fired when someone dragged a desktop preview panel
+   narrower to make room for something beside it - the drawing vanished behind
+   a card telling them to rotate a device they were not holding, which reads as
+   the page having broken. A phone is identified by its input, not its aspect
+   ratio: 'pointer: coarse' is the part of this query that actually means
+   touch. The width bound only keeps tablets held upright out of it. */
 .gate { display: none; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap; }
-@media (orientation: portrait) and (max-width: 900px) {
+@media (orientation: portrait) and (max-width: 820px) and (pointer: coarse) {
   .gate { display: flex; position: fixed; inset: 0; z-index: 50;
     align-items: center; justify-content: center; padding: 32px;
     background-color: var(--sheet);
