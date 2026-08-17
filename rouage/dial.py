@@ -752,18 +752,27 @@ REGS = ('<span class="reg tl"></span><span class="reg tr"></span>'
         '<span class="reg bl"></span><span class="reg br"></span>')
 
 
-def render(trace: Trace) -> str:
+def render(trace: Trace, standalone: bool = True) -> str:
+    """The object record.
+
+    standalone=True gives a complete document. standalone=False gives the same
+    page as a fragment - title, style and content, with no doctype, html, head
+    or body - for hosts that supply their own document shell. One source either
+    way, because two copies of this page would drift the way two copies of the
+    anatomy table would.
+    """
     ring = load_ring()
     anatomy = load_anatomy()
     spec = "".join(
         f'<figure>{dial_svg(route(ring, u, a), 240, detailed=False)}'
         f'<figcaption>{cap}</figcaption></figure>' for u, a, cap in SPECIMENS)
-    return f"""<!doctype html>
+    head = ("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Le Cadran &#183; Object Record &#183; Forgotten Industries</title>
-<style>{CSS}</style></head>
-<body>
+<title>Le Cadran</title>
+<style>%s</style></head>
+<body>""" % CSS) if standalone else f"<title>Le Cadran</title>\n<style>{CSS}</style>"
+    return f"""{head}
 <input type="checkbox" id="portrait-ok" class="vh">
 <div class="gate"><div class="gate-inner">
   <div class="mark">Forgotten Industries</div>
@@ -870,7 +879,7 @@ def render(trace: Trace) -> str:
     <span>Forgotten Industries &#183; ATLAS &#183; Le Conseil</span>
     <span>A thing documented is a thing not yet lost.</span>
   </footer>
-</div></body></html>"""
+</div>{"</body></html>" if standalone else ""}"""
 
 
 def main() -> None:
