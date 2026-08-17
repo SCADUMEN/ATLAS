@@ -62,6 +62,7 @@ class Member:
     phrases: tuple[str, ...] = ()
     standing: bool = False   # runs every turn, uncapped
     sealed: bool = False     # never self-activates; requires arming
+    bullets: tuple[str, ...] = ()  # the semantic half of the gate, verbatim
 
     def matches(self, utterance: str) -> str | None:
         """Return the phrase that fired, or None. Literal containment only."""
@@ -110,14 +111,21 @@ NUMBER_WORDS = {
 }
 
 
-def parse_activation(path: Path) -> tuple[tuple[str, ...], bool, bool]:
-    """Extract (phrases, standing, sealed) from a subroutine's gate block.
+def parse_activation(
+    path: Path,
+) -> tuple[tuple[str, ...], bool, bool, tuple[str, ...]]:
+    """Extract (phrases, standing, sealed, bullets) from a gate block.
 
     Reads only the '### Activation' (or '### Standing Activation') section
     inside OPERATIONAL CORE. The quoted strings in that section are the
-    machine-matchable half of the gate. The prose bullets beneath them are
-    the semantic half and are deliberately not read here - matching them
-    would require interpretation, which le-rouage.md prohibits.
+    machine-matchable half of the gate, and evaluate() matches them.
+
+    The prose bullets beneath them are the semantic half - "an artifact
+    shows modification whose cause is unknown" - and are not matched here;
+    doing that would require interpretation, which le-rouage.md prohibits
+    the train from doing. They are still extracted, verbatim, because
+    admit_proposals() needs something to check a barrel's citation against
+    without re-reading the file for meaning itself.
     """
     text = path.read_text(encoding="utf-8")
 
@@ -135,7 +143,9 @@ def parse_activation(path: Path) -> tuple[tuple[str, ...], bool, bool]:
     phrases = tuple(dict.fromkeys(re.findall(r'"([^"]+)"', section)))
     standing = "**Always on.**" in section
     sealed = "does not self-activate" in section
-    return phrases, standing, sealed
+    bullets = tuple(m.group(1).strip()
+                     for m in re.finditer(r"^-\s+(.+)$", section, re.M))
+    return phrases, standing, sealed, bullets
 
 
 def load_ring(conseil: Path = CONSEIL) -> Ring:
@@ -148,9 +158,9 @@ def load_ring(conseil: Path = CONSEIL) -> Ring:
 
     for position, name, rel in rows:
         path = REPO / rel
-        phrases, standing, sealed = parse_activation(path)
+        phrases, standing, sealed, bullets = parse_activation(path)
         members.append(Member(position, name.strip(), path,
-                              phrases, standing, sealed))
+                              phrases, standing, sealed, bullets))
 
     # Scoped to the '## Precedence' section. The numbered list under
     # 'Adding Or Removing A Member' is membership criteria, not a ladder,
@@ -310,8 +320,18 @@ def meter(ring: Ring, candidates: list[Candidate], trace: Trace) -> list[Candida
     return candidates
 
 
-def route(ring: Ring, utterance: str, armed: str | None = None) -> Trace:
+def route(
+    ring: Ring,
+    utterance: str,
+    armed: str | None = None,
+    proposals: list[tuple[str, str]] | None = None,
+) -> Trace:
     """One turn of the train. Pure: same ring + same input, same trace.
+
+    `proposals` is the barrel's semantic-half output for this turn - see
+    admit_proposals() for what it is and how it is admitted. Optional and
+    defaults to none, so a caller with no barrel (or a barrel that found
+    nothing) still gets exactly the old, literal-only behaviour.
 
     Stages 6 (COLLECT) and 7 (TIER) are the barrel's and Le Sceptique's.
     They are recorded as stages the train reached and handed off, never as
@@ -322,6 +342,9 @@ def route(ring: Ring, utterance: str, armed: str | None = None) -> Trace:
     trace.stages.append("WIND")
     trace.stages.append("EVALUATE")
     candidates = evaluate(ring, utterance, armed)
+    trace.candidates = candidates
+    if proposals:
+        candidates = candidates + admit_proposals(ring, trace, proposals)
 
     trace.stages.append("ORDER")
     candidates = order(ring, candidates)
@@ -364,22 +387,71 @@ def admit_proposals(
     `proposals` is a list of (member_name, citation) where citation is the
     activation bullet the barrel claims fired.
 
-    TODO(matthew): decide the admission policy. This is the trust boundary of
-    the whole instrument and it is genuinely your call:
+    Decided (L'Opérateur, 2026-08-16): **Cited**. Of the three options this
+    docstring used to carry -
 
       (a) Permissive  - admit any proposal; the cap and seal are the only
-                        defence. Most gates fire. Risks theatre, which is
-                        exactly what Le Sas exists to hold.
+                        defence. Risks theatre.
       (b) Cited       - reject any proposal whose citation is not a verbatim
-                        line in that member's Activation section. Auditable:
-                        the trace shows which bullet fired. Costs nothing at
-                        runtime and is still a string match, so the train
-                        stays deterministic.
-      (c) Strict      - admit nothing. Only named invocation fires a mode.
-                        Maximum honesty, but eleven of thirteen gates go
-                        permanently dark and the automatic half of every
-                        activation block becomes decoration.
+                        line in that member's Activation section. Auditable
+                        and still a string match, so the train stays
+                        deterministic.
+      (c) Strict      - admit nothing automatically. Maximum honesty, but
+                        eleven of thirteen gates go permanently dark.
+
+    - (b) is what is built. A proposal is admitted only if `citation`,
+    stripped, equals one of `member.bullets` exactly: the same prose lines
+    parse_activation() already pulled out of the doctrine at load time, so
+    there is no second copy of the gate text to drift from the file. This
+    is still a literal match, just against a different field than
+    evaluate() checks, so "the train decides nothing" survives - whatever
+    read the artifact for meaning and decided the bullet applied was the
+    barrel, upstream of here.
+
+    A citation that does not match verbatim is a rejected proposal, not a
+    held candidate: it never reaches order() or meter(), because the cap
+    and the seal are for things that actually convened. The rejection is
+    recorded to trace.failures instead - a barrel that keeps citing text
+    that is not there is itself a discrimination failure in the gates, the
+    same category evaluate() already reports as full-ring and over-cap.
+
+    A member already present in trace.candidates (named, or standing) is
+    skipped rather than duplicated - one convened member should occupy one
+    cap slot, not one per route that found it.
+
+    A correctly cited sealed member (Le Fripon) is still not admitted
+    unless `trace.armed` names him. A true bullet says Matthew might want
+    to invoke him, never that he has - the same distinction evaluate()
+    already draws for a named sealed match.
 
     Return the candidates to merge into trace.candidates before order().
     """
-    raise NotImplementedError("admission policy undecided - see TODO above")
+    admitted: list[Candidate] = []
+    seen = {fold(c.member.name) for c in trace.candidates}
+
+    for name, citation in proposals:
+        member = ring.by_name(name)
+        if member is None:
+            trace.failures.append(f"rejected proposal: unknown member {name!r}")
+            continue
+
+        folded_name = fold(member.name)
+        if folded_name in seen:
+            continue
+
+        cited = citation.strip()
+        if cited not in member.bullets:
+            trace.failures.append(
+                f"rejected proposal: {member.name} cited text not found "
+                f"verbatim in its Activation section: {citation!r}"
+            )
+            continue
+
+        seen.add(folded_name)
+        if member.sealed and fold(trace.armed or "") != folded_name:
+            admitted.append(Candidate(member, f"proposed:{cited}", "sealed",
+                                       "proposed without authorization"))
+        else:
+            admitted.append(Candidate(member, f"proposed:{cited}"))
+
+    return admitted

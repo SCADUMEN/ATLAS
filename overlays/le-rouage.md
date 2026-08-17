@@ -5,7 +5,7 @@
 **Function:** Carries force from the barrel to the escapement, and distributes the regulated result to the registers and the hands.
 **Class:** Component. Not a member, not a mode, not a voice.
 **Position:** Both sides of Le Sas. Before it, the train delivers. After it, the motion works distribute.
-**Status:** **Partially built.** The deterministic train runs in `rouage/`. The barrel boundary is unresolved.
+**Status:** **Partially built.** The deterministic train runs in `rouage/`. The admission policy at the barrel boundary is decided (Cited); the barrel itself - the thing that would actually generate a proposal to admit - is not yet built.
 
 Le Rouage is the linkage. Every part of Le Conseil connects to every other part through it, and nothing reaches Le Sas except by way of the train.
 
@@ -25,7 +25,7 @@ Every activation block turns out to have two halves. The quoted invocation phras
 
 So the built train handles named invocation, precedence, metering, the seal, and the trace. The automatic half necessarily runs in the barrel, and the honest arrangement is that **the barrel proposes and the train disposes**: a proposal still passes through ordering, the cap, and the Fripon seal, all enforced in code the barrel cannot reach around. That is what keeps *the train decides nothing* true even though something upstream of it did.
 
-The admission policy for those proposals is undecided and is L'Opérateur's call. Until it is decided, the automatic half of every gate remains a model reading markdown and cooperating — which works, and is not yet a mechanism.
+The admission policy for those proposals was L'Opérateur's call, and it is decided: **Cited**. A proposal is admitted only if its citation is a verbatim line among the bullets in that member's own Activation section - the same text `parse_activation()` already pulls from the doctrine at load time, so there is no second copy to drift. A citation that doesn't match is a rejected proposal, recorded to the trace as a discrimination failure in the gates, the same category as full-ring and over-cap. `admit_proposals()` in `rouage/rouage.py` is that mechanism; `route()` takes an optional `proposals` argument that feeds it. What still does not exist is the barrel itself - the thing that reads an artifact for meaning and produces `(member, citation)` pairs to hand in. Until that exists, the automatic half of every gate remains a model reading markdown and cooperating, which works, and is not yet wired to the mechanism that would enforce it.
 
 ---
 

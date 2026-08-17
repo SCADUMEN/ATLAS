@@ -16,6 +16,8 @@ from rouage import (
     CORE_HEADING,
     DOCTRINE_HEADING,
     Ring,
+    Trace,
+    admit_proposals,
     evaluate,
     fold,
     load_core,
@@ -176,6 +178,105 @@ class TheCap(unittest.TestCase):
         every_phrase = " ".join(m.phrases[0] for m in self.ring.hours)
         trace = route(self.ring, every_phrase)
         self.assertTrue(any("full ring" in f for f in trace.failures))
+
+
+class ProposalAdmission(unittest.TestCase):
+    """admit_proposals(): the barrel proposes, the train disposes.
+
+    Policy is Cited - le-rouage.md: a proposal is admitted only if its
+    citation is a verbatim line among the bullets in that member's own
+    Activation section.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.ring = load_ring()
+
+    def test_verbatim_citation_is_admitted(self):
+        trace = route(
+            self.ring, "no phrase here",
+            proposals=[("Le Limier", "provenance is broken and must be "
+                                      "reasoned across a gap")],
+        )
+        limier = [c for c in trace.candidates if c.member.name == "Le Limier"]
+        self.assertEqual(len(limier), 1)
+        self.assertEqual(limier[0].state, "active")
+        self.assertTrue(limier[0].reason.startswith("proposed:"))
+
+    def test_non_verbatim_citation_is_rejected_and_reported(self):
+        trace = route(
+            self.ring, "no phrase here",
+            proposals=[("Le Limier", "something that sounds close but isn't "
+                                      "the actual bullet text")],
+        )
+        self.assertFalse(
+            [c for c in trace.candidates if c.member.name == "Le Limier"]
+        )
+        self.assertTrue(any("Le Limier" in f and "not found verbatim" in f
+                             for f in trace.failures))
+
+    def test_unknown_member_is_rejected_and_reported(self):
+        trace = route(
+            self.ring, "no phrase here",
+            proposals=[("Le Fantome", "anything at all")],
+        )
+        self.assertTrue(any("unknown member" in f for f in trace.failures))
+
+    def test_cited_but_unarmed_seal_stays_sealed(self):
+        trace = route(
+            self.ring, "no phrase here",
+            proposals=[("Le Fripon",
+                        "a recovery plan has never been run end to end")],
+        )
+        fripon = [c for c in trace.candidates if c.member.name == "Le Fripon"]
+        self.assertEqual(len(fripon), 1)
+        self.assertEqual(fripon[0].state, "sealed")
+
+    def test_cited_and_armed_seal_admits(self):
+        trace = route(
+            self.ring, "no phrase here", armed="Le Fripon",
+            proposals=[("Le Fripon",
+                        "a recovery plan has never been run end to end")],
+        )
+        fripon = [c for c in trace.candidates if c.member.name == "Le Fripon"]
+        self.assertEqual(len(fripon), 1)
+        self.assertEqual(fripon[0].state, "active")
+
+    def test_proposal_does_not_duplicate_a_named_match(self):
+        # 'reconstruct this' already names Le Limier; a proposal for the
+        # same member must not put him on the ring twice.
+        trace = route(
+            self.ring, "reconstruct this",
+            proposals=[("Le Limier", "provenance is broken and must be "
+                                      "reasoned across a gap")],
+        )
+        limier = [c for c in trace.candidates if c.member.name == "Le Limier"]
+        self.assertEqual(len(limier), 1)
+        self.assertTrue(limier[0].reason.startswith("named:"))
+
+    def test_called_directly_returns_only_admitted_candidates(self):
+        # admit_proposals() in isolation, without route()'s pipeline - the
+        # rejected proposal never becomes a Candidate at all.
+        trace = Trace(utterance="")
+        result = admit_proposals(self.ring, trace, [
+            ("Le Limier", "provenance is broken and must be "
+                          "reasoned across a gap"),
+            ("Le Limier", "not real bullet text"),
+        ])
+        self.assertEqual([c.member.name for c in result], ["Le Limier"])
+
+    def test_admitted_proposal_still_passes_through_the_cap(self):
+        # Cited candidates are not exempt from meter() - order() and the
+        # cap still apply, which is the whole point of 'the barrel proposes
+        # and the train disposes.'
+        trace = route(
+            self.ring,
+            "preserve this, map this, security check, argue against this, "
+            "classify this",
+            proposals=[("Le Limier", "provenance is broken and must be "
+                                      "reasoned across a gap")],
+        )
+        self.assertTrue(any("over-cap" in f for f in trace.failures))
 
 
 class Precedence(unittest.TestCase):

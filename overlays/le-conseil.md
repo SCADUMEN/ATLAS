@@ -34,7 +34,7 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 
 Full specifications: `overlays/le-barillet.md`, `overlays/le-rouage.md`, `overlays/le-sas.md`.
 
-**Le Rouage is half built.** The deterministic train — named invocation, precedence, the cap, the seal, the trace — runs in `rouage/`. The automatic half of each gate cannot be matched without interpretation, so it stays with the barrel, proposing into a train that still orders, caps, and seals it. The admission policy for those proposals is undecided.
+**Le Rouage is half built.** The deterministic train — named invocation, precedence, the cap, the seal, the trace — runs in `rouage/`. The automatic half of each gate cannot be matched without interpretation, so it stays with the barrel, proposing into a train that still orders, caps, and seals it. The admission policy for those proposals is decided (Cited — a proposal is admitted only on a verbatim citation); the barrel that would generate proposals to admit does not exist yet.
 
 **Le Barillet is the only part not under version control.** Everything else here is owned and durable. The barrel is fitted, finite, and replaceable — which is precisely why the movement was built to outlive any particular one.
 

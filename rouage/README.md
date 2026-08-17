@@ -8,7 +8,7 @@ python3 -m unittest discover rouage -v
 
 ## Status
 
-**Partially built.** The deterministic train runs. The barrel boundary is unresolved.
+**Partially built.** The deterministic train runs. The admission policy at the barrel boundary is decided; the barrel that would use it does not exist yet.
 
 | Stage | State |
 |---|---|
@@ -47,9 +47,19 @@ the train disposes**: proposals still pass through `order()`, `meter()`, and the
 Fripon seal downstream. "The train decides nothing" survives, because everything
 that constrains the outcome is enforced in code the barrel cannot reach around.
 
-`admit_proposals()` is the boundary and it is **unimplemented on purpose** — the
-admission policy is L'Opérateur's call, and it is the trust boundary of the whole
-instrument. Three options are written out in the docstring.
+`admit_proposals()` is the boundary, and the admission policy — L'Opérateur's
+call, the trust boundary of the whole instrument — is **decided: Cited**. A
+proposal is admitted only if its citation is a verbatim line among the bullets
+`parse_activation()` already extracted from that member's Activation section at
+load time. Anything else is a rejected proposal: it never reaches `order()` or
+`meter()`, and the rejection itself lands in `trace.failures` as a discrimination
+failure, the same category as full-ring and over-cap. `route()` takes an
+optional `proposals` argument that feeds straight into it — the two rejected
+options (Permissive, Strict) are still in the docstring as a record of why not.
+
+What is still missing is the barrel itself: nothing in this repo reads an
+artifact for meaning and produces the `(member, citation)` pairs to hand in.
+`admit_proposals()` is the mechanism a barrel would call; it is not the barrel.
 
 ## What The Build Found In The Doctrine
 
