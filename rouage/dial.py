@@ -64,12 +64,14 @@ INK = {
     "plate": "#14161f",
     "edge": "#2a2f42",
     "ink": "#e8ecff",
-    "dim": "#8b93b8",
+    "dim": "#ab9668",
     "cyan": "#35e6ff",
+    "amber": "#d9a04a",     # bezel furniture, not a state
+
     "active": "#3dff9e",     # matrix green
     "sealed": "#ffb43d",     # amber
-    "held": "#5f6a92",
-    "dark": "#242a42",
+    "held": "#7d6f52",
+    "dark": "#463a24",
     "dissent": "#ff4fd8",    # magenta
     "fault": "#ff5470",
 }
@@ -213,8 +215,8 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     for ang in (-135, -45, 45, 135):
         add(f'<g transform="rotate({ang} {cx:.1f} {cy:.1f})">'
             f'<rect x="{cx + r_case - 18:.1f}" y="{cy - 19:.1f}" '
-            f'width="56" height="36" rx="12" fill="#232838" '
-            f'stroke="#12151f" stroke-width="3"/></g>')
+            f'width="56" height="36" rx="12" fill="#2e271f" '
+            f'stroke="#171310" stroke-width="3"/></g>')
 
     # --- the crown and the two pushers, on the right flank ----------------
     # le-boitier.md's control table: crown at 3, guarded pusher above it,
@@ -247,7 +249,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     flank(0, "".join(crown))
 
     # --- the case ---------------------------------------------------------
-    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_case:.1f}" fill="#1b1f2e" '
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_case:.1f}" fill="#241f1a" '
         f'stroke="url(#brass)" stroke-width="5"/>')
 
     # --- the rotating bezel: ATLAS ---------------------------------------
@@ -266,16 +268,24 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_bezel_in:.1f}" '
         f'fill="#0f1220" stroke="#3d3320" stroke-width="2"/>')
 
+    # Bounded at each end. A scale that fades off into the plate at its inner
+    # edge reads as unfinished; two rules turn it into a chapter ring, which
+    # is what it is. Not hairlines - le-boitier.md rules those out.
+    scale_out = r_case - 12
+    scale_in = scale_out - 14
+    for rr_ in (scale_out, scale_in):
+        add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{rr_:.1f}" fill="none" '
+            f'stroke="{INK["amber"]}" stroke-width="1.6" opacity="0.5"/>')
+
     for m in range(60):    # the 60-minute scale
         a = math.radians(-90 + m * 6)
-        outer = r_case - 12
-        inner = outer - (14 if m % 5 == 0 else 8)
-        add(f'<line x1="{cx + outer*math.cos(a):.1f}" '
-            f'y1="{cy + outer*math.sin(a):.1f}" '
+        inner = scale_out - (14 if m % 5 == 0 else 8)
+        add(f'<line x1="{cx + scale_out*math.cos(a):.1f}" '
+            f'y1="{cy + scale_out*math.sin(a):.1f}" '
             f'x2="{cx + inner*math.cos(a):.1f}" '
             f'y2="{cy + inner*math.sin(a):.1f}" '
-            f'stroke="{INK["dim"]}" stroke-width="{3.5 if m % 5 == 0 else 2}" '
-            f'opacity="{0.95 if m % 5 == 0 else 0.55}"/>')
+            f'stroke="{INK["amber"]}" stroke-width="{3.5 if m % 5 == 0 else 2}" '
+            f'opacity="{0.95 if m % 5 == 0 else 0.6}"/>')
 
     if detailed:
         for m in (10, 20, 30, 40, 50):
@@ -286,8 +296,8 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
             nr = r_case - 36
             add(f'<text x="{cx + nr*math.cos(a):.1f}" '
                 f'y="{cy + nr*math.sin(a) + 5:.1f}" text-anchor="middle" '
-                f'fill="{INK["ink"]}" font-size="15" font-weight="500" '
-                f'opacity="0.9">{m}</text>')
+                f'fill="{INK["amber"]}" font-size="15" font-weight="500" '
+                f'opacity="0.95">{m}</text>')
 
     # The lume pip at zero. On a real bezel this is the only part that glows.
     add(f'<path d="M {cx:.1f} {cy - r_case + 8:.1f} '
