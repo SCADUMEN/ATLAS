@@ -558,8 +558,32 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     # stand-in for a mechanism that did not exist.
     ranked = [c.member.position for c in trace.admitted()
               if c.member.position != "crown"]
+    # The hour hand: highest precedence still standing. A chronograph's running
+    # hands and its chrono hand measure different things, and so do these. The
+    # route is a SEQUENCE - who goes first. Precedence is IRREVERSIBILITY -
+    # what matters most if only one thing can be acted on. They diverge, and
+    # the divergence is the reading: the route can end at Le Messager while the
+    # thing you cannot undo is still sitting at Le Vigile.
+    #
+    # Short and blunt, so it is never mistaken for the minute hand. Drawn only
+    # when it differs from where the route stopped; superimposed it would be a
+    # second hand indicating nothing, which is the same test the rattrapante
+    # has to pass.
+    precedence_first = ranked[0] if ranked else None
     if trace.route_end:
         ranked = [trace.route_end] + [p for p in ranked if p != trace.route_end]
+    if precedence_first and precedence_first != trace.route_end:
+        px, py = polar(cx, cy, r_label - 74, precedence_first)
+        add(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{px:.1f}" y2="{py:.1f}" '
+            f'stroke="{INK["cyan"]}" stroke-width="5.5" stroke-linecap="round" '
+            f'opacity="0.92"/>')
+        # Past the tip on the same ray, not above it - above put the legend
+        # across the hand it was labelling.
+        plx, ply = polar(cx, cy, r_label - 52, precedence_first)
+        add(f'<text x="{plx:.1f}" y="{ply:.1f}" text-anchor="middle" '
+            f'fill="{INK["cyan"]}" font-size="7" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1" '
+            f'opacity="0.85">PRECEDENCE</text>')
 
     # --- la rattrapante: the split-seconds hand ---------------------------
     # A route has two termini now - where it was aimed and where it actually
