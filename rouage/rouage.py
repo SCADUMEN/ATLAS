@@ -298,6 +298,10 @@ class Trace:
     armed: str | None = None
     route: str | None = None
     route_end: str | None = None
+    # The sequence as positions, kept so route_end can be re-resolved after the
+    # gates have run. take_route() sets the intended terminus; only the gates
+    # know the actual one.
+    route_positions: tuple[str, ...] = ()
     verdicts: list[Verdict] = field(default_factory=list)
     halted: list[str] = field(default_factory=list)
     cap_authorized: int | None = None
@@ -475,7 +479,9 @@ def take_route(ring: Ring, trace: Trace, utterance: str) -> list[Candidate]:
     # The hand sweeps to what ended the route. The last STEP is the end even
     # when it repeats an earlier one - Harden ends at Vigile - so this reads
     # from the sequence, not from the deduplicated candidates.
-    last = resolve_step(ring, steps[-1])
+    resolved = [resolve_step(ring, st) for st in steps]
+    trace.route_positions = tuple(m.position for m in resolved if m)
+    last = resolved[-1] if resolved else None
     trace.route_end = last.position if last else None
     trace.notices.append(f"route {hit}: {' -> '.join(steps)}")
     return admitted
@@ -609,6 +615,41 @@ def record_winding(trace: Trace, log: Path, when: str) -> None:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
+def settle_route_end(trace: Trace) -> None:
+    """Stage 9a. Where the route ACTUALLY ended, not where it was aimed.
+
+    take_route() sets route_end from the sequence, which is the only thing it
+    can know - the cap, the brake and Le Sas have not run yet. If the last step
+    is then held, the hand would sweep to a member that never passed the door
+    and the dial would report a route ending somewhere it was stopped short of.
+
+    So the terminus is re-resolved once the gates are done: the last step that
+    is still standing. A route cut short ended where it was cut, and saying so
+    is the difference between indicating and asserting.
+
+    Only isolation testing missed this. Every one of these mechanisms is
+    correct alone; the fault was in their composition.
+    """
+    if not trace.route or not trace.route_positions:
+        return
+
+    live = {c.member.position for c in trace.candidates if c.state == "active"}
+    for pos in reversed(trace.route_positions):
+        if pos in live:
+            if pos != trace.route_end:
+                trace.notices.append(
+                    f"route {trace.route}: cut short at {pos} - "
+                    f"{trace.route_end} did not pass"
+                )
+            trace.route_end = pos
+            return
+
+    trace.notices.append(
+        f"route {trace.route}: no step survived; the hand indicates nothing"
+    )
+    trace.route_end = None
+
+
 def le_sas(ring: Ring, trace: Trace, tiered: list[str] | None) -> None:
     """Stage 8 - RELEASE. Le Sas's first admission condition, at last.
 
@@ -717,6 +758,7 @@ def route(
         trace.stages.append("VERDICT->colonnes")
 
     le_sas(ring, trace, tiered)
+    settle_route_end(trace)
     trace.stages.append("RELEASE->sas")
     trace.stages.append("DISTRIBUTE")
     trace.stages.append("RECORD->crown")

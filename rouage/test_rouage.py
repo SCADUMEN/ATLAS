@@ -24,6 +24,7 @@ from rouage import (
     evaluate,
     git_evidence,
     load_routes,
+    STATES,
     citations,
     record_winding,
     resolve_step,
@@ -619,6 +620,63 @@ class LeSasChecksTiersExist(unittest.TestCase):
         t = route(self.ring, self.U, tiered=[])
         sceptique = next(c for c in t.candidates if c.member.position == "01")
         self.assertEqual(sceptique.state, "active")
+
+
+class MechanismsInCombination(unittest.TestCase):
+    """Every mechanism is correct alone. These test them together.
+
+    route() takes nine parameters and each was covered in isolation, which is
+    exactly how the route_end bug survived: take_route() sets the terminus
+    before the cap, the brake or Le Sas have run, so a held last step still
+    drew the hand.
+    """
+
+    def setUp(self):
+        self.ring = load_ring()
+
+    def test_the_hand_never_indicates_a_member_that_was_held(self):
+        for kw in ({"tiered": ["Le Curateur"]},
+                   {"verdicts": [("Le Renégat", "Archive")]},
+                   {"authorize_cap": None}):
+            t = route(self.ring, "run Publish, argue against this", **kw)
+            if t.route_end is None:
+                continue
+            seat = next(c for c in t.candidates
+                        if c.member.position == t.route_end)
+            self.assertEqual(seat.state, "active",
+                             f"hand points at a {seat.state} member with {kw}")
+
+    def test_a_route_cut_short_says_so(self):
+        t = route(self.ring, "run Publish", tiered=["Le Curateur"])
+        self.assertNotEqual(t.route_end, "10")
+        self.assertTrue(any("cut short" in n for n in t.notices))
+
+    def test_a_fully_halted_route_indicates_nothing(self):
+        # Better a hand that points nowhere than one that points at a member
+        # the brake stopped.
+        t = route(self.ring, "run Publish, argue against this",
+                  verdicts=[("Le Renégat", "Archive")])
+        self.assertIsNone(t.route_end)
+        self.assertTrue(any("no step survived" in n for n in t.notices))
+
+    def test_an_unobstructed_route_still_ends_where_it_ends(self):
+        self.assertEqual(route(self.ring, "run Publish").route_end, "10")
+
+    def test_all_nine_parameters_together_produce_a_coherent_trace(self):
+        m = next(x for x in self.ring.members if x.bullets)
+        t = route(self.ring, "Harden this",
+                  armed="Le Fripon",
+                  proposals=[(m.name, m.bullets[0], "HEAD")],
+                  verify=git_evidence(),
+                  require_evidence=False,
+                  verdicts=[("Le Vigile", "Reduce")],
+                  authorize_cap=6,
+                  tiered=["Le Vigile", "Le Fripon", m.name])
+        self.assertEqual(t.failures, [])
+        self.assertEqual(t.route, "Harden")
+        # Nothing may be in a state the dial cannot render.
+        for c in t.candidates:
+            self.assertIn(c.state, STATES)
 
 
 class Precedence(unittest.TestCase):
