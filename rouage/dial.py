@@ -633,7 +633,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
 
     # --- le frein: the brake ---------------------------------------------
     # A halt is a whole-ring state, not a per-position one, so it cannot be
-    # carried by marker colour alone - the dissenter goes violet, but the
+    # carried by marker colour alone - the dissenter goes magenta, but the
     # members it stopped are only 'held', which is what an over-cap member
     # looks like too. The band is what distinguishes being held because the
     # room was full from being held because someone pulled the brake.
@@ -1077,14 +1077,14 @@ def render(trace: Trace, standalone: bool = True) -> str:
     Sceptique, which is a person. The arc is the context window, which the train
     does not measure. Drawing a needle in either would be the exact failure
     <code>hardware/le-boitier.md</code> names.</p>
-    <p><b>Dissent appears now, and it is violet rather than red.</b> A fault is
+    <p><b>Dissent appears now, and it is magenta rather than red.</b> A fault is
     the routing failing; dissent is a member doing its job, so it must not
     borrow the fault colour. The state arrives from <em>la roue &#224;
     colonnes</em>, the column wheel &#8212; the part that carries what a member
     concluded and routes the consequence without forming a verdict itself.
     <b>Consulted still never appears</b>: marking a member weighed-but-not-surfaced
     is a semantic call, so it belongs to the barrel, which does not exist.</p>
-    <p><b>A halt needs a band, not a colour.</b> The dissenter goes violet, but
+    <p><b>A halt needs a band, not a colour.</b> The dissenter goes magenta, but
     the members it stopped are only <em>held</em> &#8212; which is exactly what
     an over-cap member looks like. Marker colour cannot distinguish being held
     because the room was full from being held because someone pulled the brake,
