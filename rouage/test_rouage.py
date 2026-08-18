@@ -679,6 +679,35 @@ class MechanismsInCombination(unittest.TestCase):
             self.assertIn(c.state, STATES)
 
 
+class TheRattrapante(unittest.TestCase):
+    """Two hands, superimposed until something splits them."""
+
+    U = "run Publish, argue against this"
+
+    def setUp(self):
+        self.ring = load_ring()
+
+    def test_an_unobstructed_route_does_not_split(self):
+        t = route(self.ring, "run Publish")
+        self.assertEqual(t.route_aimed, t.route_end)
+
+    def test_a_cut_short_route_splits(self):
+        t = route(self.ring, "run Publish", tiered=["Le Curateur"])
+        self.assertEqual(t.route_aimed, "10")
+        self.assertNotEqual(t.route_end, "10")
+
+    def test_an_arrested_route_keeps_its_aim_with_nothing_to_indicate(self):
+        # The main hand indicates nothing; the split hand still records where
+        # the route was pointed, which is the whole reading.
+        t = route(self.ring, self.U, verdicts=[("Le Renégat", "Archive")])
+        self.assertIsNone(t.route_end)
+        self.assertEqual(t.route_aimed, "10")
+
+    def test_no_route_means_no_split(self):
+        t = route(self.ring, "what happened here")
+        self.assertIsNone(t.route_aimed)
+
+
 class Precedence(unittest.TestCase):
     """'Precedence follows irreversibility.'"""
 

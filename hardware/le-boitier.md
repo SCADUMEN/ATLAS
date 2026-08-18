@@ -70,7 +70,8 @@ The unidirectional ratchet turns out to carry the doctrine better than prose did
 |---|---|---|
 | **Twelve hour markers** | Addressable RGB LEDs behind diffused acrylic batons | Six states map to six colours. Dark is genuinely off. |
 | **Three registers** | Round LCD modules or LED rings | Signal · Noise · Gain, driven from 01 |
-| **Hands** | Geared stepper on the centre post, full 360° | The answer. Sweeps to what ended the route. |
+| **Hands** | Geared stepper on the centre post, full 360° | The answer. Sweeps to where the route actually stopped. |
+| **Split-seconds hand** | Second stepper, coaxial, shorter and dashed | La Rattrapante. Rides under the main hand and only separates when a route was cut short. Parked and unlit otherwise. |
 | **Escapement** | Single LED behind a window | Pulses once per release. Le Sas made visible. |
 | **Column wheel** | Not lit. Machined, visible through the caseback | La Roue à Colonnes. It holds state and decides nothing, so there is nothing for it to indicate on the front. |
 | **Brake** | Band above 6, its own colour | Le Frein. A halt is a whole-ring state, so it cannot be carried by marker colour alone — see below. |

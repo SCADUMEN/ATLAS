@@ -302,6 +302,9 @@ class Trace:
     # gates have run. take_route() sets the intended terminus; only the gates
     # know the actual one.
     route_positions: tuple[str, ...] = ()
+    # Where the route was aimed, kept after settle_route_end() moves route_end
+    # to where it actually stopped. The gap between the two is the split.
+    route_aimed: str | None = None
     verdicts: list[Verdict] = field(default_factory=list)
     halted: list[str] = field(default_factory=list)
     cap_authorized: int | None = None
@@ -483,6 +486,7 @@ def take_route(ring: Ring, trace: Trace, utterance: str) -> list[Candidate]:
     trace.route_positions = tuple(m.position for m in resolved if m)
     last = resolved[-1] if resolved else None
     trace.route_end = last.position if last else None
+    trace.route_aimed = trace.route_end
     trace.notices.append(f"route {hit}: {' -> '.join(steps)}")
     return admitted
 

@@ -33,6 +33,7 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 | **Brake** | Le Frein | What Le Renégat's Archive or Release engages. Never stops the crown. |
 | **Perpetual calendar** | Le Continuant | The long arc, and the only part that outlives a barrel. Stops, and it loses its place. |
 | **Hands** | — | The answer. Deliberately no one. |
+| **Split-seconds hand** | — | La Rattrapante. Where the route was aimed, when that is not where it stopped. Also no one. |
 
 Full specifications: `overlays/le-barillet.md`, `overlays/le-rouage.md`, `overlays/le-sas.md`.
 

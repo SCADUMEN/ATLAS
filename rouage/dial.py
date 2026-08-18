@@ -560,10 +560,40 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
               if c.member.position != "crown"]
     if trace.route_end:
         ranked = [trace.route_end] + [p for p in ranked if p != trace.route_end]
+
+    # --- la rattrapante: the split-seconds hand ---------------------------
+    # A route has two termini now - where it was aimed and where it actually
+    # stopped - and until this the gap between them survived only as a line of
+    # text. A rattrapante is exactly two hands riding superimposed until
+    # something splits them, which is the mechanism this situation already is.
+    #
+    # Drawn only when they differ. A route that completed as intended has one
+    # hand, because a split hand resting under the main one would be a
+    # complication indicating nothing, and doctrine keeps the hands unassigned
+    # precisely so they never say more than the trace does.
+    split = trace.route_aimed if (
+        trace.route_aimed and trace.route_aimed != trace.route_end) else None
+    if split:
+        sx, sy = polar(cx, cy, r_label - 26, split)
+        add(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{sx:.1f}" y2="{sy:.1f}" '
+            f'stroke="{INK["held"]}" stroke-width="2.6" stroke-linecap="round" '
+            f'stroke-dasharray="7 5" opacity="0.9"/>')
+        # The legend rides inboard on the same ray. At the tip it collides with
+        # whatever complication sits at that hour - LEAP at 10:30 was the case.
+        lx2, ly2 = polar(cx, cy, 70, split)
+        add(f'<text x="{lx2:.1f}" y="{ly2:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="7" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1">'
+            f'AIMED</text>')
     # Stops short of the label annulus. The hand always points at an admitted
     # member, so a hand long enough to touch the chapter ring is a hand that
     # always crosses that member's own name - it would strike out the one
     # label the reading depends on. le-boitier.md ranks legibility first.
+    if trace.route and trace.route_end is None and detailed:
+        add(f'<text x="{cx:.1f}" y="{cy + size*0.075:.1f}" text-anchor="middle" '
+            f'fill="{INK["held"]}" font-size="7.5" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1.5">'
+            f'ROUTE ARRESTED &#183; NOTHING TO INDICATE</text>')
     if ranked:
         hx, hy = polar(cx, cy, r_label - 10, ranked[0])
         add(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{hx:.1f}" y2="{hy:.1f}" '
