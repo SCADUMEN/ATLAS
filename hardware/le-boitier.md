@@ -82,7 +82,7 @@ The unidirectional ratchet turns out to carry the doctrine better than prose did
 ### A Halt Needs A Band, Not A Colour
 
 Le Renégat's Archive or Release halts the field operators. The dissenter can be
-given its own colour — violet, since a fault is the routing failing and dissent
+given its own colour — magenta, since a fault is the routing failing and dissent
 is a member doing its job, and the two must not share a hue. But **the members
 it stopped go to `held`, which is exactly what an over-cap member looks like.**
 
@@ -95,7 +95,20 @@ the ring rather than about any position on it.
 
 ### Discrete States Are A Hardware Decision
 
-Six discrete states map to six LED colours with no interpretation layer — dark, consulted, active, sealed, held, dissent. A continuous display — brightness proportional to confidence — would need calibration and would be unreadable across twelve markers at a glance.
+Six discrete states map to six LED colours with no interpretation layer:
+
+| State | Colour | Reads as |
+|---|---|---|
+| **Dark** | unlit | the gate did not fire |
+| **Consulted** | highlighter yellow | weighed and contributed, not surfaced |
+| **Active** | matrix green | convened and surfaced |
+| **Sealed** | amber | locked, awaiting the crown |
+| **Held** | dim amber-grey | stopped at the door |
+| **Dissent** | magenta | Le Renégat refusing; the brake is engaged |
+
+**Consulted and held were the same colour for a while and that was a bug.** They mean nearly opposite things — one is a member that *was* heard, the other is a member that never got in — and rendering them alike conflates "we considered this" with "this was refused."
+
+**Red is not in this table on purpose.** It belongs to fault and to nothing else, because a colour meaning exactly one thing is worth more than a sixth marker hue. Keeping it off the chapter ring also means it never has to be told apart from magenta at a glance; as a text band it never competes with dissent. A continuous display — brightness proportional to confidence — would need calibration and would be unreadable across twelve markers at a glance.
 
 Legibility under bad conditions is a diver's requirement and it is also an astigmatism requirement: uniform stroke weights, no hairlines, ground lifted off pure black.
 

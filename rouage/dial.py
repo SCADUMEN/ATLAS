@@ -11,7 +11,8 @@ Anything the train does not yet drive is drawn UNDRIVEN and says so on its face:
 
   - The three registers are Le Sceptique's, from stage 7 (TIER), a person.
   - The up-and-down arc is the context window. The train does not measure it.
-  - Consulted and Dissent are real states the train cannot yet emit.
+  - Consulted is a real state the train cannot yet emit. It has its own
+    ink anyway, so the dial cannot mistranslate it the day it arrives.
 
 Drawing any of those lit would make this a prop.
 
@@ -20,8 +21,8 @@ Drawing any of those lit would make this a prop.
     python3 rouage/dial.py "red team this" --arm "Le Fripon"
 
 Legibility constraints are from le-boitier.md and are not styling: uniform
-stroke weights, no hairlines, ground lifted off pure black, colour pulled back
-from full saturation to prevent halation.
+stroke weights, no hairlines, ground lifted off pure black. Halation is now
+deliberate but bounded - see le-boitier.md for why that reversed.
 """
 
 from __future__ import annotations
@@ -72,7 +73,13 @@ INK = {
     "sealed": "#ffb43d",     # amber
     "held": "#7d6f52",
     "dark": "#463a24",
+    "consulted": "#e8f04a",  # highlighter yellow - weighed, not surfaced
     "dissent": "#ff4fd8",    # magenta
+    # Red stays fault-only and never becomes a marker state. Fault is the one
+    # signal that means the routing itself failed, and a colour that means
+    # exactly one thing is worth more than a sixth marker hue. It also keeps
+    # red off the chapter ring, where it would have to be told apart from
+    # magenta at a glance - as a text band it never competes with dissent.
     "fault": "#ff5470",
 }
 
@@ -82,7 +89,7 @@ INK = {
 # That is the display lying, which le-boitier.md calls the difference between
 # a gauge and a prop.
 STATE_INK = {
-    "consulted": INK["held"],
+    "consulted": INK["consulted"],
     "active": INK["active"],
     "sealed": INK["sealed"],
     "held": INK["held"],
@@ -867,7 +874,7 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
 # State colours for the sheet. The SVG palette is tuned for a dark plate and
 # is unreadable on pale green, so the page keeps its own.
 STATE_TEXT = {
-    "consulted": "#6a7162",
+    "consulted": "#8a7a12",
     "dissent": "#6b3f8c",
     "active": "#2f6d4e",
     "sealed": "#8a5a12",
