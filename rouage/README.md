@@ -29,6 +29,22 @@ Nothing about the roster, the precedence ladder, the panel cap, or the activatio
 phrases is written down in the code. All four are parsed from the markdown at
 runtime, so a doctrine edit changes behaviour and the two cannot drift.
 
+## The Sheet Has To Keep Up With The Instrument
+
+`SPECIMENS` in `dial.py` is Plate 2 — the showcase. It silently stopped covering
+the instrument as the instrument grew: routes and the split hand were both
+renderable and absent, and the old specimen form was a 3-or-4 tuple unpacked by
+length, so it could not have expressed them anyway.
+
+Each specimen is now a full `route()` call. A test asserts the sheet
+demonstrates every state the dial has an ink for, with two structural
+exemptions: `dark` is the *absence* of a candidate rather than a state one
+carries, and `consulted` has no emitter because deciding a member was weighed
+but not surfaced is semantic and belongs to the barrel.
+
+Writing that guard is what caught the `dark` confusion — the first version
+demanded a candidate hold a state no candidate can hold.
+
 ## The Split In Every Gate
 
 Building the evaluator surfaced something the specification implies but does not

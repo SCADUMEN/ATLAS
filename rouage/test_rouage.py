@@ -708,6 +708,66 @@ class TheRattrapante(unittest.TestCase):
         self.assertIsNone(t.route_aimed)
 
 
+class TheSheetDemonstratesTheInstrument(unittest.TestCase):
+    """Plate 2 must keep up with what the dial can render.
+
+    The specimen sheet is the instrument's showcase, and it silently stopped
+    covering the instrument as the instrument grew - routes and the split hand
+    were both renderable and absent. The old specimen form was a 3-or-4 tuple
+    unpacked by length, so it could not have expressed them anyway. This is the
+    guard that makes the omission fail loudly rather than go unnoticed.
+    """
+
+    def setUp(self):
+        from dial import SPECIMENS, specimen_trace, STATE_INK
+        self.ring = load_ring()
+        self.traces = [specimen_trace(self.ring, sp) for sp in SPECIMENS]
+        self.inks = STATE_INK
+
+    def test_every_state_with_an_ink_is_demonstrated(self):
+        shown = {c.state for t in self.traces for c in t.candidates}
+        # `consulted` is the one exception and it is honest: nothing emits it,
+        # because deciding a member was weighed-but-not-surfaced is semantic
+        # and belongs to the barrel. It keeps its ink so the dial cannot
+        # mistranslate it the day it arrives.
+        # Two exemptions, both structural rather than convenient.
+        #
+        # `dark` is not a state a candidate carries - it is the ABSENCE of a
+        # candidate. states.get(pos) returns None for an unlit hour and the
+        # dial falls back to its ink. It needs a colour and can never appear
+        # here; covered separately below.
+        #
+        # `consulted` nothing emits, honestly: deciding a member was weighed
+        # but not surfaced is semantic and belongs to the barrel. It keeps its
+        # ink so the dial cannot mistranslate it the day it arrives.
+        missing = set(self.inks) - shown - {"consulted", "dark"}
+        self.assertEqual(missing, set(),
+                         f"dial can render {missing} but no specimen shows it")
+
+    def test_dark_positions_are_demonstrated(self):
+        # Absence is signal, so the sheet has to show absence.
+        self.assertTrue(any(
+            len([c for c in t.candidates if c.member.position != "crown"]) < 12
+            for t in self.traces))
+
+    def test_a_route_is_demonstrated(self):
+        self.assertTrue(any(t.route for t in self.traces))
+
+    def test_the_split_hand_is_demonstrated(self):
+        self.assertTrue(any(t.route_aimed and t.route_aimed != t.route_end
+                            for t in self.traces))
+
+    def test_the_brake_is_demonstrated(self):
+        self.assertTrue(any(t.halted for t in self.traces))
+
+    def test_a_turn_that_convenes_no_one_is_demonstrated(self):
+        # The most common case in practice, and the easiest to forget to show.
+        self.assertTrue(any(
+            not [c for c in t.candidates
+                 if c.member.position not in ("crown", "01")]
+            for t in self.traces))
+
+
 class Precedence(unittest.TestCase):
     """'Precedence follows irreversibility.'"""
 

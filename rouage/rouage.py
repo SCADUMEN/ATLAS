@@ -321,6 +321,7 @@ class Trace:
             "notices": self.notices,
             "route": self.route,
             "route_end": self.route_end,
+            "route_aimed": self.route_aimed,
             "positions": [
                 {
                     "position": c.member.position,

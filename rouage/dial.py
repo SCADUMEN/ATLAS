@@ -999,17 +999,38 @@ def readout(trace: Trace, anatomy: dict[str, str]) -> str:
     """
 
 
+# Every specimen is a full route() call, so the sheet can show anything the
+# instrument can do. The old form was a 3-or-4 tuple unpacked by length, which
+# could not express a route, a tier or a proposal - and so Plate 2 silently
+# stopped covering the instrument as the instrument grew. A test now asserts
+# the sheet demonstrates every state the dial has an ink for.
 SPECIMENS = [
-    ("what happened here", None, "named &#183; one hour fires"),
-    ("red team my backups", None, "named, unarmed &#183; SEALED"),
-    ("red team my backups", "Le Fripon", "armed &#183; ACTIVE"),
-    ("rename this file", None, "routine &#183; convenes no one"),
-    ("preserve this, map this, security check, argue against this, classify this",
-     None, "five named, cap of four &#183; held, reported"),
-    ("preserve this, map this, security check, argue against this", None,
-     "Le Reneg&#225;t returns Archive &#183; DISSENT, brake engaged",
-     [("Le Renégat", "Archive")]),
+    dict(cap="named &#183; one hour fires",
+         u="what happened here"),
+    dict(cap="named, unarmed &#183; SEALED",
+         u="red team my backups"),
+    dict(cap="armed &#183; ACTIVE",
+         u="red team my backups", armed="Le Fripon"),
+    dict(cap="routine &#183; convenes no one",
+         u="rename this file"),
+    dict(cap="five named, cap of four &#183; held, reported",
+         u="preserve this, map this, security check, argue against this, "
+           "classify this"),
+    dict(cap="Le Ren&#233;gat returns Archive &#183; DISSENT, brake engaged",
+         u="preserve this, map this, security check, argue against this",
+         verdicts=[("Le Renégat", "Archive")]),
+    dict(cap="a named route &#183; runs in sequence, hand ends at 10",
+         u="run Publish"),
+    dict(cap="route cut short &#183; split hand holds where it was aimed",
+         u="run Publish", tiered=["Le Curateur"]),
 ]
+
+
+def specimen_trace(ring, sp: dict) -> Trace:
+    """One specimen -> one trace. Everything but `u` and `cap` is a route()
+    keyword, so a specimen can exercise any part of the instrument."""
+    kwargs = {k: v for k, v in sp.items() if k not in ("u", "cap")}
+    return route(ring, sp["u"], **kwargs)
 
 
 REGS = ('<span class="reg tl"></span><span class="reg tr"></span>'
@@ -1028,8 +1049,8 @@ def render(trace: Trace, standalone: bool = True) -> str:
     ring = load_ring()
     anatomy = load_anatomy()
     spec = "".join(
-        f'<figure>{dial_svg(route(ring, sp[0], sp[1], verdicts=sp[3] if len(sp) > 3 else None), 240, detailed=False)}'
-        f'<figcaption>{sp[2]}</figcaption></figure>' for sp in SPECIMENS)
+        f'<figure>{dial_svg(specimen_trace(ring, sp), 240, detailed=False)}'
+        f'<figcaption>{sp["cap"]}</figcaption></figure>' for sp in SPECIMENS)
     head = ("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1164,21 +1185,43 @@ def render(trace: Trace, standalone: bool = True) -> str:
 
 
 def main() -> None:
+    """CLI. Drives the whole instrument, not just two of its nine inputs.
+
+        python3 rouage/dial.py "run Publish"
+        python3 rouage/dial.py "red team this" --arm "Le Fripon"
+        python3 rouage/dial.py "argue against this" --verdict "Le Renégat:Archive"
+        python3 rouage/dial.py "run Publish" --tier "Le Curateur"
+    """
     args = list(sys.argv[1:])
-    armed = None
-    if "--arm" in args:
-        i = args.index("--arm")
-        armed = args[i + 1]
-        args = args[:i] + args[i + 2:]
+
+    def take(flag: str) -> list[str]:
+        out = []
+        while flag in args:
+            i = args.index(flag)
+            out.append(args[i + 1])
+            del args[i:i + 2]
+        return out
+
+    armed = (take("--arm") or [None])[0]
+    tiers = take("--tier")
+    verdicts = [tuple(v.split(":", 1)) for v in take("--verdict") if ":" in v]
+    cap = (take("--cap") or [None])[0]
+
     utterance = " ".join(args) or \
         "preserve this, map this, security check, argue against this"
 
-    trace = route(load_ring(), utterance, armed)
+    trace = route(load_ring(), utterance, armed,
+                  verdicts=verdicts or None,
+                  tiered=tiers or None,
+                  authorize_cap=int(cap) if cap else None)
     OUT.write_text(render(trace), encoding="utf-8")
 
     d = trace.to_dict()
     print(f"lit     {len([p for p in d['positions']])} of 13")
+    print(f"route   {d['route'] or '-'}  aimed={d['route_aimed'] or '-'}  "
+          f"ended={d['route_end'] or '-'}")
     print(f"faults  {json.dumps(d['failures'])}")
+    print(f"notices {json.dumps(d['notices'], ensure_ascii=False)}")
     print(f"wrote   {OUT}")
     if sys.platform == "darwin":
         subprocess.run(["open", str(OUT)], check=False)
