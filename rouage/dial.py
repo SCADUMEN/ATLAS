@@ -985,7 +985,42 @@ def readout(trace: Trace, anatomy: dict[str, str]) -> str:
                        for n in d["notices"])
                if d["notices"] else '<div class="none">None recorded.</div>')
 
+    # The hands' key. Plate 1 draws three of them and, until this, the sheet
+    # beside it named none - a reader saw three hands and had nothing saying
+    # which was which. Each row is the field that drives it.
+    seat = {p["position"]: p["name"] for p in d["positions"]}
+    live = [c.member.position for c in trace.admitted()
+            if c.member.position != "crown"]
+    prec = live[0] if live else None
+
+    def _pos(pos):
+        return f'{pos} {esc(seat.get(pos, ""))}' if pos else "&#8212;"
+
+    hands = "".join(
+        f'<div class="row"><span class="k">{label}</span>'
+        f'<span class="v">{_pos(pos)}'
+        f'<span class="note-s">{note}</span></span></div>'
+        for label, pos, note in (
+            # The key obeys the dial's own rule: a hand that would rest under
+            # another is not drawn, so the key must not claim it is there. It
+            # still names what the hand reads - the reading is true even when
+            # the hand carrying it is superimposed.
+            ("Hour &#183; cyan", prec, "precedence"
+             + (" &#183; superimposed" if prec == d["route_end"] else "")),
+            ("Minute &#183; white", d["route_end"], "route ended"),
+            ("Split &#183; dashed", d["route_aimed"]
+             if d["route_aimed"] != d["route_end"] else None,
+             "route aimed"
+             + (" &#183; superimposed"
+                if d["route_aimed"] and d["route_aimed"] == d["route_end"]
+                else "")),
+        ))
+
     return f"""
+    <div class="group"><h2>Route</h2>
+      <div class="row"><span class="k">taken</span>
+        <span class="v">{esc(d["route"]) if d["route"] else "&#8212;"}</span></div>
+      {hands}</div>
     <div class="group"><h2>Input</h2>
       <div class="utt">{esc(d['utterance'])}</div>
       <div class="row" style="margin-top:10px"><span class="k">armed</span>

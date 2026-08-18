@@ -768,6 +768,32 @@ class TheSheetDemonstratesTheInstrument(unittest.TestCase):
             for t in self.traces))
 
 
+class TheReadoutSurfacesTheTrace(unittest.TestCase):
+    """Every field the trace emits has to reach the sheet.
+
+    Third instance of one drift: the train grows a field, and the surface
+    beside it does not. The dial drew three hands from route, route_aimed and
+    route_end while the panel named none of them, so a reader saw three hands
+    with no key. This is the guard at that end.
+    """
+
+    def test_every_trace_field_reaches_the_readout(self):
+        import inspect
+        import dial
+        src = inspect.getsource(dial.readout)
+        t = route(load_ring(), "run Publish", tiered=["Le Curateur"])
+        for key in t.to_dict():
+            self.assertTrue(f'd["{key}"]' in src or f"d['{key}']" in src,
+                            f"trace emits {key!r} and the readout never shows it")
+
+    def test_the_key_names_all_three_hands(self):
+        import inspect
+        import dial
+        src = inspect.getsource(dial.readout)
+        for hand in ("precedence", "route ended", "route aimed"):
+            self.assertIn(hand, src)
+
+
 class Precedence(unittest.TestCase):
     """'Precedence follows irreversibility.'"""
 
