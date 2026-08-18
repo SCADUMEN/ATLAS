@@ -937,6 +937,15 @@ STATE_TEXT = {
 }
 
 
+# Anatomy rows that are not mechanisms of the movement, and so are not
+# expected on the panel. The wearer is explicitly "not a part, outside the case
+# entirely", and the three Hours rows name groups of members rather than parts.
+# Written down because the guard needs a principled exclusion rather than a
+# convenient one.
+NOT_MECHANISMS = frozenset({
+    "the wearer", "hours 11 · 12", "hours 01 · 02", "hours 03–10",
+})
+
 MECHANISMS = (
     ("Bezel", "bezel", "unidirectional"),
     ("Dial plate", "dial plate", "ground"),
@@ -949,6 +958,7 @@ MECHANISMS = (
     ("Brake", "brake", "the halt"),
     ("Perpetual calendar", "perpetual calendar", "undriven"),
     ("Hands", "hands", "answer"),
+    ("Split-seconds hand", "split-seconds hand", "where it was aimed"),
 )
 
 

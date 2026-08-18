@@ -794,6 +794,31 @@ class TheReadoutSurfacesTheTrace(unittest.TestCase):
             self.assertIn(hand, src)
 
 
+class ThePanelCoversTheAnatomy(unittest.TestCase):
+    """Every mechanism doctrine names has to reach the panel.
+
+    Fourth seam of the same failure. The split-seconds hand was added to
+    le-conseil.md's anatomy table and the mechanisms panel never picked it up,
+    so the sheet listed eleven parts for a movement doctrine said had twelve.
+    """
+
+    def test_every_mechanism_in_doctrine_is_on_the_panel(self):
+        from dial import load_anatomy, MECHANISMS, NOT_MECHANISMS
+        listed = {key for _, key, _ in MECHANISMS}
+        missing = set(load_anatomy()) - listed - set(NOT_MECHANISMS)
+        self.assertEqual(missing, set(),
+                         f"doctrine names {missing} and the panel omits it")
+
+    def test_the_panel_invents_nothing(self):
+        # The other direction: a panel row for a part doctrine does not name
+        # would render as UNASSIGNED IN DOCTRINE, which is honest but means
+        # someone is listing a mechanism that does not exist.
+        from dial import load_anatomy, MECHANISMS
+        anat = load_anatomy()
+        for _, key, _ in MECHANISMS:
+            self.assertIn(key, anat, f"panel lists {key!r}, doctrine does not")
+
+
 class Precedence(unittest.TestCase):
     """'Precedence follows irreversibility.'"""
 
