@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 
+from dial import MECHANISMS, load_anatomy, owner_of
 from rouage import Ring, load_invocations, load_ring, load_routes
 
 
@@ -28,6 +29,13 @@ def doctrine(ring: Ring | None = None) -> dict:
         "precedence": list(ring.precedence),
         "invoke": list(load_invocations()),
         "routes": {name: list(steps) for name, steps in load_routes().items()},
+        # The mechanisms panel, resolved here rather than in JS - ownership is
+        # doctrine and the browser must not be able to name an owner the
+        # anatomy table never gave it.
+        "mechanisms": [
+            {"part": part, "owner": owner_of(load_anatomy(), key), "note": note}
+            for part, key, note in MECHANISMS
+        ],
         "members": [
             {
                 "position": m.position,

@@ -143,6 +143,20 @@ function readout(t) {
     lit.map((p) => `<div class="row"><span class="k">${p.position}</span>` +
       `<span class="k">${p.reason}${p.note ? " &middot; " + p.note : ""}</span></div>`).join("")
     || '<div class="none">&mdash;</div>'}</div>
+  <div class="group"><h2>Input</h2>
+    <div class="utt">${t.utterance || "&mdash;"}</div>
+    <div class="row" style="margin-top:10px"><span class="k">armed</span>
+      <span class="k">${t.armed || "&mdash;"}</span></div></div>
+  <div class="group"><h2>Mechanisms</h2>${
+    D.mechanisms.map((m) => `<div class="row"><span class="k">${m.part}</span>` +
+      `<span class="v">${m.owner}<span class="note-s">${m.note}</span></span></div>`).join("")}</div>
+  <div class="group"><h2>Cycle</h2><ol class="cycle">${
+    t.stages.map((st, i) => {
+      const [name, target] = st.split("->");
+      return `<li><span class="n">${String(i + 1).padStart(2, "0")}</span>` +
+        `<span>${name}</span>` +
+        (target ? `<span class="to">&rarr; ${target}</span>` : "") + `</li>`;
+    }).join("")}</ol></div>
   <div class="group"><h2>Notices</h2>${
     t.notices.map((n) => `<div class="row"><span>${n}</span></div>`).join("")
     || '<div class="none">None recorded.</div>'}</div>

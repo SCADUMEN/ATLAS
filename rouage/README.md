@@ -51,8 +51,8 @@ This is that discovery method made systematic rather than lucky.
 
 ## Four Guards, One Failure Mode
 
-A surface quietly falls behind the mechanism it reports on. It happened four
-times in one sitting, in four different places, and each time it was invisible
+A surface quietly falls behind the mechanism it reports on. It happened five
+times, in four different places, and each time it was invisible
 until something asserted it:
 
 | Seam | Asserts | Caught |
@@ -60,7 +60,8 @@ until something asserted it:
 | train → dial | every emittable state has an ink | `dissent` rendering as `dark`, its own opposite |
 | dial → sheet | every ink is demonstrated | Plate 2 showing no route and no split hand |
 | train → readout | every trace field is surfaced | three hands drawn with no key beside them |
-| doctrine → panel | every named mechanism is listed | the split-seconds hand, absent two commits after it was written into the anatomy |
+| doctrine → panel | every named mechanism is listed |
+| train → live readout | every trace field reaches the browser sheet too | the split-seconds hand, absent two commits after it was written into the anatomy |
 
 None of these were noticed by reading. All four were found by asking the code
 what it covered. That is the argument for keeping them as tests rather than as

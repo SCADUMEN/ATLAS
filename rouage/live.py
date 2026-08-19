@@ -22,7 +22,21 @@ from rouage import load_ring, route
 
 OUT = Path(__file__).resolve().parent / "cadran-live.html"
 
+# No landscape gate here, and that is a decision rather than an omission.
+#
+# The object record gates because it is a technical DRAWING - the plate, the
+# record spine and the two-column notes all assume a long edge, and reflowing
+# them into a column stops it reading as a drawing at all. This page is a
+# TOOL. Its job is an input, a dial and a readout, all of which stack down a
+# phone perfectly well, and gating a tool behind a rotation is an obstacle
+# rather than a courtesy. Different job, different answer.
+#
+# The gate's CSS still arrives with the shared stylesheet and matches nothing,
+# so it is neutralised below rather than left as dead weight that looks like
+# an oversight to the next reader.
 APP_CSS = """
+.gate { display: none !important; }
+
 .live { display: grid; grid-template-columns: 1fr 330px; gap: 34px;
   align-items: start; }
 @media (max-width: 900px) { .live { grid-template-columns: 1fr; } }

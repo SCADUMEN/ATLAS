@@ -117,6 +117,26 @@ class TheTwoTrainsAgree(unittest.TestCase):
         for (u, a), j in zip(self.cases, self.js):
             self.assertEqual(self._py(u, a)["stages"], j["stages"], f"{u!r}")
 
+    def test_both_readouts_surface_every_trace_field(self):
+        """The fifth seam. Two readouts, and nothing was comparing them.
+
+        dial.py has one and paint.js has another. They had already diverged -
+        the live page was missing Input, Mechanisms and Cycle, so `utterance`
+        and `stages` reached the static sheet and nothing on the live one. The
+        train -> readout guard only ever looked at Python.
+
+        Presentation may differ; a document and a tool have different jobs.
+        What may not differ is which facts reach the reader at all.
+        """
+        js = (HERE / "paint.js").read_text(encoding="utf-8")
+        t = route(self.ring, "run Publish", tiered=["Le Curateur"]).to_dict()
+        # camelCase in JS, snake_case in the Python trace.
+        alias = {"route_end": "routeEnd", "route_aimed": "routeAimed"}
+        for key in t:
+            probe = alias.get(key, key)
+            self.assertIn(f"t.{probe}", js,
+                          f"trace emits {key!r} and the live readout omits it")
+
     def test_the_js_engine_hardcodes_no_member_or_route_vocabulary(self):
         # The condition that keeps one implementation authoritative: a doctrine
         # edit must not leave a stale copy behind in train.js.
