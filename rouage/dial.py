@@ -1262,7 +1262,12 @@ def main() -> None:
     OUT.write_text(render(trace), encoding="utf-8")
 
     d = trace.to_dict()
-    print(f"lit     {len([p for p in d['positions']])} of 13")
+    lit = [p for p in d["positions"] if p["state"] != "dark"]
+    print(f"lit     {len(lit)} of 13")
+    for pos in lit:
+        note = f"  {pos['note']}" if pos["note"] else ""
+        print(f"  {pos['position']:>5}  {pos['name']:<16}"
+              f"{pos['state']:<10}{pos['reason']}{note}")
     print(f"route   {d['route'] or '-'}  aimed={d['route_aimed'] or '-'}  "
           f"ended={d['route_end'] or '-'}")
     print(f"faults  {json.dumps(d['failures'])}")
