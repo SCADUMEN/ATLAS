@@ -29,6 +29,25 @@ Nothing about the roster, the precedence ladder, the panel cap, or the activatio
 phrases is written down in the code. All four are parsed from the markdown at
 runtime, so a doctrine edit changes behaviour and the two cannot drift.
 
+## Invariants, Not Just Cases
+
+`InvariantsUnderComposition` runs a matrix — utterances by arming by verdicts
+by tiers by cap authorizations — and asserts the properties that must hold for
+every one of them:
+
+- no candidate ends in a state the dial cannot render
+- Le Fripon is never active without the crown
+- nothing ever stops the crown, not le frein and not Le Sas
+- the hand never indicates a member that is not standing
+- `route_end` is always a step of the route
+- a halt always has a dissenter visible on the dial
+- every combination is reproducible
+
+`route()` takes nine parameters. Hand-written cases test the paths someone
+thought of, and the `route_end` bug lived precisely in the one nobody had:
+every mechanism was correct alone and the fault was only in their combination.
+This is that discovery method made systematic rather than lucky.
+
 ## Four Guards, One Failure Mode
 
 A surface quietly falls behind the mechanism it reports on. It happened four

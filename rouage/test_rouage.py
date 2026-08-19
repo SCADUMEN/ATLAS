@@ -10,6 +10,7 @@ dependency to install on the board in the case.
     python3 -m unittest discover rouage -v
 """
 
+import itertools
 import json
 import tempfile
 import unittest
@@ -817,6 +818,89 @@ class ThePanelCoversTheAnatomy(unittest.TestCase):
         anat = load_anatomy()
         for _, key, _ in MECHANISMS:
             self.assertIn(key, anat, f"panel lists {key!r}, doctrine does not")
+
+
+class InvariantsUnderComposition(unittest.TestCase):
+    """Properties that must hold for every combination of inputs.
+
+    The route_end bug was found by composing parameters by hand and looking.
+    This is that method made systematic: a matrix of utterances, arming,
+    verdicts, tiers and cap authorizations, with the invariants asserted on
+    every resulting trace. Hand-picked cases test the paths someone thought of;
+    this tests the ones nobody did.
+    """
+
+    UTTERANCES = ("what happened here", "run Publish", "Harden this",
+                  "rename this file", "run Publish, argue against this",
+                  "Judgement please", "run Exhibit, red team my backups",
+                  "preserve this, map this, security check, "
+                  "argue against this, classify this")
+    ARMED = (None, "Le Fripon")
+    VERDICTS = (None, [("Le Renégat", "Archive")], [("Le Renégat", "Reduce")],
+                [("Le Vigile", "Release")])
+    TIERED = (None, [], ["Le Curateur"],
+              ["Le Vigile", "Le Curateur", "Le Messager", "Le Fripon"])
+    CAPS = (None, 6)
+
+    def setUp(self):
+        self.ring = load_ring()
+
+    def _matrix(self):
+        for u, a, v, ti, c in itertools.product(
+                self.UTTERANCES, self.ARMED, self.VERDICTS,
+                self.TIERED, self.CAPS):
+            kw = dict(verdicts=v, tiered=ti, authorize_cap=c)
+            yield (f"{u!r} armed={a} verdicts={v} tiered={ti} cap={c}",
+                   route(self.ring, u, a, **kw), u, a, kw)
+
+    def test_no_candidate_ends_in_a_state_the_dial_cannot_render(self):
+        for ctx, t, *_ in self._matrix():
+            for c in t.candidates:
+                self.assertIn(c.state, STATES, ctx)
+
+    def test_le_fripon_is_never_active_without_the_crown(self):
+        # The seal is the older of the two standing rules and the one thing no
+        # route, proposal or verdict may reach around.
+        for ctx, t, _, armed, _ in self._matrix():
+            seat = next((c for c in t.candidates
+                         if c.member.position == "05"), None)
+            if seat and seat.state == "active":
+                self.assertEqual(armed, "Le Fripon", ctx)
+
+    def test_nothing_ever_stops_the_crown(self):
+        # Neither le frein nor Le Sas may hold Le Sauvegarder. A mechanism that
+        # can stop the crown is a mechanism that can lose the archive.
+        for ctx, t, *_ in self._matrix():
+            seat = next((c for c in t.candidates
+                         if c.member.position == "crown"), None)
+            if seat:
+                self.assertNotIn(seat.state, ("held", "dissent"), ctx)
+
+    def test_the_hand_never_indicates_a_member_that_is_not_standing(self):
+        for ctx, t, *_ in self._matrix():
+            if not t.route_end:
+                continue
+            seat = next((c for c in t.candidates
+                         if c.member.position == t.route_end), None)
+            if seat:
+                self.assertEqual(seat.state, "active", ctx)
+
+    def test_route_end_is_always_a_step_of_the_route(self):
+        for ctx, t, *_ in self._matrix():
+            if t.route_end and t.route_positions:
+                self.assertIn(t.route_end, t.route_positions, ctx)
+
+    def test_a_halt_always_has_a_dissenter_on_the_dial(self):
+        # Otherwise the brake band reports a halt with no visible cause.
+        for ctx, t, *_ in self._matrix():
+            if t.halted:
+                self.assertTrue(any(c.state == "dissent" for c in t.candidates),
+                                ctx)
+
+    def test_every_combination_is_reproducible(self):
+        for ctx, t, u, armed, kw in self._matrix():
+            self.assertEqual(route(self.ring, u, armed, **kw).to_dict(),
+                             t.to_dict(), ctx)
 
 
 class Precedence(unittest.TestCase):
