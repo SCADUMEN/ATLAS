@@ -131,43 +131,12 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
   .notes .col { columns: 1; }
   h1 { margin-top: 0; }
 }
-/* Landscape gate. The sheet is a technical drawing: the plate, the spine and
-   the two-column notes all assume a long edge. Rather than reflow it into a
-   column that no longer reads as a drawing, ask for the device to be turned.
-   It is escapable on purpose - a hard orientation lock strands anyone whose
-   rotation is locked, which is a real accessibility failure, not an edge case.
-
-   The pointer test is load-bearing, not belt-and-braces. 'orientation:
-   portrait' is true of ANY viewport taller than it is wide, so the first
-   version of this gate fired when someone dragged a desktop preview panel
-   narrower to make room for something beside it - the drawing vanished behind
-   a card telling them to rotate a device they were not holding, which reads as
-   the page having broken. A phone is identified by its input, not its aspect
-   ratio: 'pointer: coarse' is the part of this query that actually means
-   touch. The width bound only keeps tablets held upright out of it. */
-.gate { display: none; }
-.vh { position: absolute; width: 1px; height: 1px; overflow: hidden;
-  clip: rect(0 0 0 0); white-space: nowrap; }
-@media (orientation: portrait) and (max-width: 820px) and (pointer: coarse) {
-  .gate { display: flex; position: fixed; inset: 0; z-index: 50;
-    align-items: center; justify-content: center; padding: 32px;
-    background-color: var(--sheet);
-    background-image:
-      repeating-linear-gradient(0deg, transparent 0 23px, rgba(30,35,27,.05) 23px 24px),
-      repeating-linear-gradient(90deg, transparent 0 23px, rgba(30,35,27,.05) 23px 24px); }
-  #portrait-ok:checked ~ .gate { display: none; }
-  .gate-inner { max-width: 34ch; border: 1px solid var(--rule);
-    background: var(--field); padding: 26px 24px; position: relative; }
-  .gate .mark { font-size: 15px; margin-bottom: 20px; }
-  .gate h2 { font-family: var(--display); font-size: 25px; letter-spacing: 0;
-    text-transform: none; border: 0; padding: 0; margin: 0 0 10px; }
-  .gate p { margin: 0 0 18px; font-size: 15px; color: var(--dim); }
-  .gate label { font-family: var(--data); font-size: 10.5px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--brass); border-bottom: 1px solid var(--brass);
-    padding-bottom: 2px; cursor: pointer; }
-  #portrait-ok:focus-visible ~ .gate label { outline: 2px solid var(--brass);
-    outline-offset: 3px; }
-}
+/* No landscape gate. One was built and removed: it read as an obstacle
+   rather than a courtesy, and a reader who has opened a technical drawing on a
+   phone has already decided they want to look at it on a phone. What actually
+   made the dial usable there is below - the plate holds a legible size and
+   pans, instead of shrinking until its engravings are unreadable. That was
+   always the real fix; the gate was the part in the way. */
 
 /* Phones. The dial is vector and stays sharp at any size, but its engravings
    are set for a 620px plate - let it shrink to a 375px screen and they drop
@@ -185,7 +154,6 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
   figure { margin-bottom: 34px; }
 }
 
-.gate { display: none !important; }
 
 .live { display: grid; grid-template-columns: 1fr 330px; gap: 34px;
   align-items: start; }
