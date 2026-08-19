@@ -53,6 +53,21 @@ STATES = ("consulted", "active", "sealed", "held", "dissent")
 # arrow, so they are parsed the same way as everything else: from doctrine,
 # never restated here.
 ROUTES_HEADER = re.compile(r"^\|\s*Route\s*\|\s*Sequence\s*\|.*$", re.M)
+# A route is invoked deliberately or not at all. Every route name is a common
+# English word - Build, Publish, Harden, Recover - so bare substring matching
+# convened members out of ordinary prose: "I need to build a shelf" ran Build,
+# and 7 of the council's own 81 gate bullets tripped a route when read as text.
+#
+# Member phrases get away with substring matching because 51 of 53 are
+# multi-word constructions nobody types by accident. Route names are not, and
+# building the named half by analogy to member phrases missed that the
+# vocabulary was not analogous.
+#
+# "<Route> this" is deliberately NOT an invocation form: "build this" is Le
+# Forgeron's own phrase and "map this" is Le Cartographe's, so it would make one
+# utterance fire both a member and a route containing that member.
+INVOKE = ("run", "take", "route")
+
 ROUTE_ROW = re.compile(r"^\|\s*\*\*([^*|]+)\*\*\s*\|\s*([^|]+?)\s*\|", re.M)
 
 REPO = Path(__file__).resolve().parent.parent
@@ -446,8 +461,10 @@ def take_route(ring: Ring, trace: Trace, utterance: str) -> list[Candidate]:
     """
     routes = load_routes()
     folded = fold(utterance)
+    verbs = "|".join(INVOKE)
     hit = next((name for name in routes
-                if fold(name) in folded), None)
+                if re.search(rf"\b(?:{verbs})\s+{re.escape(fold(name))}\b",
+                             folded)), None)
     if hit is None:
         return []
 

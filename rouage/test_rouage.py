@@ -501,25 +501,25 @@ class NamedRoutes(unittest.TestCase):
     def test_a_repeated_step_lights_one_seat_but_still_ends_there(self):
         # Harden is Vigile -> Fripon -> Vigile. A seat cannot be occupied
         # twice, but the route still ends at Vigile.
-        t = route(self.ring, "Harden this")
+        t = route(self.ring, "run Harden")
         vigiles = [c for c in t.candidates if c.member.name == "Le Vigile"]
         self.assertEqual(len(vigiles), 1)
         self.assertEqual(t.route_end, "04")
 
     def test_a_route_does_not_unseal_le_fripon(self):
-        t = route(self.ring, "Harden this")
+        t = route(self.ring, "run Harden")
         fripon = next(c for c in t.candidates if c.member.name == "Le Fripon")
         self.assertEqual(fripon.state, "sealed")
 
     def test_an_armed_route_step_is_admitted(self):
-        t = route(self.ring, "Harden this", armed="Le Fripon")
+        t = route(self.ring, "run Harden", armed="Le Fripon")
         fripon = next(c for c in t.candidates if c.member.name == "Le Fripon")
         self.assertEqual(fripon.state, "active")
 
     def test_judgement_delegates_and_admits_no_one(self):
         # Its sequence cell is a protocol file, not members. Inventing a
         # sequence it does not have would be the train deciding something.
-        t = route(self.ring, "Judgement please")
+        t = route(self.ring, "run Judgement")
         self.assertEqual(self.routes["Judgement"], ())
         self.assertEqual(t.route, "Judgement")
         self.assertIsNone(t.route_end)
@@ -665,7 +665,7 @@ class MechanismsInCombination(unittest.TestCase):
 
     def test_all_nine_parameters_together_produce_a_coherent_trace(self):
         m = next(x for x in self.ring.members if x.bullets)
-        t = route(self.ring, "Harden this",
+        t = route(self.ring, "run Harden",
                   armed="Le Fripon",
                   proposals=[(m.name, m.bullets[0], "HEAD")],
                   verify=git_evidence(),
@@ -830,9 +830,9 @@ class InvariantsUnderComposition(unittest.TestCase):
     this tests the ones nobody did.
     """
 
-    UTTERANCES = ("what happened here", "run Publish", "Harden this",
+    UTTERANCES = ("what happened here", "run Publish", "run Harden",
                   "rename this file", "run Publish, argue against this",
-                  "Judgement please", "run Exhibit, red team my backups",
+                  "run Judgement", "run Exhibit, red team my backups",
                   "preserve this, map this, security check, "
                   "argue against this, classify this")
     ARMED = (None, "Le Fripon")
@@ -901,6 +901,141 @@ class InvariantsUnderComposition(unittest.TestCase):
         for ctx, t, u, armed, kw in self._matrix():
             self.assertEqual(route(self.ring, u, armed, **kw).to_dict(),
                              t.to_dict(), ctx)
+
+
+class TheBarrelBoundaryIsWhereItSays(unittest.TestCase):
+    """The train matches names. It does not read for meaning.
+
+    This is a characterization test, not a wish. le-rouage.md forbids the train
+    from interpreting, so a situation that plainly satisfies a gate's written
+    condition must NOT fire it - only the quoted invocation phrases do. If
+    someone later teaches evaluate() to understand the prose bullets, these
+    fail, and that is the point: the boundary moves by decision, not by drift.
+
+    The third test is the one that matters. It shows the boundary is a seam
+    rather than a wall - the same situation IS admissible the moment something
+    cites the bullet it satisfies. The mechanism is complete and unwired.
+    """
+
+    def setUp(self):
+        self.ring = load_ring()
+        self.limier = self.ring.by_name("Le Limier")
+        # "an artifact shows modification, damage, or repair whose cause is
+        # unknown" - Le Limier's first automatic condition, verbatim.
+        self.bullet = self.limier.bullets[0]
+
+    def _fired(self, utterance):
+        t = route(self.ring, utterance)
+        return any(c.member.name == "Le Limier" for c in t.candidates)
+
+    def test_a_situation_that_satisfies_the_gate_does_not_fire_it(self):
+        # Every one of these is squarely inside Le Limier's written condition.
+        # None of them contain an invocation phrase, so none of them convene
+        # him. This is the automatic half of the gate, and it does not run.
+        for described in (
+            "this file changed and I do not know why",
+            "the pump failed and I cannot establish the sequence",
+            "provenance is broken across a gap in the record",
+        ):
+            self.assertFalse(self._fired(described),
+                             f"train read for meaning: {described!r}")
+
+    def test_the_named_half_does_fire(self):
+        for phrase in self.limier.phrases:
+            self.assertTrue(self._fired(phrase), f"named gate missed {phrase!r}")
+
+    def test_the_same_situation_is_admissible_once_something_cites_it(self):
+        # The seam. The barrel reads the situation, recognises the condition,
+        # and hands in the bullet verbatim; the train admits it without ever
+        # having interpreted anything.
+        t = Trace(utterance="this file changed and I do not know why")
+        admitted = admit_proposals(
+            self.ring, t, [("Le Limier", self.bullet)])
+        self.assertEqual(len(admitted), 1)
+        self.assertEqual(admitted[0].member.name, "Le Limier")
+        self.assertEqual(t.failures, [])
+
+    def test_and_a_paraphrase_of_that_same_condition_is_refused(self):
+        # Which is what keeps the seam honest: the barrel may not soften a
+        # condition to make a situation fit it.
+        t = Trace(utterance="")
+        admitted = admit_proposals(
+            self.ring, t,
+            [("Le Limier", "an artifact was modified and nobody knows why")])
+        self.assertEqual(admitted, [])
+        self.assertTrue(any("verbatim" in f for f in t.failures))
+
+    def test_no_member_fires_on_a_plain_description_of_its_own_condition(self):
+        # Generalised across the whole ring: every member's first bullet, fed
+        # in as an utterance, must not convene that member. The bullets are
+        # prose about when to convene, not invocations.
+        for m in self.ring.members:
+            if not m.bullets:
+                continue
+            t = route(self.ring, m.bullets[0])
+            fired = [c for c in t.candidates
+                     if c.member.name == m.name and not m.standing]
+            self.assertEqual(fired, [],
+                             f"{m.name} fired on its own bullet as prose")
+
+
+class RoutesFireOnlyWhenInvoked(unittest.TestCase):
+    """Route names are common words. Ordinary prose must not convene a route.
+
+    take_route() matched a route name as a bare substring, so "I need to build
+    a shelf" ran Build and convened Le Cartographe and Le Forgeron. Seven of
+    the council's own 81 gate bullets tripped a route when read as text.
+
+    The harm was not extra noise. A phantom route admits two or three members
+    and those count against the cap, so a false activation SUPPRESSED a real
+    one - which inverts what the cap is for.
+    """
+
+    def setUp(self):
+        self.ring = load_ring()
+
+    def test_ordinary_prose_containing_a_route_word_does_not_route(self):
+        for text in ("I need to build a shelf this weekend",
+                     "let me identify the serial number",
+                     "harden the epoxy overnight",
+                     "recover the deleted photos",
+                     "publish nothing yet",
+                     "the intake manifold is cracked",
+                     "triage can wait until Monday",
+                     "exhibit A is the receipt"):
+            self.assertIsNone(route(self.ring, text).route,
+                              f"prose routed: {text!r}")
+
+    def test_no_gate_bullet_in_doctrine_trips_a_route(self):
+        # The council's own prose is the sharpest available corpus of sentences
+        # that talk about this work without meaning to invoke anything.
+        for m in self.ring.members:
+            for bullet in m.bullets:
+                self.assertIsNone(route(self.ring, bullet).route,
+                                  f"{m.name} bullet routed: {bullet[:60]!r}")
+
+    def test_every_route_still_answers_to_a_deliberate_invocation(self):
+        for name in load_routes():
+            for verb in ("run", "take", "route"):
+                t = route(self.ring, f"{verb} {name}")
+                self.assertEqual(t.route, name, f"{verb} {name} did not route")
+
+    def test_a_phantom_route_can_no_longer_push_a_real_member_over_the_cap(self):
+        # The regression that made this worth fixing rather than tidying.
+        t = route(self.ring,
+                  "build me a plan, preserve this, security check, "
+                  "argue against this")
+        self.assertIsNone(t.route)
+        self.assertEqual([c.member.name for c in t.candidates
+                          if "over cap" in c.note], [])
+
+    def test_route_this_is_not_an_invocation_form(self):
+        # It would collide with member phrases: "build this" is Le Forgeron's
+        # own invocation and "map this" is Le Cartographe's.
+        self.assertIsNone(route(self.ring, "build this").route)
+        forgeron = [c for c in route(self.ring, "build this").candidates
+                    if c.member.name == "Le Forgeron"]
+        self.assertEqual(len(forgeron), 1, "the member phrase must still fire")
 
 
 class Precedence(unittest.TestCase):
