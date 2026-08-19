@@ -78,11 +78,18 @@ function takeRoute(D, utterance, trace) {
 // Stage 3 - ORDER. Precedence follows irreversibility, and the ladder is
 // doctrine's, not this file's.
 function order(D, cands) {
+  // (ladder index, dial position) - a TUPLE, matching rouage.py. Ranking on
+  // the index alone and leaning on sort stability tie-breaks by roster order
+  // instead of by position, which picks a different member off the ladder and
+  // therefore points the hour hand somewhere else.
   const rank = (c) => {
     const i = D.precedence.findIndex((n) => fold(n) === fold(c.m.name));
-    return i === -1 ? D.precedence.length : i;
+    return [i === -1 ? D.precedence.length : i, c.m.position];
   };
-  return [...cands].sort((a, b) => rank(a) - rank(b));
+  return [...cands].sort((a, b) => {
+    const [ra, pa] = rank(a), [rb, pb] = rank(b);
+    return ra - rb || (pa < pb ? -1 : pa > pb ? 1 : 0);
+  });
 }
 
 // Stage 4 - METER. The cap is a ceiling, never a floor; full ring is measured
@@ -144,6 +151,9 @@ export function route(D, utterance, armed = null, capAuthorized = null) {
   settleRouteEnd(trace, cands);
   trace.stages.push("RELEASE->sas", "DISTRIBUTE", "RECORD->crown");
 
+  trace.admitted = cands
+    .filter((c) => c.state === "active" && c.m.position !== "crown")
+    .map((c) => c.m.position);
   trace.positions = [...cands]
     .sort((a, b) => (a.m.position < b.m.position ? -1 : 1))
     .map((c) => ({ position: c.m.position, name: c.m.name, state: c.state, reason: c.reason, note: c.note }));

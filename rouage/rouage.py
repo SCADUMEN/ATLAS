@@ -348,6 +348,12 @@ class Trace:
             "route": self.route,
             "route_end": self.route_end,
             "route_aimed": self.route_aimed,
+            # Precedence order, not dial order. `positions` is sorted by seat
+            # for display; anything asking "what matters most here" must read
+            # this instead, or it gets the lowest hour number rather than the
+            # least reversible member.
+            "admitted": [c.member.position for c in self.admitted()
+                         if c.member.position != "crown"],
             "positions": [
                 {
                     "position": c.member.position,

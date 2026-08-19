@@ -155,7 +155,8 @@ def owner_of(anatomy: dict[str, str], mechanism: str) -> str:
 
 
 def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
-             anatomy: dict[str, str] | None = None) -> str:
+             anatomy: dict[str, str] | None = None,
+             always_emit_bands: bool = False) -> str:
     """One chronograph. Every lit element traces to a field in `trace`.
 
     Mechanism ownership comes from `anatomy` (le-conseil.md). An engraving is
@@ -353,7 +354,8 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         opacity = "1" if lit else "0.8"
         halo = ' filter="url(#glow)"' if lit else ''
         soft = ' filter="url(#glowsoft)"' if lit else ''
-        add(f'<line x1="{bxp:.1f}" y1="{byp:.1f}" x2="{axp:.1f}" y2="{ayp:.1f}" '
+        add(f'<line data-baton="{pos}" '
+            f'x1="{bxp:.1f}" y1="{byp:.1f}" x2="{axp:.1f}" y2="{ayp:.1f}" '
             f'stroke="{ink}" stroke-width="{width}" stroke-linecap="round" '
             f'opacity="{opacity}"{halo}/>')
 
@@ -375,11 +377,13 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         # ampersand into &amp; and prints "&#183;" on every dark position.
         name = esc(entry["name"]) if entry else "&#183;"
         tail = "  " + state.upper() if lit else ""
-        add(f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anchor}" fill="{ink}" '
+        add(f'<text data-name="{pos}" '
+            f'x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anchor}" fill="{ink}" '
             f'font-size="14.5" font-weight="500" '
             f'opacity="{1 if lit else 0.55}"{soft}>'
             f'{name}</text>')
-        add(f'<text x="{lx:.1f}" y="{ly+15:.1f}" text-anchor="{anchor}" '
+        add(f'<text data-state="{pos}" '
+            f'x="{lx:.1f}" y="{ly+15:.1f}" text-anchor="{anchor}" '
             f'fill="{INK["dim"]}" font-size="10.5" font-family="ui-monospace,monospace" '
             f'letter-spacing="1.5">{pos}{tail}</text>')
 
@@ -572,15 +576,17 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     precedence_first = ranked[0] if ranked else None
     if trace.route_end:
         ranked = [trace.route_end] + [p for p in ranked if p != trace.route_end]
-    if precedence_first and precedence_first != trace.route_end:
+    minute_at = ranked[0] if ranked else None
+    if precedence_first and precedence_first != minute_at:
         px, py = polar(cx, cy, r_label - 74, precedence_first)
-        add(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{px:.1f}" y2="{py:.1f}" '
+        add(f'<line data-hand="hour" x1="{cx:.1f}" y1="{cy:.1f}" '
+            f'x2="{px:.1f}" y2="{py:.1f}" '
             f'stroke="{INK["cyan"]}" stroke-width="5.5" stroke-linecap="round" '
             f'opacity="0.92"/>')
         # Past the tip on the same ray, not above it - above put the legend
         # across the hand it was labelling.
         plx, ply = polar(cx, cy, r_label - 52, precedence_first)
-        add(f'<text x="{plx:.1f}" y="{ply:.1f}" text-anchor="middle" '
+        add(f'<text data-legend="precedence" x="{plx:.1f}" y="{ply:.1f}" text-anchor="middle" '
             f'fill="{INK["cyan"]}" font-size="7" '
             f'font-family="ui-monospace,monospace" letter-spacing="1" '
             f'opacity="0.85">PRECEDENCE</text>')
@@ -599,13 +605,14 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         trace.route_aimed and trace.route_aimed != trace.route_end) else None
     if split:
         sx, sy = polar(cx, cy, r_label - 26, split)
-        add(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{sx:.1f}" y2="{sy:.1f}" '
+        add(f'<line data-hand="split" x1="{cx:.1f}" y1="{cy:.1f}" '
+            f'x2="{sx:.1f}" y2="{sy:.1f}" '
             f'stroke="{INK["held"]}" stroke-width="2.6" stroke-linecap="round" '
             f'stroke-dasharray="7 5" opacity="0.9"/>')
         # The legend rides inboard on the same ray. At the tip it collides with
         # whatever complication sits at that hour - LEAP at 10:30 was the case.
         lx2, ly2 = polar(cx, cy, 70, split)
-        add(f'<text x="{lx2:.1f}" y="{ly2:.1f}" text-anchor="middle" '
+        add(f'<text data-legend="aimed" x="{lx2:.1f}" y="{ly2:.1f}" text-anchor="middle" '
             f'fill="{INK["held"]}" font-size="7" '
             f'font-family="ui-monospace,monospace" letter-spacing="1">'
             f'AIMED</text>')
@@ -620,7 +627,8 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
             f'ROUTE ARRESTED &#183; NOTHING TO INDICATE</text>')
     if ranked:
         hx, hy = polar(cx, cy, r_label - 10, ranked[0])
-        add(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{hx:.1f}" y2="{hy:.1f}" '
+        add(f'<line data-hand="minute" x1="{cx:.1f}" y1="{cy:.1f}" '
+            f'x2="{hx:.1f}" y2="{hy:.1f}" '
             f'stroke="{INK["ink"]}" stroke-width="4.5" stroke-linecap="round"/>')
     add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="9" fill="{INK["brass_hi"]}"/>')
     add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.5" fill="{INK["plate"]}"/>')
@@ -681,7 +689,7 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
                 f'fill="{INK["cyan"] if taken else INK["dim"]}" '
                 f'font-size="{9 if taken else 8}" '
                 f'font-family="ui-monospace,monospace" letter-spacing="1" '
-                f'opacity="{1 if taken else 0.62}" '
+                f'data-route="{esc(rname)}" opacity="{1 if taken else 0.62}" '
                 f'transform="rotate({rot:.1f} {rx:.1f} {ry:.1f})">'
                 f'{esc(rname.upper())}</text>')
 
@@ -691,12 +699,17 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
     # members it stopped are only 'held', which is what an over-cap member
     # looks like too. The band is what distinguishes being held because the
     # room was full from being held because someone pulled the brake.
-    if detailed and trace.halted:
-        add(f'<text x="{cx:.1f}" y="{cy + size*0.262:.1f}" text-anchor="middle" '
+    if detailed and (trace.halted or always_emit_bands):
+        add(f'<text data-band="brake" '
+            f'x="{cx:.1f}" y="{cy + size*0.262:.1f}" text-anchor="middle" '
             f'fill="{INK["dissent"]}" font-size="9" '
             f'font-family="ui-monospace,monospace" letter-spacing="1.5">'
             f'{esc(owner_of(anatomy, "brake"))} &#183; '
-            f'{len(trace.halted)} HELD &#183; AWAITING L\'OP&#201;RATEUR</text>')
+            f'{len(trace.halted)} HELD &#183; AWAITING L\'OP&#201;RATEUR</text>'
+            if trace.halted else
+            f'<text data-band="brake" x="{cx:.1f}" y="{cy + size*0.262:.1f}" '
+            f'text-anchor="middle" fill="{INK["dissent"]}" font-size="9" '
+            f'font-family="ui-monospace,monospace" letter-spacing="1.5"></text>')
 
     # --- escapement band --------------------------------------------------
     # The escapement is internal and unseen, so it gets a band and not a
@@ -714,7 +727,8 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         # On the rehaut - the flange between the chapter ring and the dial
         # edge. Fixed position now: this chassis has a wider chord there than
         # the chronometer did, so the state fits without the band moving.
-        add(f'<text x="{cx:.1f}" y="{cy + size*0.315:.1f}" text-anchor="middle" '
+        add(f'<text data-band="escapement" '
+            f'x="{cx:.1f}" y="{cy + size*0.315:.1f}" text-anchor="middle" '
             f'fill="{band_ink}" font-size="10" font-family="ui-monospace,monospace" '
             f'letter-spacing="1.5">'
             f'{esc(owner_of(anatomy, "escapement"))} &#183; {band}</text>')
@@ -722,11 +736,12 @@ def dial_svg(trace: Trace, size: int = 820, detailed: bool = True,
         # The fault itself reads inward, where the chord is wide enough for a
         # sentence. A lamp says THAT the escapement faulted; the instrument
         # still has to say WHICH, or the trace is the only place it exists.
-        if trace.failures:
-            add(f'<text x="{cx:.1f}" y="{cy + size*0.258:.1f}" text-anchor="middle" '
+        if trace.failures or always_emit_bands:
+            add(f'<text data-band="fault" '
+                f'x="{cx:.1f}" y="{cy + size*0.258:.1f}" text-anchor="middle" '
                 f'fill="{INK["fault"]}" font-size="8" opacity="0.9" '
                 f'font-family="ui-monospace,monospace" letter-spacing="0.5">'
-                f'{esc(trace.failures[0].upper())}</text>')
+                f'{esc(trace.failures[0].upper()) if trace.failures else ""}</text>')
 
     add("</svg>")
     return "\n".join(o)
@@ -999,9 +1014,9 @@ def readout(trace: Trace, anatomy: dict[str, str]) -> str:
     # beside it named none - a reader saw three hands and had nothing saying
     # which was which. Each row is the field that drives it.
     seat = {p["position"]: p["name"] for p in d["positions"]}
-    live = [c.member.position for c in trace.admitted()
-            if c.member.position != "crown"]
-    prec = live[0] if live else None
+    # From the precedence-ordered field, not from d["positions"], which is
+    # sorted by seat for display.
+    prec = d["admitted"][0] if d["admitted"] else None
 
     def _pos(pos):
         return f'{pos} {esc(seat.get(pos, ""))}' if pos else "&#8212;"

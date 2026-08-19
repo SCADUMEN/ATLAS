@@ -99,6 +99,14 @@ class TheTwoTrainsAgree(unittest.TestCase):
             self.assertEqual(p["route_end"], j["routeEnd"], f"{u!r}")
             self.assertEqual(p["route_aimed"], j["routeAimed"], f"{u!r}")
 
+    def test_the_precedence_ordering_matches(self):
+        # The hour hand reads from this. Deriving it from display order gives
+        # the lowest hour number instead of the least reversible member, which
+        # is a different claim entirely.
+        for (u, a), j in zip(self.cases, self.js):
+            self.assertEqual(self._py(u, a)["admitted"], j["admitted"],
+                             f"{u!r} armed={a}")
+
     def test_faults_and_notices_match(self):
         for (u, a), j in zip(self.cases, self.js):
             p = self._py(u, a)
