@@ -12,6 +12,7 @@ dependency to install on the board in the case.
 
 import itertools
 import json
+import pathlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,6 +26,7 @@ from rouage import (
     evaluate,
     git_evidence,
     load_routes,
+    load_invocations,
     STATES,
     citations,
     record_winding,
@@ -1036,6 +1038,46 @@ class RoutesFireOnlyWhenInvoked(unittest.TestCase):
         forgeron = [c for c in route(self.ring, "build this").candidates
                     if c.member.name == "Le Forgeron"]
         self.assertEqual(len(forgeron), 1, "the member phrase must still fire")
+
+
+class TheInvocationGrammarIsDoctrine(unittest.TestCase):
+    """No gate vocabulary lives in Python, including this.
+
+    The fix for route over-firing put `run|take|route` in rouage.py, which is
+    the one thing this build has consistently refused to do - the roster, the
+    precedence ladder, the cap, the anatomy and every member phrase are parsed
+    from markdown so doctrine and code cannot drift. The verbs are read from
+    le-conseil.md now, the same way the cap is read from a sentence rather than
+    written as a number.
+    """
+
+    def test_the_verbs_come_from_doctrine(self):
+        self.assertEqual(load_invocations(), ("run", "take", "route"))
+
+    def test_editing_doctrine_changes_what_the_train_answers_to(self):
+        # The property that makes this doctrine rather than decoration.
+        conseil = pathlib.Path(load_ring().members[0].path).parent.parent / \
+            "overlays" / "le-conseil.md"
+        original = conseil.read_text(encoding="utf-8")
+        try:
+            conseil.write_text(original.replace(
+                "`run`, `take`, or `route`,",
+                "`run`, `take`, `route`, or `engage`,", 1), encoding="utf-8")
+            self.assertIn("engage", load_invocations())
+            self.assertEqual(
+                route(load_ring(), "engage Publish").route, "Publish")
+        finally:
+            conseil.write_text(original, encoding="utf-8")
+        self.assertIsNone(route(load_ring(), "engage Publish").route)
+
+    def test_a_missing_grammar_is_refused_rather_than_assumed(self):
+        # Same discipline as the cap and the anatomy table: if doctrine does
+        # not say it, the train does not invent a default.
+        import tempfile
+        stub = pathlib.Path(tempfile.mkdtemp()) / "le-conseil.md"
+        stub.write_text("# nothing here", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            load_invocations(stub)
 
 
 class Precedence(unittest.TestCase):

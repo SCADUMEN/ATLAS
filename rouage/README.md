@@ -25,9 +25,10 @@ python3 -m unittest discover rouage -v
 | 9 DISTRIBUTE | **Built** — emits the trace. |
 | 10 RECORD | **Built** — same call. Append-only, time supplied by the caller. |
 
-Nothing about the roster, the precedence ladder, the panel cap, or the activation
-phrases is written down in the code. All four are parsed from the markdown at
-runtime, so a doctrine edit changes behaviour and the two cannot drift.
+Nothing about the roster, the precedence ladder, the panel cap, the activation
+phrases, the anatomy table or the route invocation grammar is written down in
+the code. All of it is parsed from the markdown at runtime, so a doctrine edit
+changes behaviour and the two cannot drift.
 
 ## Invariants, Not Just Cases
 

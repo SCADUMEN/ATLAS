@@ -180,7 +180,11 @@ Two standing rules override ordering:
 
 Every route terminates through register 01 and the escapement. No route reaches the dial directly.
 
-A route has the same two halves a gate has. The **triggers** above are semantic and belong to the barrel. The **route's own name is matchable**, so the named half runs in `rouage/` today — but only when deliberately invoked, as `run Publish`, `take Publish` or `route Publish`. Every route name is a common English word, and matching them bare convened members out of ordinary prose: *"I need to build a shelf"* ran Build. Member phrases survive loose matching because almost all of them are multi-word constructions nobody types by accident; route names are not, so they need the verb. Naming a route naming a route admits its sequence in the route's order rather than in precedence order, because saying who goes first is the entire point of having named it. No route names more than three distinct members and the cap is four, so the two orderings never actually contend.
+**Routes are invoked by verb:** `run`, `take`, or `route`, followed by the route's name.
+
+Every route name is a common English word, and matching them bare convened members out of ordinary prose — *"I need to build a shelf"* ran Build, and seven of this council's own gate conditions tripped a route when read as text. Member phrases survive loose matching because almost all of them are multi-word constructions nobody types by accident; route names are not, so they take the verb. `<Route> this` is deliberately not a form: `build this` is Le Forgeron's own invocation and `map this` is Le Cartographe's.
+
+A route has the same two halves a gate has. The **triggers** above are semantic and belong to the barrel. The **route's own name is matchable**, so the named half runs in `rouage/` today. Naming a route naming a route admits its sequence in the route's order rather than in precedence order, because saying who goes first is the entire point of having named it. No route names more than three distinct members and the cap is four, so the two orderings never actually contend.
 
 A member repeated in a sequence — Harden is Vigile → Fripon → Vigile — is admitted once. A candidate is a seat on the dial and a seat cannot be occupied twice. The route's shape is kept in the trace, and the hand still ends where the sequence ends.
 

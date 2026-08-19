@@ -53,20 +53,20 @@ STATES = ("consulted", "active", "sealed", "held", "dissent")
 # arrow, so they are parsed the same way as everything else: from doctrine,
 # never restated here.
 ROUTES_HEADER = re.compile(r"^\|\s*Route\s*\|\s*Sequence\s*\|.*$", re.M)
-# A route is invoked deliberately or not at all. Every route name is a common
-# English word - Build, Publish, Harden, Recover - so bare substring matching
-# convened members out of ordinary prose: "I need to build a shelf" ran Build,
-# and 7 of the council's own 81 gate bullets tripped a route when read as text.
+# The invocation grammar is doctrine, not code. le-conseil.md states it in one
+# sentence and this reads the verbs out of it - the same arrangement as the cap,
+# which is parsed from "Two to four members convene at once" rather than being
+# written here. Hardcoding `run|take|route` would have put the one piece of gate
+# vocabulary that lives in Python back in Python.
 #
-# Member phrases get away with substring matching because 51 of 53 are
-# multi-word constructions nobody types by accident. Route names are not, and
-# building the named half by analogy to member phrases missed that the
-# vocabulary was not analogous.
-#
-# "<Route> this" is deliberately NOT an invocation form: "build this" is Le
-# Forgeron's own phrase and "map this" is Le Cartographe's, so it would make one
-# utterance fire both a member and a route containing that member.
-INVOKE = ("run", "take", "route")
+# The rule exists because every route name is a common English word: matching
+# them bare convened members out of ordinary prose. Member phrases survive loose
+# matching because 51 of 53 are multi-word constructions nobody types by
+# accident; route names are not, so they take a verb.
+INVOKE_PHRASE = re.compile(
+    r"\*\*Routes are invoked by verb:\*\*\s*(.+?)(?:,\s*followed|\.)", re.S)
+INVOKE_VERB = re.compile(r"`(\w+)`")
+
 
 ROUTE_ROW = re.compile(r"^\|\s*\*\*([^*|]+)\*\*\s*\|\s*([^|]+?)\s*\|", re.M)
 
@@ -80,6 +80,17 @@ DOCTRINE_HEADING = "## DOCTRINE"
 # --------------------------------------------------------------------------
 # Normalisation
 # --------------------------------------------------------------------------
+
+def load_invocations(conseil: Path = CONSEIL) -> tuple[str, ...]:
+    """The verbs a route answers to, parsed from le-conseil.md."""
+    m = INVOKE_PHRASE.search(conseil.read_text(encoding="utf-8"))
+    if m is None:
+        raise ValueError("le-conseil.md: route invocation grammar not found")
+    verbs = tuple(INVOKE_VERB.findall(m.group(1)))
+    if not verbs:
+        raise ValueError("le-conseil.md: no invocation verbs in the grammar")
+    return verbs
+
 
 def fold(text: str) -> str:
     """Casefold and strip accents, so 'Renegat' matches 'Renégat'.
@@ -461,7 +472,7 @@ def take_route(ring: Ring, trace: Trace, utterance: str) -> list[Candidate]:
     """
     routes = load_routes()
     folded = fold(utterance)
-    verbs = "|".join(INVOKE)
+    verbs = "|".join(load_invocations())
     hit = next((name for name in routes
                 if re.search(rf"\b(?:{verbs})\s+{re.escape(fold(name))}\b",
                              folded)), None)
