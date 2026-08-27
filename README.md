@@ -31,6 +31,24 @@ Overlays and templates:
 - `overlays/forgotten-industries.md` - public-safe project overlay for Forgotten Industries.
 - `templates/repo-AGENTS.md` - starter root instructions for downstream repositories.
 - `templates/project-overlay.md` - starter overlay for a new project.
+- `templates/continuity-capsule.md` - private downstream handoff schema; never live archive state.
+
+Portable launcher and examples:
+
+- `install.sh` - one-command install for the launcher. See below.
+- `bin/atlas` - launches Claude Code fitted as the barrel, with the compact ATLAS core injected. See below.
+- `bin/atlas-context` - deterministic compact or doctrine-stripped portable runtime builder.
+- `bin/atlas-continuity` - initializes and checks an untracked project continuity capsule.
+- `bin/atlas-doctor` - verifies assembly, fingerprints, privacy boundaries, and doctrine stripping.
+- `adapters/` - handoff instructions for Codex and file-less agents.
+- `runtime/` - ordered manifests, runtime contracts, codas, and assembly tests.
+- `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.
+
+Grade and modules:
+
+- `overlays/le-grade.md` - the leveling system: tiers, XP curve, and the module ledger.
+- `grade/` - the grade computed in code. Python, stdlib only, parses the ledger, 8 tests.
+- `modules/` - knowledge and skill modules that raise the grade, one file each.
 
 ## Le Conseil
 
@@ -87,6 +105,109 @@ PROJECT/
 ```
 
 For larger projects, keep the project-specific instructions local and use this repository as the source of truth for shared ATLAS behavior.
+
+## Portable Launcher (Claude Code)
+
+Type `atlas` in any directory and Claude Code starts as ATLAS, layered on top of the project you are already in.
+
+### Quickstart
+
+```sh
+git clone git@github.com:SCADUMEN/ATLAS.git
+cd ATLAS
+eval "$(./install.sh)"
+atlas
+```
+
+`eval "$(./install.sh)"` symlinks `bin/atlas` into `~/.local/bin`, makes sure that directory is on your `PATH` — now and in future shells — and leaves `atlas` usable in the same shell, no reload. Running `./install.sh` without the `eval` installs just as durably; you open a new terminal to pick it up.
+
+Requirements: a POSIX shell, git, and Claude Code (`claude`) on your `PATH`.
+
+### What it does
+
+It deterministically assembles the compact core — `ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`, `overlays/le-conseil.md`, and the runtime contract — plus a runtime coda, and passes it to Claude with `--append-system-prompt-file`. It also runs `--add-dir` on this repository, so the subroutine cores are read on demand per `overlays/le-rouage.md` rather than all loaded up front. ATLAS governs the interface; current direct instructions and project rules remain authoritative.
+
+The generated header records the source commit and a content fingerprint. No timestamp is included, so identical source and options produce identical bytes.
+
+In the language of the movement: the launcher fits the running model as the barrel (`overlays/le-barillet.md`). The model supplies force; the doctrines supply shape.
+
+### Usage
+
+```sh
+atlas                 # interactive, in the current directory
+atlas -c              # resume the last conversation here
+atlas "quick question"
+atlas --model ...     # any claude flag passes straight through
+```
+
+### Continuity between barrels
+
+Initialize a private project-local capsule:
+
+```sh
+atlas --atlas-continuity init
+```
+
+This creates `.atlas/continuity.md` with mode `600` and adds `.atlas/` to the
+repository's local `.git/info/exclude`. It refuses to overwrite an existing
+capsule. The capsule separates verified state, operator testimony, inference,
+plans, the last safe state, and the next move. It is never canonical memory and
+must never contain secrets.
+
+When a capsule exists at the current project's root, `atlas` loads it as
+read-only project state. Set `ATLAS_NO_CONTINUITY=1` for a session that must not
+load it, or set `ATLAS_CONTINUITY_FILE` to select an explicit capsule.
+
+Run the diagnostic pulse without starting Claude:
+
+```sh
+atlas --atlas-doctor
+```
+
+### Other barrels
+
+Build a self-contained bundle for Codex or an agent without repository access:
+
+```sh
+atlas --atlas-context --mode portable --output /tmp/atlas-portable.md
+```
+
+Portable mode includes all thirteen `OPERATIONAL CORE` sections and excludes
+every `DOCTRINE` section. See `adapters/codex/` and `adapters/fileless/` for the
+downstream handoff pattern. Continuity is included in an exported bundle only
+when `--continuity FILE` is passed explicitly.
+
+### Manual install
+
+If you would rather not run the script, and `~/.local/bin` is on your `PATH`:
+
+```sh
+ln -s "$(pwd)/bin/atlas" ~/.local/bin/atlas
+```
+
+The twelve subroutine doctrines are not loaded up front, because thirteen doctrines do not fit the reserve. When a council member is named, its `OPERATIONAL CORE` is read from `subroutines/` on demand.
+
+The launcher is the Claude Code path. The same versioned core now reaches Codex
+and file-less agents through deterministic portable bundles; only the barrel
+adapter changes.
+
+### Verification
+
+```sh
+python3 -m unittest discover runtime -v
+python3 -m unittest discover rouage -v
+```
+
+## Le Grade
+
+ATLAS levels up. Every capability is a module with a tier and fixed XP (S=1000, A=500, B=250, C=100, D=50); the grade is those XP on a 0–100 square-root curve, so the top grades are the steepest. It is deterministic: `grade/grade.py` parses the module ledger in `overlays/le-grade.md`, verifies each module's file exists, sums the XP, and prints the grade. A module earns nothing until its file is real.
+
+```sh
+python3 grade/grade.py            # full readout
+python3 grade/grade.py --oneline  # boot banner
+```
+
+Current grade: **87** (9,850 / 13,000 XP). The single S-tier module is Reincarnation — the portable launcher above. To level up, build a module (knowledge pack or core-system work), list it in the ledger with a real path, and rerun the script. Grade 100 is the design-complete instrument; modules past it earn Grand Complication prestige. Full doctrine and the leveling schedule are in `overlays/le-grade.md`.
 
 ## Operating Principle
 

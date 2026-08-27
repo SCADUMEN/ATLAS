@@ -1,0 +1,88 @@
+#!/bin/sh
+# atlas — launch Claude Code fitted as the barrel of Le Conseil.
+#
+# Injects the compact ATLAS core (core layer, rapport, operator profile, the
+# council manifest) plus a runtime coda as an appended system prompt, and grants
+# tool access to the ATLAS repo so the subroutine cores can be read on demand
+# per overlays/le-rouage.md. Layers on top of the current directory's own
+# context; ATLAS voice governs the session.
+#
+# Install:  ln -s /absolute/path/to/ATLAS/bin/atlas ~/.local/bin/atlas
+# Use:      atlas                 # interactive, in the current directory
+#           atlas -c              # resume the last conversation here
+#           atlas "quick question"
+#           atlas --model ...     # any claude flag passes straight through
+set -eu
+
+# A CDPATH inherited from the environment makes `cd` echo its target and corrupt
+# the path captures below. Neutralize it for this script.
+CDPATH=''
+
+# Resolve this script through any symlinks, then the repo root above bin/.
+SOURCE=$0
+while [ -h "$SOURCE" ]; do
+  dir=$(cd -P "$(dirname "$SOURCE")" && pwd)
+  SOURCE=$(readlink "$SOURCE")
+  case $SOURCE in
+    /*) ;;
+    *) SOURCE=$dir/$SOURCE ;;
+  esac
+done
+SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+REPO=$(cd -P "$SCRIPT_DIR/.." && pwd)
+
+# ATLAS-owned controls use a namespaced flag so ordinary Claude prompts and
+# flags continue to pass through unchanged.
+case ${1:-} in
+  --atlas-doctor)
+    shift
+    exec "$REPO/bin/atlas-doctor" "$@"
+    ;;
+  --atlas-continuity)
+    shift
+    exec "$REPO/bin/atlas-continuity" "$@"
+    ;;
+  --atlas-context)
+    shift
+    exec "$REPO/bin/atlas-context" "$@"
+    ;;
+esac
+
+[ -x "$REPO/bin/atlas-context" ] || {
+  echo "atlas: missing runtime builder: $REPO/bin/atlas-context" >&2
+  echo "atlas: is $REPO a complete ATLAS checkout?" >&2
+  exit 1
+}
+
+command -v claude >/dev/null 2>&1 || {
+  echo "atlas: 'claude' not found on PATH. Install Claude Code first." >&2
+  exit 127
+}
+
+CTX=$(mktemp "${TMPDIR:-/tmp}/atlas-context.XXXXXX") || {
+  echo "atlas: could not create a temp context file." >&2
+  exit 1
+}
+trap 'rm -f "$CTX"' EXIT INT TERM
+
+PROJECT_DIR=$(pwd -P)
+if [ "${ATLAS_NO_CONTINUITY:-0}" = 1 ]; then
+  "$REPO/bin/atlas-context" --mode compact --no-continuity --output "$CTX"
+elif [ -n "${ATLAS_CONTINUITY_FILE:-}" ]; then
+  "$REPO/bin/atlas-context" --mode compact \
+    --continuity "$ATLAS_CONTINUITY_FILE" --output "$CTX"
+else
+  if git -C "$PROJECT_DIR" rev-parse --show-toplevel >/dev/null 2>&1; then
+    PROJECT_ROOT=$(git -C "$PROJECT_DIR" rev-parse --show-toplevel)
+  else
+    PROJECT_ROOT=$PROJECT_DIR
+  fi
+  if [ -f "$PROJECT_ROOT/.atlas/continuity.md" ]; then
+    "$REPO/bin/atlas-context" --mode compact \
+      --continuity "$PROJECT_ROOT/.atlas/continuity.md" --output "$CTX"
+  else
+    "$REPO/bin/atlas-context" --mode compact --no-continuity --output "$CTX"
+  fi
+fi
+
+claude --append-system-prompt-file "$CTX" --add-dir "$REPO" "$@"
