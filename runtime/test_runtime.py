@@ -96,6 +96,63 @@ class RuntimeAssembly(unittest.TestCase):
         self.assertIn("compact and portable runtimes are deterministic", dispatched.stdout)
 
 
+class TheGeneratedAgentMatchesItsSources(unittest.TestCase):
+    """agents/atlas.md is a build artifact, and build artifacts drift.
+
+    The core has to be inline: an agent's `skills:` field preloads full skill
+    content for subagents, but not for the main-thread agent that
+    settings.json activates. So the five doctrine files are concatenated into
+    the agent definition, which means the same bytes exist twice and only a
+    test keeps them equal.
+
+    A stale agent file is the dangerous case, because it still loads. The
+    session would run on doctrine that no longer matches the repository and
+    nothing would announce it.
+    """
+
+    AGENT = ROOT / "agents" / "atlas.md"
+
+    def test_the_committed_agent_is_what_the_builder_emits(self):
+        self.assertTrue(self.AGENT.is_file(), f"missing {self.AGENT}")
+        fresh = run(BIN / "atlas-context", "--mode", "agent", "--output", "-").stdout
+        self.assertEqual(
+            self.AGENT.read_text(), fresh,
+            "agents/atlas.md has drifted from its sources; "
+            "regenerate with `bin/atlas-context --mode agent`")
+
+    def test_the_frontmatter_carries_only_fields_a_plugin_agent_honours(self):
+        head = self.AGENT.read_text().split("---")[1]
+        self.assertIn("name: atlas", head)
+        self.assertIn("model: inherit", head)
+        # Plugin agents ignore these three, and silently ignored configuration
+        # is worse than none: it reads as a guarantee that is not in force.
+        for ignored in ("hooks:", "mcpServers:", "permissionMode:"):
+            self.assertNotIn(ignored, head, f"plugin agents ignore {ignored}")
+        # These two are not accepted from a plugin at all.
+        for rejected in ("initialPrompt:", "isolation:"):
+            self.assertNotIn(rejected, head, f"plugin agents reject {rejected}")
+
+    def test_the_banner_tells_a_reader_not_to_edit_it(self):
+        self.assertIn("GENERATED", self.AGENT.read_text())
+
+    def test_agent_mode_refuses_a_continuity_capsule(self):
+        # The agent file is committed; a capsule is project-private. Baking one
+        # into the other would publish it.
+        with tempfile.TemporaryDirectory() as tmp:
+            capsule = Path(tmp) / "continuity.md"
+            capsule.write_text("# capsule\n")
+            done = run(BIN / "atlas-context", "--mode", "agent",
+                       "--continuity", capsule, check=False)
+            self.assertNotEqual(done.returncode, 0)
+            self.assertIn("no continuity capsule", done.stderr)
+
+    def test_the_agent_omits_the_canonical_repository_stanza(self):
+        # Compact mode names an absolute path so the model can find the repo.
+        # A plugin's root is already readable, and an absolute path baked into
+        # a committed file would be wrong on every other machine.
+        self.assertNotIn("# Canonical repository", self.AGENT.read_text())
+
+
 class ContinuityCustody(unittest.TestCase):
 
     def make_project(self, parent: Path) -> Path:
