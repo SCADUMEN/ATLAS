@@ -31,11 +31,17 @@ Overlays and templates:
 - `overlays/forgotten-industries.md` - public-safe project overlay for Forgotten Industries.
 - `templates/repo-AGENTS.md` - starter root instructions for downstream repositories.
 - `templates/project-overlay.md` - starter overlay for a new project.
+- `templates/continuity-capsule.md` - private downstream handoff schema; never live archive state.
 
 Portable launcher and examples:
 
 - `install.sh` - one-command install for the launcher. See below.
 - `bin/atlas` - launches Claude Code fitted as the barrel, with the compact ATLAS core injected. See below.
+- `bin/atlas-context` - deterministic compact or doctrine-stripped portable runtime builder.
+- `bin/atlas-continuity` - initializes and checks an untracked project continuity capsule.
+- `bin/atlas-doctor` - verifies assembly, fingerprints, privacy boundaries, and doctrine stripping.
+- `adapters/` - handoff instructions for Codex and file-less agents.
+- `runtime/` - ordered manifests, runtime contracts, codas, and assembly tests.
 - `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.
 
 Grade and modules:
@@ -119,7 +125,9 @@ Requirements: a POSIX shell, git, and Claude Code (`claude`) on your `PATH`.
 
 ### What it does
 
-It assembles the compact core — `ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`, `overlays/le-conseil.md` — plus a runtime coda, and passes it to Claude with `--append-system-prompt-file`. It also runs `--add-dir` on this repository, so the subroutine cores are read on demand per `overlays/le-rouage.md` rather than all loaded up front. ATLAS voice governs; the current directory's own context still loads beneath it.
+It deterministically assembles the compact core — `ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`, `overlays/le-conseil.md`, and the runtime contract — plus a runtime coda, and passes it to Claude with `--append-system-prompt-file`. It also runs `--add-dir` on this repository, so the subroutine cores are read on demand per `overlays/le-rouage.md` rather than all loaded up front. ATLAS governs the interface; current direct instructions and project rules remain authoritative.
+
+The generated header records the source commit and a content fingerprint. No timestamp is included, so identical source and options produce identical bytes.
 
 In the language of the movement: the launcher fits the running model as the barrel (`overlays/le-barillet.md`). The model supplies force; the doctrines supply shape.
 
@@ -132,6 +140,43 @@ atlas "quick question"
 atlas --model ...     # any claude flag passes straight through
 ```
 
+### Continuity between barrels
+
+Initialize a private project-local capsule:
+
+```sh
+atlas --atlas-continuity init
+```
+
+This creates `.atlas/continuity.md` with mode `600` and adds `.atlas/` to the
+repository's local `.git/info/exclude`. It refuses to overwrite an existing
+capsule. The capsule separates verified state, operator testimony, inference,
+plans, the last safe state, and the next move. It is never canonical memory and
+must never contain secrets.
+
+When a capsule exists at the current project's root, `atlas` loads it as
+read-only project state. Set `ATLAS_NO_CONTINUITY=1` for a session that must not
+load it, or set `ATLAS_CONTINUITY_FILE` to select an explicit capsule.
+
+Run the diagnostic pulse without starting Claude:
+
+```sh
+atlas --atlas-doctor
+```
+
+### Other barrels
+
+Build a self-contained bundle for Codex or an agent without repository access:
+
+```sh
+atlas --atlas-context --mode portable --output /tmp/atlas-portable.md
+```
+
+Portable mode includes all thirteen `OPERATIONAL CORE` sections and excludes
+every `DOCTRINE` section. See `adapters/codex/` and `adapters/fileless/` for the
+downstream handoff pattern. Continuity is included in an exported bundle only
+when `--continuity FILE` is passed explicitly.
+
 ### Manual install
 
 If you would rather not run the script, and `~/.local/bin` is on your `PATH`:
@@ -142,7 +187,16 @@ ln -s "$(pwd)/bin/atlas" ~/.local/bin/atlas
 
 The twelve subroutine doctrines are not loaded up front, because thirteen doctrines do not fit the reserve. When a council member is named, its `OPERATIONAL CORE` is read from `subroutines/` on demand.
 
-This is the Claude Code path. A doctrine-stripped bundle for agents without file access is a planned follow-up; Codex reads the repository files natively through `AGENTS.md`.
+The launcher is the Claude Code path. The same versioned core now reaches Codex
+and file-less agents through deterministic portable bundles; only the barrel
+adapter changes.
+
+### Verification
+
+```sh
+python3 -m unittest discover runtime -v
+python3 -m unittest discover rouage -v
+```
 
 ## Le Grade
 

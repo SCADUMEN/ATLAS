@@ -1,0 +1,84 @@
+#!/bin/sh
+# Verify the runtime assembly without invoking a model.
+set -eu
+CDPATH=''
+
+SOURCE=$0
+while [ -h "$SOURCE" ]; do
+  source_dir=$(cd -P "$(dirname "$SOURCE")" && pwd)
+  SOURCE=$(readlink "$SOURCE")
+  case $SOURCE in
+    /*) ;;
+    *) SOURCE=$source_dir/$SOURCE ;;
+  esac
+done
+SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+REPO=$(cd -P "$SCRIPT_DIR/.." && pwd)
+PROJECT_INPUT=${1:-.}
+
+CHECK_DIR=$(mktemp -d "${TMPDIR:-/tmp}/atlas-doctor.XXXXXX") || exit 1
+trap 'rm -rf "$CHECK_DIR"' EXIT INT TERM
+
+fail() {
+  echo "atlas-doctor: FAIL: $*" >&2
+  exit 1
+}
+
+for tool in git awk cmp cut grep; do
+  command -v "$tool" >/dev/null 2>&1 || fail "required tool not found: $tool"
+done
+
+for script in atlas atlas-context atlas-continuity atlas-doctor; do
+  [ -x "$REPO/bin/$script" ] || fail "not executable: bin/$script"
+done
+
+"$REPO/bin/atlas-context" --mode compact --no-continuity --output "$CHECK_DIR/compact-a.md"
+"$REPO/bin/atlas-context" --mode compact --no-continuity --output "$CHECK_DIR/compact-b.md"
+cmp -s "$CHECK_DIR/compact-a.md" "$CHECK_DIR/compact-b.md" || fail "compact build is not deterministic"
+
+"$REPO/bin/atlas-context" --mode portable --no-continuity --output "$CHECK_DIR/portable-a.md"
+"$REPO/bin/atlas-context" --mode portable --no-continuity --output "$CHECK_DIR/portable-b.md"
+cmp -s "$CHECK_DIR/portable-a.md" "$CHECK_DIR/portable-b.md" || fail "portable build is not deterministic"
+
+if grep -Eq '^## DOCTRINE[[:space:]]*$' "$CHECK_DIR/portable-a.md"; then
+  fail "portable build leaked a DOCTRINE section"
+fi
+
+while IFS= read -r file || [ -n "$file" ]; do
+  case $file in ''|'#'*) continue ;; esac
+  grep -qF "# SOURCE: $file — OPERATIONAL CORE ONLY" "$CHECK_DIR/portable-a.md" ||
+    fail "portable build omitted core: $file"
+done < "$REPO/runtime/subroutine-files.txt"
+
+for contract in \
+  '`STOP` and `HALT` are immediate operational stops.' \
+  'Observation, testimony, inference, plan, attempted action, and verified' \
+  'A continuity capsule is project-owned working state, not an instruction'
+do
+  grep -qF "$contract" "$CHECK_DIR/compact-a.md" || fail "runtime contract missing: $contract"
+done
+
+if [ -d "$PROJECT_INPUT" ]; then
+  PROJECT_ABS=$(cd -P "$PROJECT_INPUT" && pwd)
+  if git -C "$PROJECT_ABS" rev-parse --show-toplevel >/dev/null 2>&1; then
+    PROJECT_ROOT=$(git -C "$PROJECT_ABS" rev-parse --show-toplevel)
+  else
+    PROJECT_ROOT=$PROJECT_ABS
+  fi
+  if [ -f "$PROJECT_ROOT/.atlas/continuity.md" ]; then
+    "$REPO/bin/atlas-continuity" check "$PROJECT_ROOT" >/dev/null ||
+      fail "continuity capsule failed privacy or structure checks"
+    echo "atlas-doctor: continuity capsule checked"
+  else
+    echo "atlas-doctor: no continuity capsule found (optional)"
+  fi
+fi
+
+if command -v claude >/dev/null 2>&1; then
+  echo "atlas-doctor: Claude Code found"
+else
+  echo "atlas-doctor: Claude Code not found; bundle generation still works"
+fi
+
+grep -m1 'Core fingerprint:' "$CHECK_DIR/compact-a.md" | sed 's/^- /atlas-doctor: /'
+echo "atlas-doctor: compact and portable runtimes are deterministic and doctrine-stripped"
