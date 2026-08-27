@@ -10,9 +10,15 @@ an engraving, fixed at every boot, and it must not grow a field that claims to
 report anything. If it ever needs to say what the movement is doing, that is the
 Cadran's work, not this one's.
 
-The launcher prints it; the model never reproduces it. Art held in the rite text
-would cost context on every boot and would drift the moment it was paraphrased.
-Held here, it is the same on the thousandth wind as on the first.
+The rite carries the panel and the model reproduces it. The launcher cannot:
+Claude Code takes the alternate screen buffer when it starts and wipes anything
+already printed, so a masthead written before the interface flashes once and is
+gone. Reproduced in the rite, it lands in the transcript and scrolls back.
+
+That means the panel exists twice - drawn here, and written into the rite text
+in runtime/compact-coda.md. This module is the canonical copy. When the drawing
+changes, reprint it and repaste the fence; test_premiere_lueur.py fails if the
+two ever disagree.
 
     python3 rouage/premiere_lueur.py
 

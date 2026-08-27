@@ -99,14 +99,6 @@ if [ "$BOOT" -eq 1 ]; then
     printf '\n---\n\n# BOOT READOUT (computed at launch)\n\n'
     [ -n "$grade" ] && printf '%s\n' "$grade"
   } >> "$CTX"
-  # Engrave the masthead before the interface takes the screen. Held in the
-  # launcher, not the rite: art in the rite text costs context on every boot and
-  # drifts the moment it is paraphrased. Guarded like the grade line above, so a
-  # missing python3 degrades to a plain launch instead of a broken one. The
-  # terminal test keeps it out of pipes and logs.
-  if [ -t 1 ]; then
-    python3 "$REPO/rouage/premiere_lueur.py" 2>/dev/null || true
-  fi
   set -- "$ARRIVAL_CUE"
 fi
 

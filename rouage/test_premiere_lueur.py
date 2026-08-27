@@ -18,6 +18,8 @@ solidity are asserted, to make a regression loud.
 
 from __future__ import annotations
 
+import os
+import re
 import unittest
 
 from premiere_lueur import (
@@ -133,6 +135,40 @@ class TheMastheadIsFixed(unittest.TestCase):
 
     def test_two_renders_are_identical(self):
         self.assertEqual(premiere_lueur(), premiere_lueur())
+
+
+class TheRiteCarriesTheSamePanel(unittest.TestCase):
+    """The panel lives twice: drawn here, and written into the rite text that
+    the model reproduces. Two copies of anything drift, and this pair would
+    drift silently - a stale rite still renders, just wrong. So the copy is
+    checked against the renderer rather than trusted.
+
+    The launcher cannot print the masthead: Claude Code takes the alternate
+    screen buffer on startup and wipes anything already on it. Reproducing the
+    panel in the rite is what puts it in the transcript, where it survives.
+    """
+
+    def setUp(self):
+        here = os.path.dirname(os.path.abspath(__file__))
+        coda = os.path.join(here, os.pardir, "runtime", "compact-coda.md")
+        with open(coda, encoding="utf-8") as handle:
+            self.coda = handle.read()
+
+    def test_the_rite_text_holds_the_canonical_panel(self):
+        fence = re.search(r"```text\n(.*?)\n```", self.coda, re.S)
+        self.assertIsNotNone(fence, "the rite's text fence is gone")
+        canonical = premiere_lueur().splitlines()
+        embedded = fence.group(1).splitlines()[:len(canonical)]
+        self.assertEqual(embedded, canonical,
+                         "the rite's panel has drifted from the renderer; "
+                         "repaste `python3 rouage/premiere_lueur.py`")
+
+    def test_the_rite_does_not_also_carry_the_old_text_masthead(self):
+        # The panel is titled and carries the motto, so the plain heading and
+        # the bare motto line it replaced must not creep back alongside it.
+        self.assertNotIn("—— FIRST LIGHT ——", self.coda)
+        self.assertEqual(self.coda.count(MOTTO), 1,
+                         "the motto appears outside the panel")
 
 
 if __name__ == "__main__":
