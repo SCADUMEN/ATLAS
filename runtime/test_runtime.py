@@ -153,6 +153,55 @@ class TheGeneratedAgentMatchesItsSources(unittest.TestCase):
         self.assertNotIn("# Canonical repository", self.AGENT.read_text())
 
 
+class TheCouncilSkillsCarryCoresOnly(unittest.TestCase):
+    """Doctrine must never reach a working context.
+
+    Until now that was a prose contract: the coda asked the model to read only
+    the OPERATIONAL CORE, and overlays/le-rouage.md conceded the rule was not
+    wired to any mechanism. A skill file that contains no doctrine cannot leak
+    it, so the guarantee stops depending on cooperation.
+    """
+
+    SKILLS = ROOT / "skills"
+    MANIFEST = ROOT / "runtime" / "subroutine-files.txt"
+
+    def members(self) -> list[str]:
+        lines = self.MANIFEST.read_text().splitlines()
+        return [Path(ln).stem for ln in lines
+                if ln.strip() and not ln.startswith("#")]
+
+    def test_every_council_member_has_a_skill(self):
+        for name in self.members():
+            self.assertTrue((self.SKILLS / name / "SKILL.md").is_file(),
+                            f"missing skills/{name}/SKILL.md")
+
+    def test_no_skill_carries_a_doctrine_section(self):
+        # The whole point. A DOCTRINE heading in a skill body means the
+        # authoring layer would load with the core.
+        for name in self.members():
+            body = (self.SKILLS / name / "SKILL.md").read_text()
+            self.assertNotIn("## DOCTRINE", body,
+                             f"skills/{name} leaks its doctrine")
+
+    def test_the_skills_match_their_sources(self):
+        done = run(BIN / "atlas-skills", "--check", check=False)
+        self.assertEqual(done.returncode, 0, done.stderr)
+
+    def test_le_fripon_cannot_self_activate(self):
+        # Doctrine: he never self-activates without L'Opérateur. As frontmatter
+        # the harness enforces it; as prose the model merely honoured it.
+        head = (self.SKILLS / "le-fripon" / "SKILL.md").read_text().split("---")[1]
+        self.assertIn("disable-model-invocation: true", head)
+
+    def test_the_unsealed_members_stay_model_invocable(self):
+        # Only Le Fripon is sealed. Sealing the rest would break the router:
+        # a gate that cannot fire on its own trigger is not a gate.
+        sealed = [n for n in self.members()
+                  if "disable-model-invocation: true"
+                  in (self.SKILLS / n / "SKILL.md").read_text().split("---")[1]]
+        self.assertEqual(sealed, ["le-fripon"], f"unexpected seals: {sealed}")
+
+
 class ContinuityCustody(unittest.TestCase):
 
     def make_project(self, parent: Path) -> Path:

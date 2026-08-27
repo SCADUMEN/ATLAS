@@ -80,5 +80,30 @@ else
   echo "atlas-doctor: Claude Code not found; bundle generation still works"
 fi
 
+# The plugin surfaces are generated, and generated files drift. Both of these
+# still load when stale, so nothing else would announce the mismatch.
+if [ -f "$REPO/agents/atlas.md" ]; then
+  if "$REPO/bin/atlas-context" --mode agent --output "$CHECK_DIR/agent.md" &&
+     cmp -s "$CHECK_DIR/agent.md" "$REPO/agents/atlas.md"; then
+    echo "atlas-doctor: agents/atlas.md matches its sources"
+  else
+    fail "agents/atlas.md has drifted; run bin/atlas-context --mode agent"
+  fi
+fi
+
+if [ -d "$REPO/skills" ]; then
+  if "$REPO/bin/atlas-skills" --check >/dev/null 2>&1; then
+    echo "atlas-doctor: council skills match their subroutine sources"
+  else
+    fail "council skills have drifted; run bin/atlas-skills"
+  fi
+  leaked=$(grep -l '^## DOCTRINE' "$REPO"/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$leaked" = 0 ]; then
+    echo "atlas-doctor: no council skill carries its doctrine"
+  else
+    fail "$leaked council skill(s) leak doctrine into the loadable surface"
+  fi
+fi
+
 grep -m1 'Core fingerprint:' "$CHECK_DIR/compact-a.md" | sed 's/^- /atlas-doctor: /'
 echo "atlas-doctor: compact and portable runtimes are deterministic and doctrine-stripped"
