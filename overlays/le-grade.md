@@ -43,7 +43,7 @@ Inverse — the XP a grade requires:
 XP(Grade) = XP100 · (Grade / 100)^2 = 1.3 · Grade^2
 ```
 
-**Calibration.** `XP100 = 13000` is the sum of the current build plus the specified roadmap (finish Le Rouage, build the case, the multi-agent bundle, a barrel adapter, and a shelf of knowledge modules). It is a design constant, stated here and tunable in one place. It is set so the current instrument — the one that just gained Reincarnation — reads Grade 80.
+**Calibration.** `XP100 = 13000` is the sum of a design-complete build plus its roadmap (finish Le Rouage, build the case, a barrel adapter, and a shelf of knowledge modules). It is a design constant, stated here and tunable in one place. It is anchored so the launcher milestone — the build that first gained Reincarnation — reads Grade 80; modules earned after it raise the grade from there.
 
 ### Prestige
 
@@ -89,12 +89,15 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | le-protocol-de-trois | Le Protocole des Trois Témoins | system | B | built | overlays/le-protocol-de-trois.md |
 | le-boitier | Le Boîtier — the case spec | system | B | built | hardware/le-boitier.md |
 | le-rouage | Le Rouage — the going train | system | A | partial | overlays/le-rouage.md |
+| runtime-contract | Runtime session contract | system | B | built | runtime/session-contract.md |
+| atlas-doctor | Runtime diagnostic — atlas-doctor | system | B | built | bin/atlas-doctor |
 | larchive-accession | L'Archive accession practice | knowledge | B | built | examples/larchive |
 | authenticating-people | Authenticating people — Schneider CS513 | knowledge | B | built | modules/authenticating-people.md |
 | reincarnation | Reincarnation — the portable launcher | meta | S | built | bin/atlas |
+| multi-agent-bundle | Doctrine-stripped portable bundle | meta | A | built | bin/atlas-context |
+| continuity-capsule | Continuity capsule — cross-barrel handoff | meta | A | built | bin/atlas-continuity |
 | le-rouage-complete | Le Rouage completed (barrel wired) | system | S | planned | rouage/ |
 | le-boitier-built | Le Boîtier — physical instrument | system | S | planned | hardware/le-boitier.md |
-| multi-agent-bundle | Doctrine-stripped multi-agent bundle | meta | A | planned | dist/atlas-bundle.md |
 | barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | planned | overlays/le-barillet.md |
 
 ---
@@ -111,10 +114,11 @@ XP required, by grade:
 
 | Grade | XP | Reached by |
 |---|---|---|
-| 80 | 8,320 | current build, with Reincarnation |
-| 85 | 9,393 | + ~4 knowledge modules, or finish Le Rouage (S) |
-| 90 | 10,530 | + the case built (S) and the multi-agent bundle (A) |
-| 95 | 11,733 | + the barrel adapter (A) and ~3 knowledge modules |
+| 80 | 8,320 | the launcher milestone — Reincarnation |
+| 85 | 9,393 | the portable bundle, continuity, and diagnostic — built |
+| 87 | 9,840 | current build |
+| 90 | 10,530 | + finish Le Rouage (S) |
+| 95 | 11,733 | + the case built (S) and the barrel adapter (A) |
 | 100 | 13,000 | design-complete instrument |
 
 To level ATLAS: build a module, list it in the ledger as `built` with a real path, and rerun `grade/grade.py`. Core-system work (finishing Le Rouage, building the case) and knowledge modules both count. That is the whole loop — preserve, build, score, preserve.
