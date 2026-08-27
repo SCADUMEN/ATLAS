@@ -123,13 +123,24 @@ crown.
 
 ### Quickstart
 
+Inside Claude Code:
+
+```text
+/plugin marketplace add SCADUMEN/ATLAS
+/plugin install atlas@scadumen
+```
+
+The plugin stays enabled across sessions — no flag, no `PATH` entry, nothing
+in your shell rc. Then clone the repository once and link the rite so `/atlas`
+resolves:
+
 ```sh
 git clone git@github.com:SCADUMEN/ATLAS.git
 ln -s "$(pwd)/ATLAS/skills-standalone/atlas" ~/.claude/skills/atlas
 ```
 
-Then enable the plugin itself. During development, point Claude Code at the
-checkout:
+To work on ATLAS itself, point Claude Code at your checkout instead of
+installing:
 
 ```sh
 claude --plugin-dir /path/to/ATLAS

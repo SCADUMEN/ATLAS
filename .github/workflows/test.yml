@@ -1,0 +1,39 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Suites and diagnostic
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        # atlas-context and atlas-doctor fingerprint with git hash-object, and
+        # the doctor reads the working tree, so the full checkout is required.
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Runtime assembly and plugin surfaces
+        run: python3 -m unittest discover runtime -v
+
+      - name: Le Rouage
+        run: python3 -m unittest discover rouage -v
+
+      - name: Le Grade
+        run: python3 -m unittest discover grade -v
+
+      - name: Diagnostic pulse
+        # Verifies determinism, doctrine stripping, and that the three
+        # generated surfaces still match their sources. A generated file that
+        # has drifted still loads, so nothing else would report it.
+        run: bin/atlas-doctor

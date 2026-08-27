@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 # BOOT READOUT (computed at load)
 
-!`python3 "${ATLAS_REPO:-$HOME/projects/shadow-atlas}/grade/grade.py" --oneline 2>/dev/null || true`
+!`"$HOME/.claude/skills/atlas/grade" 2>/dev/null || true`
 
 Perform the Arrival rite once. Reproduce the panel and the greeting
 below, filling `<N>` from the BOOT READOUT above and `<Operator>`
