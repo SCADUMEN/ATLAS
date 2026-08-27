@@ -8,7 +8,7 @@
 # context; ATLAS voice governs the session.
 #
 # Install:  ln -s /absolute/path/to/ATLAS/bin/atlas ~/.local/bin/atlas
-# Use:      atlas                 # bare launch: ATLAS performs the Arrival rite
+# Use:      atlas                 # bare launch: crown loaded, press Enter for the rite
 #           atlas -c              # resume the last conversation here (no rite)
 #           atlas "quick question"
 #           atlas --model ...     # any claude flag passes straight through
@@ -48,8 +48,15 @@ case ${1:-} in
     ;;
 esac
 
-# A bare launch (no args) is a boot: seed the Arrival rite as the first turn.
-# Any argument — a prompt, -c, a flag — is a normal launch and skips the rite.
+# A bare launch (no args) is a boot: load the boot signal so the Operator can
+# wind the crown. Any argument — a prompt, -c, a flag — is a normal launch and
+# loads nothing.
+#
+# The signal is passed as the positional prompt, which Claude Code's interactive
+# mode PREFILLS rather than sends: the rite fires when the Operator presses
+# Enter. That is deliberate on both sides. Interactive mode reserves the choice
+# of what gets sent, and the crown is the Operator's to wind. Only `claude -p`
+# submits a seeded prompt by itself, and print mode has no session to hand back.
 BOOT=0
 [ "$#" -eq 0 ] && BOOT=1
 ARRIVAL_CUE='⟨wind the crown⟩'
