@@ -8,8 +8,8 @@
 # context; ATLAS voice governs the session.
 #
 # Install:  ln -s /absolute/path/to/ATLAS/bin/atlas ~/.local/bin/atlas
-# Use:      atlas                 # interactive, in the current directory
-#           atlas -c              # resume the last conversation here
+# Use:      atlas                 # bare launch: ATLAS performs the Arrival rite
+#           atlas -c              # resume the last conversation here (no rite)
 #           atlas "quick question"
 #           atlas --model ...     # any claude flag passes straight through
 set -eu
@@ -48,6 +48,12 @@ case ${1:-} in
     ;;
 esac
 
+# A bare launch (no args) is a boot: seed the Arrival rite as the first turn.
+# Any argument — a prompt, -c, a flag — is a normal launch and skips the rite.
+BOOT=0
+[ "$#" -eq 0 ] && BOOT=1
+ARRIVAL_CUE='⟨wind the crown⟩'
+
 [ -x "$REPO/bin/atlas-context" ] || {
   echo "atlas: missing runtime builder: $REPO/bin/atlas-context" >&2
   echo "atlas: is $REPO a complete ATLAS checkout?" >&2
@@ -83,6 +89,17 @@ else
   else
     "$REPO/bin/atlas-context" --mode compact --no-continuity --output "$CTX"
   fi
+fi
+
+if [ "$BOOT" -eq 1 ]; then
+  # Append the launch-time grade so the rite reports it deterministically,
+  # then seed the arrival cue as the operator's first turn.
+  grade=$(python3 "$REPO/grade/grade.py" --oneline 2>/dev/null || true)
+  {
+    printf '\n---\n\n# BOOT READOUT (computed at launch)\n\n'
+    [ -n "$grade" ] && printf '%s\n' "$grade"
+  } >> "$CTX"
+  set -- "$ARRIVAL_CUE"
 fi
 
 claude --append-system-prompt-file "$CTX" --add-dir "$REPO" "$@"

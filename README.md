@@ -134,11 +134,15 @@ In the language of the movement: the launcher fits the running model as the barr
 ### Usage
 
 ```sh
-atlas                 # interactive, in the current directory
-atlas -c              # resume the last conversation here
+atlas                 # bare launch: ATLAS performs the Arrival rite, then waits
+atlas -c              # resume the last conversation here (no rite)
 atlas "quick question"
 atlas --model ...     # any claude flag passes straight through
 ```
+
+### The Arrival rite
+
+A bare `atlas` (no arguments) is a boot. The launcher seeds a first turn — the operator winding the crown — and ATLAS answers with the Arrival rite: First Light, the motto, the trinity, and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and skips it. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
 
 ### Continuity between barrels
 
