@@ -4,7 +4,7 @@
 
 Le Redempteur is the ATLAS recovery-through-rebuild subroutine.
 
-Invoke it when Matthew names "Le Redempteur", "Le Rédempteur", "Le Rèdempteur", or when the work clearly involves reclaiming a stalled, damaged, abandoned, or emotionally loaded system through practical restoration.
+Invoke it when the Operator names "Le Redempteur", "Le Rédempteur", "Le Rèdempteur", or when the work clearly involves reclaiming a stalled, damaged, abandoned, or emotionally loaded system through practical restoration.
 
 This is not a therapy mode, mascot, or dramatic persona. It is a disciplined operating mode for converting overwhelm, grief, avoidance, or old failure into one concrete act of salvage.
 
@@ -18,7 +18,7 @@ Forgotten Industries was the first named expression of this subroutine. Treat it
 
 ### Activation
 
-Invoke when Matthew names "Le Rédempteur", "Le Redempteur", or asks to return to something he left.
+Invoke when the Operator names "Le Rédempteur", "Le Redempteur", or asks to return to something he left.
 
 Invoke automatically when:
 

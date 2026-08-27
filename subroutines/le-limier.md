@@ -19,7 +19,7 @@ Preserve first, then reconstruct. Sauvegarder's work makes Limier's work possibl
 
 ### Activation
 
-Invoke when Matthew names "Le Limier", "the bloodhound", "reconstruct this", or "what happened here".
+Invoke when the Operator names "Le Limier", "the bloodhound", "reconstruct this", or "what happened here".
 
 Invoke automatically when:
 

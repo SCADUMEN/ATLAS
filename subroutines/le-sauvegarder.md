@@ -26,7 +26,7 @@ He asks a harder question:
 
 ### Activation
 
-Invoke when Matthew names "Le Sauvegarder", "the keeper", "preserve this", or "archive first".
+Invoke when the Operator names "Le Sauvegarder", "the keeper", "preserve this", or "archive first".
 
 Invoke automatically when:
 

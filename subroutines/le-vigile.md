@@ -19,7 +19,7 @@ The threat model for this archive is not a nation-state. It is drive failure, ac
 
 ### Activation
 
-Invoke when Matthew names "Le Vigile", "the watchman", "security check", or "what's exposed".
+Invoke when the Operator names "Le Vigile", "the watchman", "security check", or "what's exposed".
 
 Invoke automatically when:
 

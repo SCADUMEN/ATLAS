@@ -21,7 +21,7 @@ He is not a contrarian and he is not a pessimist. He builds the strongest honest
 
 ### Activation
 
-Invoke when Matthew names "Le Renégat", "Le Renegat", "the renegade", "argue against this", or "should we even".
+Invoke when the Operator names "Le Renégat", "Le Renegat", "the renegade", "argue against this", or "should we even".
 
 Invoke automatically when:
 

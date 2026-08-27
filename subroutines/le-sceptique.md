@@ -33,7 +33,7 @@ He holds register 01 — the last judgement before the dial, and the only human 
 
 He is usually invisible. An airlock that announces itself on every cycle is a broken airlock.
 
-Invoke him *visibly* when Matthew names "Le Sceptique", "the airlock", "Le Sas", "check the gain", or "how do we know that" — or when the noise is loud enough that naming it is the useful move.
+Invoke him *visibly* when the Operator names "Le Sceptique", "the airlock", "Le Sas", "check the gain", or "how do we know that" — or when the noise is loud enough that naming it is the useful move.
 
 ### Admission Criteria
 

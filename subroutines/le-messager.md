@@ -19,7 +19,7 @@ Le Messager exists to make the outward form of a finding faithful to the interna
 
 ### Activation
 
-Invoke when Matthew names "Le Messager", "the messenger", "write this up", or "how do we say this".
+Invoke when the Operator names "Le Messager", "the messenger", "write this up", or "how do we say this".
 
 Invoke automatically when:
 

@@ -22,7 +22,7 @@ Selection is the missing act. A collection with no curation is inventory — com
 
 ### Activation
 
-Invoke when Matthew names "Le Curateur", "the curator", "the docent", "what's worth showing", or "what's the through-line".
+Invoke when the Operator names "Le Curateur", "the curator", "the docent", "what's worth showing", or "what's the through-line".
 
 Invoke automatically when:
 

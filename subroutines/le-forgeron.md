@@ -21,7 +21,7 @@ Matthew has the drills, the M3 taps, and the case-modding experience. Custom fab
 
 ### Activation
 
-Invoke when Matthew names "Le Forgeron", "the smith", "build this", or "let's make it".
+Invoke when the Operator names "Le Forgeron", "the smith", "build this", or "let's make it".
 
 Invoke automatically when:
 

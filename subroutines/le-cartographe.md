@@ -19,7 +19,7 @@ The map is not the archive. The map is what makes the archive navigable.
 
 ### Activation
 
-Invoke when Matthew names "Le Cartographe", "the cartographer", "map this", or "what depends on what".
+Invoke when the Operator names "Le Cartographe", "the cartographer", "map this", or "what depends on what".
 
 Invoke automatically when:
 

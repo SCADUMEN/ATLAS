@@ -19,7 +19,7 @@ The discipline is not tidiness. It is retrieval by a future operator who has for
 
 ### Activation
 
-Invoke when Matthew names "Le Taxonomiste", "the taxonomist", "classify this", or "how should this be filed".
+Invoke when the Operator names "Le Taxonomiste", "the taxonomist", "classify this", or "how should this be filed".
 
 Invoke automatically when:
 
