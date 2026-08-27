@@ -34,6 +34,7 @@ Overlays and templates:
 
 Portable launcher and examples:
 
+- `install.sh` - one-command install for the launcher. See below.
 - `bin/atlas` - launches Claude Code fitted as the barrel, with the compact ATLAS core injected. See below.
 - `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.
 
@@ -95,19 +96,28 @@ For larger projects, keep the project-specific instructions local and use this r
 
 ## Portable Launcher (Claude Code)
 
-`bin/atlas` lets you type `atlas` in any directory and get Claude Code running as ATLAS, without leaving the project you are in.
+Type `atlas` in any directory and Claude Code starts as ATLAS, layered on top of the project you are already in.
 
-It assembles the compact core — `ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`, `overlays/le-conseil.md` — plus a runtime coda, and passes it to Claude with `--append-system-prompt-file`. It also runs `--add-dir` on this repository, so the subroutine cores are read on demand per `overlays/le-rouage.md` rather than all loaded up front. The session is layered on top of the current directory's own context; ATLAS voice governs.
+### Quickstart
+
+```sh
+git clone git@github.com:SCADUMEN/ATLAS.git
+cd ATLAS
+eval "$(./install.sh)"
+atlas
+```
+
+`eval "$(./install.sh)"` symlinks `bin/atlas` into `~/.local/bin`, makes sure that directory is on your `PATH` — now and in future shells — and leaves `atlas` usable in the same shell, no reload. Running `./install.sh` without the `eval` installs just as durably; you open a new terminal to pick it up.
+
+Requirements: a POSIX shell, git, and Claude Code (`claude`) on your `PATH`.
+
+### What it does
+
+It assembles the compact core — `ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`, `overlays/le-conseil.md` — plus a runtime coda, and passes it to Claude with `--append-system-prompt-file`. It also runs `--add-dir` on this repository, so the subroutine cores are read on demand per `overlays/le-rouage.md` rather than all loaded up front. ATLAS voice governs; the current directory's own context still loads beneath it.
 
 In the language of the movement: the launcher fits the running model as the barrel (`overlays/le-barillet.md`). The model supplies force; the doctrines supply shape.
 
-Install once (`~/.local/bin` must be on your `PATH`):
-
-```sh
-ln -s "$(pwd)/bin/atlas" ~/.local/bin/atlas
-```
-
-Then, from anywhere:
+### Usage
 
 ```sh
 atlas                 # interactive, in the current directory
@@ -116,7 +126,15 @@ atlas "quick question"
 atlas --model ...     # any claude flag passes straight through
 ```
 
-The core injected is compact by design; the twelve subroutine doctrines are not loaded up front, because thirteen doctrines do not fit the reserve. When a council member is named, its `OPERATIONAL CORE` is read from `subroutines/` on demand.
+### Manual install
+
+If you would rather not run the script, and `~/.local/bin` is on your `PATH`:
+
+```sh
+ln -s "$(pwd)/bin/atlas" ~/.local/bin/atlas
+```
+
+The twelve subroutine doctrines are not loaded up front, because thirteen doctrines do not fit the reserve. When a council member is named, its `OPERATIONAL CORE` is read from `subroutines/` on demand.
 
 This is the Claude Code path. A doctrine-stripped bundle for agents without file access is a planned follow-up; Codex reads the repository files natively through `AGENTS.md`.
 
