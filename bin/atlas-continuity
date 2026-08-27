@@ -1,0 +1,104 @@
+#!/bin/sh
+# Create or check a private, downstream ATLAS continuity capsule.
+set -eu
+CDPATH=''
+
+SOURCE=$0
+while [ -h "$SOURCE" ]; do
+  source_dir=$(cd -P "$(dirname "$SOURCE")" && pwd)
+  SOURCE=$(readlink "$SOURCE")
+  case $SOURCE in
+    /*) ;;
+    *) SOURCE=$source_dir/$SOURCE ;;
+  esac
+done
+SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+REPO=$(cd -P "$SCRIPT_DIR/.." && pwd)
+
+usage() {
+  cat <<'EOF'
+Usage: atlas-continuity init [PROJECT]
+       atlas-continuity check [PROJECT]
+       atlas-continuity path [PROJECT]
+
+init creates PROJECT/.atlas/continuity.md with mode 600 and adds .atlas/ to
+the repository's local info/exclude. It refuses to overwrite an existing file.
+EOF
+}
+
+COMMAND=${1:-}
+PROJECT_INPUT=${2:-.}
+case $COMMAND in init|check|path) ;; *) usage >&2; exit 2 ;; esac
+[ -d "$PROJECT_INPUT" ] || {
+  echo "atlas-continuity: project directory not found: $PROJECT_INPUT" >&2
+  exit 1
+}
+
+PROJECT_ABS=$(cd -P "$PROJECT_INPUT" && pwd)
+if git -C "$PROJECT_ABS" rev-parse --show-toplevel >/dev/null 2>&1; then
+  PROJECT_ROOT=$(git -C "$PROJECT_ABS" rev-parse --show-toplevel)
+else
+  PROJECT_ROOT=$PROJECT_ABS
+fi
+CAPSULE=$PROJECT_ROOT/.atlas/continuity.md
+
+if [ "$COMMAND" = path ]; then
+  printf '%s\n' "$CAPSULE"
+  exit 0
+fi
+
+if [ "$COMMAND" = init ]; then
+  [ ! -e "$CAPSULE" ] || {
+    echo "atlas-continuity: refusing to overwrite: $CAPSULE" >&2
+    exit 1
+  }
+  mkdir -p "$PROJECT_ROOT/.atlas"
+  cp "$REPO/templates/continuity-capsule.md" "$CAPSULE"
+  chmod 600 "$CAPSULE"
+
+  if git -C "$PROJECT_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+    EXCLUDE=$(git -C "$PROJECT_ROOT" rev-parse --git-path info/exclude)
+    case $EXCLUDE in /*) ;; *) EXCLUDE=$PROJECT_ROOT/$EXCLUDE ;; esac
+    mkdir -p "$(dirname "$EXCLUDE")"
+    if ! grep -qxF '.atlas/' "$EXCLUDE" 2>/dev/null; then
+      printf '\n# private ATLAS continuity state\n.atlas/\n' >> "$EXCLUDE"
+    fi
+  fi
+  echo "atlas-continuity: created private capsule: $CAPSULE"
+fi
+
+[ -f "$CAPSULE" ] || {
+  echo "atlas-continuity: capsule not found: $CAPSULE" >&2
+  exit 1
+}
+
+# `ls -l` is used instead of platform-specific stat flags. Characters 5-10
+# are the group and other permission bits on POSIX long listings.
+GROUP_OTHER=$(LC_ALL=C ls -ld "$CAPSULE" | cut -c5-10)
+[ "$GROUP_OTHER" = '------' ] || {
+  echo "atlas-continuity: capsule is readable or writable beyond its owner" >&2
+  echo "atlas-continuity: run: chmod 600 $CAPSULE" >&2
+  exit 1
+}
+
+for heading in \
+  '## Verified state' \
+  '## Operator testimony' \
+  '## Inferences and plans' \
+  '## Active objective' \
+  '## Last safe state' \
+  '## Next concrete move'
+do
+  grep -qxF "$heading" "$CAPSULE" || {
+    echo "atlas-continuity: missing heading: $heading" >&2
+    exit 1
+  }
+done
+
+if git -C "$PROJECT_ROOT" rev-parse --git-dir >/dev/null 2>&1 &&
+   git -C "$PROJECT_ROOT" ls-files --error-unmatch -- .atlas/continuity.md >/dev/null 2>&1; then
+  echo "atlas-continuity: capsule is tracked; move private state out of git" >&2
+  exit 1
+fi
+
+echo "atlas-continuity: capsule is present, structured, and untracked"

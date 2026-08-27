@@ -30,12 +30,14 @@ while [ -h "$SOURCE" ]; do
 done
 REPO=$(cd -P "$(dirname "$SOURCE")" && pwd)
 
-if [ ! -f "$REPO/bin/atlas" ]; then
-  log "install: $REPO/bin/atlas not found."
-  log "install: run this from inside the ATLAS repository."
-  exit 1
-fi
-chmod +x "$REPO/bin/atlas" 2>/dev/null || true
+for script in atlas atlas-context atlas-continuity atlas-doctor; do
+  if [ ! -f "$REPO/bin/$script" ]; then
+    log "install: $REPO/bin/$script not found."
+    log "install: run this from inside a complete ATLAS repository."
+    exit 1
+  fi
+  chmod +x "$REPO/bin/$script" 2>/dev/null || true
+done
 
 command -v claude >/dev/null 2>&1 || \
   log "install: note — 'claude' is not on your PATH yet. Install Claude Code before running atlas."

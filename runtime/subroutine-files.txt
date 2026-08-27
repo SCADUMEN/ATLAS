@@ -1,0 +1,14 @@
+# Ordered by the dial, then the crown. Portable bundles load cores only.
+subroutines/le-continuant.md
+subroutines/le-redempteur.md
+subroutines/le-sceptique.md
+subroutines/le-curateur.md
+subroutines/le-taxonomiste.md
+subroutines/le-vigile.md
+subroutines/le-fripon.md
+subroutines/le-renegat.md
+subroutines/le-cartographe.md
+subroutines/le-limier.md
+subroutines/le-forgeron.md
+subroutines/le-messager.md
+subroutines/le-sauvegarder.md

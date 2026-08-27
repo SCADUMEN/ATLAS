@@ -31,17 +31,28 @@ done
 SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
 REPO=$(cd -P "$SCRIPT_DIR/.." && pwd)
 
-# The compact core. Cores and manifest only — never the subroutine doctrines,
-# which do not fit the reserve (see overlays/le-barillet.md).
-CORE="ATLAS.md rapport/AGENTS.md profiles/matthew.md overlays/le-conseil.md"
+# ATLAS-owned controls use a namespaced flag so ordinary Claude prompts and
+# flags continue to pass through unchanged.
+case ${1:-} in
+  --atlas-doctor)
+    shift
+    exec "$REPO/bin/atlas-doctor" "$@"
+    ;;
+  --atlas-continuity)
+    shift
+    exec "$REPO/bin/atlas-continuity" "$@"
+    ;;
+  --atlas-context)
+    shift
+    exec "$REPO/bin/atlas-context" "$@"
+    ;;
+esac
 
-for f in $CORE; do
-  if [ ! -f "$REPO/$f" ]; then
-    echo "atlas: missing core file: $REPO/$f" >&2
-    echo "atlas: is $REPO a complete ATLAS checkout?" >&2
-    exit 1
-  fi
-done
+[ -x "$REPO/bin/atlas-context" ] || {
+  echo "atlas: missing runtime builder: $REPO/bin/atlas-context" >&2
+  echo "atlas: is $REPO a complete ATLAS checkout?" >&2
+  exit 1
+}
 
 command -v claude >/dev/null 2>&1 || {
   echo "atlas: 'claude' not found on PATH. Install Claude Code first." >&2
@@ -54,45 +65,24 @@ CTX=$(mktemp "${TMPDIR:-/tmp}/atlas-context.XXXXXX") || {
 }
 trap 'rm -f "$CTX"' EXIT INT TERM
 
-for f in $CORE; do
-  cat "$REPO/$f" >> "$CTX"
-  printf '\n\n' >> "$CTX"
-done
-
-# Runtime coda — the "ATLAS wins" precedence layer and the on-demand routing
-# contract. $REPO is substituted so the path is correct on any machine.
-cat >> "$CTX" <<EOF
----
-
-# ATLAS SESSION — RUNTIME NOTES
-
-This Claude Code session is fitted as **the barrel** of Le Conseil (see
-\`overlays/le-barillet.md\`): the model supplies force, the doctrines above supply
-shape. You are not ATLAS. ATLAS is the bezel, the interface set before the dive
-and read against ever after. You turn the train.
-
-**Voice precedence.** For this session, ATLAS voice and formatting govern and
-override any conflicting global or project persona: steady, direct, concise;
-short paragraphs; minimal bullets; no tables; no walls of text; no
-corporate-assistant phrasing. Technical correctness, safety, and preservation of
-evidence still come first, always.
-
-**The canonical ATLAS repository is at \`$REPO\`** and is on your allowed tool
-paths. The four files above are the compact core. The twelve subroutine
-doctrines are not loaded, by design.
-
-**Routing.** Follow \`overlays/le-rouage.md\` and \`overlays/le-conseil.md\`. When
-Matthew names a council member, or a member's activation block fires, Read that
-member's \`OPERATIONAL CORE\` from \`subroutines/<name>.md\` — cores only, never the
-\`DOCTRINE\` sections. Convene a member only when it changes the answer; most turns
-convene none. Held members are not named, listed, or marked absent in output
-(\`overlays/le-sas.md\`). Le Sceptique (01) is always on; Le Fripon (05) never
-self-activates without L'Opérateur.
-
-**When the power reserve runs low** (context filling), stop cleanly, record
-state, and hand off. Do not run down mid-cycle.
-
-A thing documented is a thing not yet lost.
-EOF
+PROJECT_DIR=$(pwd -P)
+if [ "${ATLAS_NO_CONTINUITY:-0}" = 1 ]; then
+  "$REPO/bin/atlas-context" --mode compact --no-continuity --output "$CTX"
+elif [ -n "${ATLAS_CONTINUITY_FILE:-}" ]; then
+  "$REPO/bin/atlas-context" --mode compact \
+    --continuity "$ATLAS_CONTINUITY_FILE" --output "$CTX"
+else
+  if git -C "$PROJECT_DIR" rev-parse --show-toplevel >/dev/null 2>&1; then
+    PROJECT_ROOT=$(git -C "$PROJECT_DIR" rev-parse --show-toplevel)
+  else
+    PROJECT_ROOT=$PROJECT_DIR
+  fi
+  if [ -f "$PROJECT_ROOT/.atlas/continuity.md" ]; then
+    "$REPO/bin/atlas-context" --mode compact \
+      --continuity "$PROJECT_ROOT/.atlas/continuity.md" --output "$CTX"
+  else
+    "$REPO/bin/atlas-context" --mode compact --no-continuity --output "$CTX"
+  fi
+fi
 
 claude --append-system-prompt-file "$CTX" --add-dir "$REPO" "$@"
