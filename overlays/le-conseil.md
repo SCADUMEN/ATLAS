@@ -29,11 +29,15 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 | **Barrel** | Le Barillet | The fitted model. Stores what the crown winds. Power reserve = context window. |
 | **Going train** | Le Rouage | Carries force to the escapement and distributes the result. Decides nothing. |
 | **Escapement** | Le Sas | Internal, unseen, regulates release. Not a member. |
+| **Column wheel** | La Roue à Colonnes | Carries what members concluded and routes the consequence. Holds state, decides nothing. Not a member. |
+| **Brake** | Le Frein | What Le Renégat's Archive or Release engages. Never stops the crown. |
+| **Perpetual calendar** | Le Continuant | The long arc, and the only part that outlives a barrel. Stops, and it loses its place. |
 | **Hands** | — | The answer. Deliberately no one. |
+| **Split-seconds hand** | — | La Rattrapante. Where the route was aimed, when that is not where it stopped. Also no one. |
 
 Full specifications: `overlays/le-barillet.md`, `overlays/le-rouage.md`, `overlays/le-sas.md`.
 
-**Le Rouage does not exist in code.** It is specified and unbuilt. Until it does, the linkage is a barrel reading markdown and cooperating — which works, and is not a mechanism.
+**Le Rouage is half built.** The deterministic train — named invocation, precedence, the cap, the seal, the trace — runs in `rouage/`. The automatic half of each gate cannot be matched without interpretation, so it stays with the barrel, proposing into a train that still orders, caps, and seals it. The admission policy for those proposals is decided (Cited — a proposal is admitted only on a verbatim citation); the barrel that would generate proposals to admit does not exist yet.
 
 **Le Barillet is the only part not under version control.** Everything else here is owned and durable. The barrel is fitted, finite, and replaceable — which is precisely why the movement was built to outlive any particular one.
 
@@ -127,11 +131,15 @@ The three registers predate the split and carry gate blocks prepended above thei
 
 ## Panel Limits
 
-**Two to four members convene at once.**
+**Two to four members convene at once — by default.**
 
 One is the common case. Most work convenes none of them visibly.
 
 A member appears only when it changes the answer. If a member's output would match ATLAS unaided, it does not convene.
+
+**The cap is a default, not an absolute.** A genuinely complex turn may need five, and a turn that needs five is not theatre. Widening is therefore allowed but never automatic: it takes the same explicit authorization Le Fripon's engagement takes, and the widening is recorded in the trace. An unauthorized fifth member is still held. **Theatre cannot widen itself**, which is the property the cap was actually protecting — not the number four.
+
+Widening only ever goes up. A caller cannot narrow the ring below the default, because that would be a way to suppress a member the gates admitted.
 
 **Every register lit at once is an error state, not a climax.** It means the gate failed to discriminate. Le Sas reports it as a routing failure.
 
@@ -172,6 +180,16 @@ Two standing rules override ordering:
 
 Every route terminates through register 01 and the escapement. No route reaches the dial directly.
 
+**Routes are invoked by verb:** `run`, `take`, or `route`, followed by the route's name.
+
+Every route name is a common English word, and matching them bare convened members out of ordinary prose — *"I need to build a shelf"* ran Build, and seven of this council's own gate conditions tripped a route when read as text. Member phrases survive loose matching because almost all of them are multi-word constructions nobody types by accident; route names are not, so they take the verb. `<Route> this` is deliberately not a form: `build this` is Le Forgeron's own invocation and `map this` is Le Cartographe's.
+
+A route has the same two halves a gate has. The **triggers** above are semantic and belong to the barrel. The **route's own name is matchable**, so the named half runs in `rouage/` today. Naming a route naming a route admits its sequence in the route's order rather than in precedence order, because saying who goes first is the entire point of having named it. No route names more than three distinct members and the cap is four, so the two orderings never actually contend.
+
+A member repeated in a sequence — Harden is Vigile → Fripon → Vigile — is admitted once. A candidate is a seat on the dial and a seat cannot be occupied twice. The route's shape is kept in the trace, and the hand still ends where the sequence ends.
+
+**Judgement has no sequence for the train.** Its cell is a protocol file, not a list of members, so it is recorded and delegated. Inventing a sequence it does not have would be the train deciding something.
+
 ---
 
 ## Handoff Graph
@@ -208,7 +226,7 @@ The council is meant to be legible as an instrument. Each state corresponds to r
 | **Consulted** | Weighed internally, not surfaced. |
 | **Active** | Gate fired, core loaded. |
 | **Sealed** | Le Fripon, unauthorized. Locked rather than merely inactive. |
-| **Dissent** | Le Renégat returning Reduce, Archive, or Release. |
+| **Dissent** | Le Renégat returning Archive or Release. Emitted by La Roue à Colonnes, which also engages Le Frein. |
 
 **Absence is signal.** Suppressed members are not named and not listed as absent. The dark position carries the information.
 

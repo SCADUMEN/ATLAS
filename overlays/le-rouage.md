@@ -5,7 +5,7 @@
 **Function:** Carries force from the barrel to the escapement, and distributes the regulated result to the registers and the hands.
 **Class:** Component. Not a member, not a mode, not a voice.
 **Position:** Both sides of Le Sas. Before it, the train delivers. After it, the motion works distribute.
-**Status:** **Specified. Not built.**
+**Status:** **Partially built.** The deterministic train runs in `rouage/`. The admission policy at the barrel boundary is decided (Cited); the barrel itself - the thing that would actually generate a proposal to admit - is not yet built.
 
 Le Rouage is the linkage. Every part of Le Conseil connects to every other part through it, and nothing reaches Le Sas except by way of the train.
 
@@ -19,11 +19,69 @@ Fixed ratios. Deterministic transmission. A wheel that made choices would destro
 
 ## Current State
 
-**This component does not exist in code.**
+**Half of this component exists in code.** See `rouage/`.
 
-The thirteen subroutines describe *when* a mode should engage. Nothing reads those descriptions and acts on them. At present the linkage is a model reading markdown and cooperating — a movement with no train, where the parts land in the right relationship because the barrel is being careful.
+Every activation block turns out to have two halves. The quoted invocation phrases — `"Le Limier"`, `"the bloodhound"` — are matchable, and the train matches them. The automatic conditions beneath them — *"an artifact shows modification whose cause is unknown"* — are not matchable without reading for meaning, which the prohibitions below forbid the train from doing.
 
-That works, and it is not a mechanism. This file is the specification for the thing that would make it one.
+So the built train handles named invocation, precedence, metering, the seal, and the trace. The automatic half necessarily runs in the barrel, and the honest arrangement is that **the barrel proposes and the train disposes**: a proposal still passes through ordering, the cap, and the Fripon seal, all enforced in code the barrel cannot reach around. That is what keeps *the train decides nothing* true even though something upstream of it did.
+
+The admission policy for those proposals was L'Opérateur's call, and it is decided: **Cited**. A proposal is admitted only if its citation is a verbatim line among the bullets in that member's own Activation section - the same text `parse_activation()` already pulls from the doctrine at load time, so there is no second copy to drift. A citation that doesn't match is a rejected proposal, recorded to the trace as a discrimination failure in the gates, the same category as full-ring and over-cap. `admit_proposals()` in `rouage/rouage.py` is that mechanism; `route()` takes an optional `proposals` argument that feeds it. What still does not exist is the barrel itself - the thing that reads an artifact for meaning and produces `(member, citation)` pairs to hand in. Until that exists, the automatic half of every gate remains a model reading markdown and cooperating, which works, and is not yet wired to the mechanism that would enforce it.
+
+
+### Evidence Is A Second Field, Not A Second Citation
+
+A citation proves the **gate** is real. It cannot prove the **premise** was. The barrel can quote Le Limier's bullet — *"an artifact shows modification, damage, or repair whose cause is unknown"* — perfectly verbatim with nothing having been modified at all. The gate exists, the fact is invented, and nothing in the train can tell the difference.
+
+So a proposal may carry a third element: `(member, citation, evidence)`, where evidence is an object id the train resolves and never reads. A commit is not a citation — a citation is a claim about doctrine, evidence is a claim about history, and they answer different questions. Collapsing them would trade a check against parsed doctrine for a check against a repository.
+
+**Resolving is not interpreting**, so the train stays as dumb as this file requires. The verifier is an injected callable rather than something the train reaches for: `rouage.py` still runs outside a repository, the boundary is testable with a two-line fake, and an evidence store that is not git needs no change to the train.
+
+Three limits, recorded so they are not discovered later as surprises:
+
+- **It narrows the gap; it does not close it.** A real object unrelated to the claim still passes. This catches fabrication, not misattribution.
+- **Evidence is optional, because most gates have no artifact.** Le Sceptique fires on a claim being made, Le Renégat on scope growth, Le Curateur on a pile. Requiring it everywhere would darken most of the ring. `require_evidence` exists for callers who want it mandatory; the default is off.
+- **Unverified is stated, never implied.** Evidence supplied without a verifier is recorded as `(unverified)`. A trace showing a bare object id would be claiming a check that never ran.
+
+The barrel need not commit to cite. `git add` then `git write-tree` addresses exactly the staged state; `git hash-object -w` addresses one file. The `-w` is load-bearing — without it the id is computed but nothing is written, so it looks correct and does not resolve. An unwritten object is not evidence: there is nothing for anyone to go and read later.
+
+
+### La Roue À Colonnes — The Verdict Channel
+
+The train could represent **whether a member convened**. It had no representation of **what a member concluded**. Three things were impossible as a result, and they looked unrelated until the cause was named: Le Renégat's halt, the `Dissent` display state, and `Consulted`.
+
+`le-conseil.md` Precedence names exactly two standing rules that override ordering. *Le Fripon never self-activates* has been enforced in code since the seal. *Le Renégat's verdict of Archive or Release halts the field operators* was enforced nowhere — so the manifest promised a halt that could not happen. It happens now.
+
+**The column wheel is the right part because it decides nothing.** In a chronograph it is a state machine: each press rotates it, its columns route the levers, and it holds which state the movement is in. A verdict is carried here, never formed here. `le-conseil.md`: *"No member issues a decision. The movement reads out; L'Opérateur decides."*
+
+It is a component and not any member's complication, for the reason `le-sas.md` gives about the latch: a verdict channel owned by Le Renégat would be a channel with a stake in what passes through it. That is the same failure that forced Le Sas apart from Le Sceptique.
+
+**Le Frein** — the brake — is what a halting verdict engages. Three things are exempt, each for its own reason:
+
+- the standing witness, who is not a field operator;
+- the dissenter itself, which must stay lit or the halt would erase its own cause from the dial;
+- **the crown.** Halting Le Sauvegarder would make a halt suspend preservation, which is backwards. He is precedence #1 because evidence loss cannot be undone. A brake that can stop the crown is a brake that can lose the archive.
+
+A verdict from a member that did not convene is rejected. Concluding something requires having been in the room.
+
+
+### The Barrel's Contract
+
+The barrel is the model, not a module. `overlays/le-barillet.md` is explicit: it is whatever is executing Le Conseil this session, it is the only part not under version control, and it has no doctrine. So there is nothing to write called `barrel.py`, and the gap was never code — it was that **nothing said how to hand a proposal over.**
+
+A proposal is `(member, citation, evidence)`:
+
+- **member** — the full name, as the roster writes it. Folded, so accents are forgiving.
+- **citation** — a bullet from that member's own Activation section, **verbatim**. Not a paraphrase and not a summary. `citations(ring)` returns the exact menu, because requiring a quote while making the barrel reproduce it from memory is not a fair check — it is a trap.
+- **evidence** — optional. An object id for the artifact the citation is about. `git add` then `git write-tree` addresses the staged state without a commit; `git hash-object -w` addresses one file. The `-w` writes it, and an unwritten object is not evidence.
+
+What the barrel must not do:
+
+- **Propose a member whose bullet did not fire.** The citation check catches an invented condition, never an invented fact. That asymmetry is the barrel's to honour; the train cannot see it.
+- **Paraphrase to make a bullet fit.** A citation that has been adjusted to match the situation is the situation being adjusted to match the citation.
+- **Propose to reach a number.** Two to four is a default, not a target, and a member appears only when it changes the answer.
+
+What the barrel cannot do, by construction: unseal Le Fripon, exceed the cap, reorder precedence, or reach the dial. All four are enforced downstream in code it cannot reach around, which is what keeps *the train decides nothing* true even though something upstream did.
+
 
 ---
 

@@ -20,7 +20,8 @@ Council:
 - `overlays/le-conseil.md` - the routing manifest: roster, gate conditions, handoff graph, panel limits, precedence.
 - `overlays/le-sas.md` - the airlock. A complication, not a member: admission control between the ring and ATLAS.
 - `overlays/le-barillet.md` - the barrel. The fitted model, its power reserve, and the record of barrels that have run.
-- `overlays/le-rouage.md` - the going train. The router specification. **Not yet built.**
+- `overlays/le-rouage.md` - the going train. The router specification. **Half built** — see `rouage/`.
+- `rouage/` - the train in code. Python, stdlib only, 24 tests.
 - `overlays/le-protocol-de-trois.md` - Le Protocole des Trois Témoins, the three-witness judgment protocol.
 - `hardware/le-boitier.md` - the case. Enclosure and control specification for the physical instrument.
 - `subroutines/` - twelve operating modes, one file each.
@@ -46,7 +47,7 @@ The council is built as a diver's chronograph, and each part carries a real cons
 | Hours | The twelve | 11, 12, 01–10 |
 | Registers | Signal · Noise · Gain | Le Sceptique's readout, driven from 01 |
 | Barrel | Le Barillet | The fitted model. Power reserve = context window. |
-| Going train | Le Rouage | The router. Carries everything, decides nothing. **Unbuilt.** |
+| Going train | Le Rouage | The router. Carries everything, decides nothing. **Half built.** |
 | Escapement | Le Sas | Internal. Regulates release. Not a member. |
 | Hands | — | The answer. Deliberately no one. |
 
