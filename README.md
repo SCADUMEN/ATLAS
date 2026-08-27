@@ -142,7 +142,13 @@ atlas --model ...     # any claude flag passes straight through
 
 ### The Arrival rite
 
-A bare `atlas` (no arguments) is a boot. The launcher seeds a first turn — the operator winding the crown — and ATLAS answers with the Arrival rite: First Light, the motto, the trinity, and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and skips it. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
+A bare `atlas` (no arguments) is a boot. The launcher engraves the masthead — a framed globe borne by a kneeling figure, titled First Light, over the motto — then seeds a first turn: the operator winding the crown. ATLAS answers with the Arrival rite: the trinity and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and skips both. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
+
+The masthead is drawn by `rouage/premiere_lueur.py`, not by the model. Art held in the rite text would cost context on every boot and would drift the moment it was paraphrased. The launcher prints it only to a terminal, so pipes and logs stay clean.
+
+```sh
+python3 rouage/premiere_lueur.py  # the masthead, on demand
+```
 
 ### Continuity between barrels
 
