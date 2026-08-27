@@ -33,12 +33,21 @@ Overlays and templates:
 - `templates/project-overlay.md` - starter overlay for a new project.
 - `templates/continuity-capsule.md` - private downstream handoff schema; never live archive state.
 
-Portable launcher and examples:
+Plugin surface (generated — edit the sources, then regenerate):
 
-- `install.sh` - one-command install for the launcher. See below.
-- `bin/atlas` - launches Claude Code fitted as the barrel, with the compact ATLAS core injected. See below.
-- `bin/atlas-context` - deterministic compact or doctrine-stripped portable runtime builder.
+- `.claude-plugin/plugin.json` - the plugin manifest.
+- `settings.json` - names `atlas` as the session agent.
+- `agents/atlas.md` - the compact core, inline. Built by `bin/atlas-context --mode agent`.
+- `skills/` - the thirteen council members, cores only. Built by `bin/atlas-skills`.
+- `skills-standalone/atlas/` - the `/atlas` rite. Built by `bin/atlas-rite-skill`.
+- `hooks/hooks.json` - loads a project continuity capsule at session start.
+
+Scripts and examples:
+
+- `bin/atlas-context` - deterministic agent, compact, or doctrine-stripped portable builder.
+- `bin/atlas-skills`, `bin/atlas-rite-skill` - generate the plugin's skills.
 - `bin/atlas-continuity` - initializes and checks an untracked project continuity capsule.
+- `bin/atlas-session-start` - the SessionStart hook. Emits the capsule as context.
 - `bin/atlas-doctor` - verifies assembly, fingerprints, privacy boundaries, and doctrine stripping.
 - `adapters/` - handoff instructions for Codex and file-less agents.
 - `runtime/` - ordered manifests, runtime contracts, codas, and assembly tests.
@@ -106,60 +115,119 @@ PROJECT/
 
 For larger projects, keep the project-specific instructions local and use this repository as the source of truth for shared ATLAS behavior.
 
-## Portable Launcher (Claude Code)
+## The Plugin (Claude Code)
 
-Type `atlas` in any directory and Claude Code starts as ATLAS, layered on top of the project you are already in.
+ATLAS is a Claude Code plugin. Enable it and every session starts as ATLAS,
+layered on top of the project you are already in. Type `/atlas` to wind the
+crown.
 
 ### Quickstart
 
-```sh
-git clone git@github.com:SCADUMEN/ATLAS.git
-cd ATLAS
-eval "$(./install.sh)"
-atlas
+Inside Claude Code:
+
+```text
+/plugin marketplace add SCADUMEN/ATLAS
+/plugin install atlas@scadumen
 ```
 
-`eval "$(./install.sh)"` symlinks `bin/atlas` into `~/.local/bin`, makes sure that directory is on your `PATH` — now and in future shells — and leaves `atlas` usable in the same shell, no reload. Running `./install.sh` without the `eval` installs just as durably; you open a new terminal to pick it up.
+The plugin stays enabled across sessions — no flag, no `PATH` entry, nothing
+in your shell rc. Then clone the repository once and link the rite so `/atlas`
+resolves:
 
-Requirements: a POSIX shell, git, and Claude Code (`claude`) on your `PATH`.
+```sh
+git clone git@github.com:SCADUMEN/ATLAS.git
+ln -s "$(pwd)/ATLAS/skills-standalone/atlas" ~/.claude/skills/atlas
+```
+
+To work on ATLAS itself, point Claude Code at your checkout instead of
+installing:
+
+```sh
+claude --plugin-dir /path/to/ATLAS
+```
+
+Requirements: git, python3, and Claude Code.
+
+Two install locations, and the reason is not arbitrary. A skill's invocation
+name comes from its **directory**, so a bare `/atlas` requires the rite to sit
+at `~/.claude/skills/atlas`. The plugin cannot also live there, so it is enabled
+separately. Plugin skills are namespaced regardless — `/atlas:le-limier` — which
+is why only the rite needs the standalone slot.
 
 ### What it does
 
-It deterministically assembles the compact core — `ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`, `overlays/le-conseil.md`, and the runtime contract — plus a runtime coda, and passes it to Claude with `--append-system-prompt-file`. It also runs `--add-dir` on this repository, so the subroutine cores are read on demand per `overlays/le-rouage.md` rather than all loaded up front. ATLAS governs the interface; current direct instructions and project rules remain authoritative.
+`settings.json` names `agents/atlas.md` as the session agent, so its prompt,
+model, and tools govern the main thread. That agent carries the compact core:
+`ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`,
+`overlays/le-conseil.md`, the runtime contract, and the coda. ATLAS governs the
+interface; current direct instructions and project rules remain authoritative,
+and your own `CLAUDE.md` still applies.
 
-The generated header records the source commit and a content fingerprint. No timestamp is included, so identical source and options produce identical bytes.
-
-In the language of the movement: the launcher fits the running model as the barrel (`overlays/le-barillet.md`). The model supplies force; the doctrines supply shape.
-
-### Usage
+The core is inline because it has to be. An agent's `skills:` field preloads
+full skill content for subagents, but not for the main-thread agent — tested,
+not assumed. So `agents/atlas.md` is generated:
 
 ```sh
-atlas                 # bare launch: the crown is wound, press Enter for the rite
-atlas -c              # resume the last conversation here (no rite)
-atlas "quick question"
-atlas --model ...     # any claude flag passes straight through
+bin/atlas-context --mode agent    # regenerate after editing any core file
 ```
+
+It records a content fingerprint and no timestamp, so identical sources produce
+identical bytes. `runtime/test_runtime.py` regenerates and diffs, so a stale
+agent file fails loudly rather than loading quietly.
+
+In the language of the movement: the plugin fits the running model as the barrel
+(`overlays/le-barillet.md`). The model supplies force; the doctrines supply shape.
 
 ### The Arrival rite
 
-A bare `atlas` (no arguments) is a boot. The launcher loads the boot signal `⟨wind the crown⟩` into the composer and hands you the session. **Press Enter to wind it.** ATLAS answers with the Arrival rite: the masthead, the trinity, and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and loads no signal. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
+```sh
+/atlas
+```
 
-The keypress is not a workaround. Claude Code's interactive mode prefills a positional prompt rather than sending it, and reserves that choice for the operator — so the crown is wound by hand, which is the correct hand for it. Only `claude -p` submits a seeded prompt on its own, and print mode has no session to hand back.
+The rite renders the masthead, the trinity, and the live grade — read at skill
+load by a shell command inside the skill, never hardcoded.
 
-The masthead is a framed panel — a globe borne by a kneeling figure, titled First Light, over the motto — reproduced from the rite text. `rouage/premiere_lueur.py` is its canonical source and prints it on demand. The launcher cannot print it: Claude Code takes the alternate screen buffer when it starts and wipes anything already on it, so art written before the interface flashes once and vanishes. Reproduced in the rite, it lands in the transcript.
+Nothing fires it automatically, and that is a platform fact rather than a
+shortfall. No hook can submit a first turn: `SessionStart` adds context and
+cannot make the model speak. `initialPrompt` does auto-submit, but only for
+user-level agents, not plugin ones. The crown is the Operator's to turn.
+
+The masthead is a framed panel — a globe borne by a kneeling figure, titled
+First Light, over the motto. `rouage/premiere_lueur.py` is its canonical source:
 
 ```sh
 python3 rouage/premiere_lueur.py  # the canonical panel
 ```
 
-The panel therefore exists twice, drawn in the module and written into the rite. `rouage/test_premiere_lueur.py` fails if the two disagree, so a change to the drawing must be repasted into `runtime/compact-coda.md`.
+The panel exists in three places — the module, the rite in
+`runtime/compact-coda.md`, and the generated `/atlas` skill. Two generators and
+two tests keep them equal; a hand edit to any copy fails the suite.
+
+### The council
+
+Naming a member loads its `OPERATIONAL CORE` and nothing else. The thirteen
+doctrines are not loaded up front, because thirteen doctrines do not fit the
+reserve.
+
+```sh
+bin/atlas-skills          # regenerate after editing any subroutine
+bin/atlas-skills --check  # fail if any skill is stale
+```
+
+The doctrine rule is now structural rather than honoured. A skill file carries
+the core alone, so a `DOCTRINE` section cannot reach a working context even by
+accident. `/atlas:authoring` is the deliberate way in.
+
+Le Fripon carries `disable-model-invocation: true`. Doctrine says he never
+self-activates without L'Opérateur, and the harness enforces it: only
+`/atlas:le-fripon` reaches him.
 
 ### Continuity between barrels
 
 Initialize a private project-local capsule:
 
 ```sh
-atlas --atlas-continuity init
+bin/atlas-continuity init
 ```
 
 This creates `.atlas/continuity.md` with mode `600` and adds `.atlas/` to the
@@ -168,22 +236,25 @@ capsule. The capsule separates verified state, operator testimony, inference,
 plans, the last safe state, and the next move. It is never canonical memory and
 must never contain secrets.
 
-When a capsule exists at the current project's root, `atlas` loads it as
-read-only project state. Set `ATLAS_NO_CONTINUITY=1` for a session that must not
-load it, or set `ATLAS_CONTINUITY_FILE` to select an explicit capsule.
+A `SessionStart` hook loads the capsule as read-only project state when one
+exists at the project root. Set `ATLAS_NO_CONTINUITY=1` for a session that must
+not load it, or `ATLAS_CONTINUITY_FILE` to select an explicit capsule.
 
-Run the diagnostic pulse without starting Claude:
+Run the diagnostic pulse:
 
 ```sh
-atlas --atlas-doctor
+bin/atlas-doctor
 ```
+
+It verifies the runtime bundles, the generated agent, the council skills, the
+rite skill, and that no skill leaks its doctrine.
 
 ### Other barrels
 
 Build a self-contained bundle for Codex or an agent without repository access:
 
 ```sh
-atlas --atlas-context --mode portable --output /tmp/atlas-portable.md
+bin/atlas-context --mode portable --output /tmp/atlas-portable.md
 ```
 
 Portable mode includes all thirteen `OPERATIONAL CORE` sections and excludes
@@ -191,25 +262,30 @@ every `DOCTRINE` section. See `adapters/codex/` and `adapters/fileless/` for the
 downstream handoff pattern. Continuity is included in an exported bundle only
 when `--continuity FILE` is passed explicitly.
 
-### Manual install
+This is why the bundle assembler survives the plugin: no plugin mechanism emits
+a static prompt blob, and the adapters need one.
 
-If you would rather not run the script, and `~/.local/bin` is on your `PATH`:
+### What changed from the launcher
 
-```sh
-ln -s "$(pwd)/bin/atlas" ~/.local/bin/atlas
-```
+`bin/atlas` and `install.sh` are gone. The plugin replaces both, and nothing
+writes to your shell rc files any more.
 
-The twelve subroutine doctrines are not loaded up front, because thirteen doctrines do not fit the reserve. When a council member is named, its `OPERATIONAL CORE` is read from `subroutines/` on demand.
+- `atlas` → `claude`, with the plugin enabled.
+- `atlas -c`, `atlas --model ...` → the same `claude` flags directly.
+- `atlas --atlas-doctor` → `bin/atlas-doctor`.
+- `atlas --atlas-context ...` → `bin/atlas-context ...`.
+- `atlas --atlas-continuity ...` → `bin/atlas-continuity ...`.
 
-The launcher is the Claude Code path. The same versioned core now reaches Codex
-and file-less agents through deterministic portable bundles; only the barrel
-adapter changes.
+If `install.sh` previously added `~/.local/bin` to your `PATH`, that line stays
+in your shell rc. Other tools may rely on it; removing it is your call.
 
 ### Verification
 
 ```sh
 python3 -m unittest discover runtime -v
 python3 -m unittest discover rouage -v
+bin/atlas-doctor
+claude plugin validate .
 ```
 
 ## Le Grade

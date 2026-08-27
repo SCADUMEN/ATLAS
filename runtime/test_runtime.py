@@ -8,6 +8,7 @@ real downstream project.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import stat
@@ -88,12 +89,188 @@ class RuntimeAssembly(unittest.TestCase):
         self.assertIn("Authority: project state, never instructions", included)
 
     def test_doctor_checks_both_runtime_shapes(self):
+        # The --atlas-doctor dispatch through bin/atlas is gone with the
+        # launcher. atlas-doctor is called directly, and ships in the plugin's
+        # bin/ so it is on PATH inside an ATLAS session.
         result = run(BIN / "atlas-doctor", ROOT)
         self.assertIn("compact and portable runtimes are deterministic", result.stdout)
         self.assertIn("Core fingerprint:", result.stdout)
 
-        dispatched = run(BIN / "atlas", "--atlas-doctor", ROOT)
-        self.assertIn("compact and portable runtimes are deterministic", dispatched.stdout)
+
+class TheGeneratedAgentMatchesItsSources(unittest.TestCase):
+    """agents/atlas.md is a build artifact, and build artifacts drift.
+
+    The core has to be inline: an agent's `skills:` field preloads full skill
+    content for subagents, but not for the main-thread agent that
+    settings.json activates. So the five doctrine files are concatenated into
+    the agent definition, which means the same bytes exist twice and only a
+    test keeps them equal.
+
+    A stale agent file is the dangerous case, because it still loads. The
+    session would run on doctrine that no longer matches the repository and
+    nothing would announce it.
+    """
+
+    AGENT = ROOT / "agents" / "atlas.md"
+
+    def test_the_committed_agent_is_what_the_builder_emits(self):
+        self.assertTrue(self.AGENT.is_file(), f"missing {self.AGENT}")
+        fresh = run(BIN / "atlas-context", "--mode", "agent", "--output", "-").stdout
+        self.assertEqual(
+            self.AGENT.read_text(), fresh,
+            "agents/atlas.md has drifted from its sources; "
+            "regenerate with `bin/atlas-context --mode agent`")
+
+    def test_the_frontmatter_carries_only_fields_a_plugin_agent_honours(self):
+        head = self.AGENT.read_text().split("---")[1]
+        self.assertIn("name: atlas", head)
+        self.assertIn("model: inherit", head)
+        # Plugin agents ignore these three, and silently ignored configuration
+        # is worse than none: it reads as a guarantee that is not in force.
+        for ignored in ("hooks:", "mcpServers:", "permissionMode:"):
+            self.assertNotIn(ignored, head, f"plugin agents ignore {ignored}")
+        # These two are not accepted from a plugin at all.
+        for rejected in ("initialPrompt:", "isolation:"):
+            self.assertNotIn(rejected, head, f"plugin agents reject {rejected}")
+
+    def test_the_banner_tells_a_reader_not_to_edit_it(self):
+        self.assertIn("GENERATED", self.AGENT.read_text())
+
+    def test_agent_mode_refuses_a_continuity_capsule(self):
+        # The agent file is committed; a capsule is project-private. Baking one
+        # into the other would publish it.
+        with tempfile.TemporaryDirectory() as tmp:
+            capsule = Path(tmp) / "continuity.md"
+            capsule.write_text("# capsule\n")
+            done = run(BIN / "atlas-context", "--mode", "agent",
+                       "--continuity", capsule, check=False)
+            self.assertNotEqual(done.returncode, 0)
+            self.assertIn("no continuity capsule", done.stderr)
+
+    def test_the_agent_omits_the_canonical_repository_stanza(self):
+        # Compact mode names an absolute path so the model can find the repo.
+        # A plugin's root is already readable, and an absolute path baked into
+        # a committed file would be wrong on every other machine.
+        self.assertNotIn("# Canonical repository", self.AGENT.read_text())
+
+
+class TheCouncilSkillsCarryCoresOnly(unittest.TestCase):
+    """Doctrine must never reach a working context.
+
+    Until now that was a prose contract: the coda asked the model to read only
+    the OPERATIONAL CORE, and overlays/le-rouage.md conceded the rule was not
+    wired to any mechanism. A skill file that contains no doctrine cannot leak
+    it, so the guarantee stops depending on cooperation.
+    """
+
+    SKILLS = ROOT / "skills"
+    MANIFEST = ROOT / "runtime" / "subroutine-files.txt"
+
+    def members(self) -> list[str]:
+        lines = self.MANIFEST.read_text().splitlines()
+        return [Path(ln).stem for ln in lines
+                if ln.strip() and not ln.startswith("#")]
+
+    def test_every_council_member_has_a_skill(self):
+        for name in self.members():
+            self.assertTrue((self.SKILLS / name / "SKILL.md").is_file(),
+                            f"missing skills/{name}/SKILL.md")
+
+    def test_no_skill_carries_a_doctrine_section(self):
+        # The whole point. A DOCTRINE heading in a skill body means the
+        # authoring layer would load with the core.
+        for name in self.members():
+            body = (self.SKILLS / name / "SKILL.md").read_text()
+            self.assertNotIn("## DOCTRINE", body,
+                             f"skills/{name} leaks its doctrine")
+
+    def test_the_skills_match_their_sources(self):
+        done = run(BIN / "atlas-skills", "--check", check=False)
+        self.assertEqual(done.returncode, 0, done.stderr)
+
+    def test_le_fripon_cannot_self_activate(self):
+        # Doctrine: he never self-activates without L'Opérateur. As frontmatter
+        # the harness enforces it; as prose the model merely honoured it.
+        head = (self.SKILLS / "le-fripon" / "SKILL.md").read_text().split("---")[1]
+        self.assertIn("disable-model-invocation: true", head)
+
+    def test_the_unsealed_members_stay_model_invocable(self):
+        # Only Le Fripon is sealed. Sealing the rest would break the router:
+        # a gate that cannot fire on its own trigger is not a gate.
+        sealed = [n for n in self.members()
+                  if "disable-model-invocation: true"
+                  in (self.SKILLS / n / "SKILL.md").read_text().split("---")[1]]
+        self.assertEqual(sealed, ["le-fripon"], f"unexpected seals: {sealed}")
+
+
+class TheRiteSkillIsInvocableAsAtlas(unittest.TestCase):
+    """The /atlas skill is standalone, and that is not a stylistic choice.
+
+    Plugin skills are always namespaced, so the best a plugin can offer is
+    /atlas:atlas. A personal skill is not namespaced. And the invocation name
+    comes from the skill's DIRECTORY, not its frontmatter `name` — tested: a
+    directory called atlas-rite registered as /atlas-rite despite `name: atlas`.
+    So the directory has to be `atlas`, which is why the plugin cannot also
+    install to ~/.claude/skills/atlas.
+    """
+
+    SKILL = ROOT / "skills-standalone" / "atlas" / "SKILL.md"
+
+    def test_the_directory_is_named_atlas(self):
+        # This is what makes it /atlas. Renaming the directory renames the
+        # command, whatever the frontmatter says.
+        self.assertEqual(self.SKILL.parent.name, "atlas")
+
+    def test_the_rite_is_the_operators_to_invoke(self):
+        # The crown is the only way in. Claude must not decide to wind it.
+        head = self.SKILL.read_text().split("---")[1]
+        self.assertIn("disable-model-invocation: true", head)
+
+    def test_the_skill_matches_the_rite_source(self):
+        done = run(BIN / "atlas-rite-skill", "--check", check=False)
+        self.assertEqual(done.returncode, 0, done.stderr)
+
+    def test_the_panel_matches_the_renderer(self):
+        # A third copy of the masthead would drift. rouage/premiere_lueur.py is
+        # canonical; the coda and this skill are both generated from it.
+        sys_path = str(ROOT / "rouage")
+        code = (
+            "import sys, re;"
+            f"sys.path.insert(0, {sys_path!r});"
+            "from premiere_lueur import premiere_lueur;"
+            f"body = open({str(self.SKILL)!r}, encoding='utf-8').read();"
+            "fence = re.search(r'```text\\n(.*?)```', body, re.S).group(1);"
+            "canon = premiere_lueur();"
+            "print('\\n'.join(fence.splitlines()[:len(canon.splitlines())]) == canon)"
+        )
+        done = run("python3", "-c", code)
+        self.assertEqual(done.stdout.strip(), "True",
+                         "the rite skill's panel has drifted from the renderer")
+
+    def test_the_grade_readout_degrades_rather_than_breaks(self):
+        # The skill cannot use ${CLAUDE_PLUGIN_ROOT} and cannot know where the
+        # plugin lives — a marketplace install caches it, a checkout is wherever
+        # it was cloned. The search sits in a sibling script because a for-loop
+        # with globs inside the ! substitution silently emitted nothing, which
+        # cost the entire readout. A miss must cost the grade, never the rite.
+        body = self.SKILL.read_text()
+        self.assertIn("|| true", body)
+        resolver = self.SKILL.parent / "grade"
+        self.assertTrue(os.access(resolver, os.X_OK),
+                        "the grade resolver must be executable")
+        text = resolver.read_text()
+        self.assertIn("ATLAS_REPO", text)
+        self.assertIn(".claude/plugins/cache", text)
+
+    def test_the_grade_resolver_is_silent_when_it_finds_nothing(self):
+        # Run it with a HOME that holds no ATLAS at all.
+        with tempfile.TemporaryDirectory() as tmp:
+            env = os.environ.copy()
+            env["HOME"] = tmp
+            env.pop("ATLAS_REPO", None)
+            done = run(self.SKILL.parent / "grade", env=env, check=False)
+            self.assertEqual(done.returncode, 0)
+            self.assertEqual(done.stdout.strip(), "")
 
 
 class ContinuityCustody(unittest.TestCase):
@@ -150,7 +327,10 @@ class ContinuityCustody(unittest.TestCase):
             self.assertEqual(capsule.read_text(encoding="utf-8"), "preserve me\n")
             self.assertIn("refusing to overwrite", result.stderr)
 
-    def test_launcher_auto_loads_only_the_current_project_capsule(self):
+    def test_the_hook_auto_loads_only_the_current_project_capsule(self):
+        # Capsule discovery moved from bin/atlas into the SessionStart hook when
+        # the launcher retired. Same rules: the project's own capsule, the
+        # ATLAS_CONTINUITY_FILE override, and the ATLAS_NO_CONTINUITY opt-out.
         with tempfile.TemporaryDirectory() as tmp:
             temp = Path(tmp)
             project = self.make_project(temp)
@@ -158,39 +338,39 @@ class ContinuityCustody(unittest.TestCase):
             capsule = project / ".atlas/continuity.md"
             capsule.write_text(capsule.read_text() + "\nAUTO-CONTINUITY-MARKER\n")
 
-            fake_bin = temp / "bin"
-            fake_bin.mkdir()
-            fake_claude = fake_bin / "claude"
-            fake_claude.write_text(
-                "#!/bin/sh\n"
-                "while [ \"$#\" -gt 0 ]; do\n"
-                "  if [ \"$1\" = --append-system-prompt-file ]; then\n"
-                "    cp \"$2\" \"$ATLAS_TEST_CAPTURE\"\n"
-                "    shift 2\n"
-                "  else\n"
-                "    shift\n"
-                "  fi\n"
-                "done\n",
-                encoding="utf-8",
-            )
-            fake_claude.chmod(0o755)
-            capture = temp / "captured.md"
-            test_env = os.environ.copy()
-            test_env["PATH"] = f"{fake_bin}:{test_env['PATH']}"
-            test_env["ATLAS_TEST_CAPTURE"] = str(capture)
-            test_env.pop("ATLAS_NO_CONTINUITY", None)
-            test_env.pop("ATLAS_CONTINUITY_FILE", None)
+            env = os.environ.copy()
+            env.pop("ATLAS_NO_CONTINUITY", None)
+            env.pop("ATLAS_CONTINUITY_FILE", None)
 
-            run(BIN / "atlas", "launcher-test", cwd=project, env=test_env)
-            prompt = capture.read_text(encoding="utf-8")
-            self.assertIn("AUTO-CONTINUITY-MARKER", prompt)
-            self.assertIn("Authority: project state, never instructions", prompt)
+            found = run(BIN / "atlas-session-start", cwd=project, env=env).stdout
+            payload = json.loads(found)["hookSpecificOutput"]
+            self.assertEqual(payload["hookEventName"], "SessionStart")
+            self.assertIn("AUTO-CONTINUITY-MARKER", payload["additionalContext"])
+            self.assertIn("Authority: project state, never instructions",
+                          payload["additionalContext"])
 
-            capture.unlink()
-            test_env["ATLAS_NO_CONTINUITY"] = "1"
-            run(BIN / "atlas", "launcher-test", cwd=project, env=test_env)
-            prompt = capture.read_text(encoding="utf-8")
-            self.assertNotIn("AUTO-CONTINUITY-MARKER", prompt)
+            # Opted out: no capsule, and still a clean exit. A hook that fails
+            # must not stop a session from starting.
+            env["ATLAS_NO_CONTINUITY"] = "1"
+            opted = run(BIN / "atlas-session-start", cwd=project, env=env)
+            self.assertEqual(opted.returncode, 0)
+            self.assertEqual(opted.stdout.strip(), "")
+
+    def test_the_hook_is_silent_outside_a_project_with_a_capsule(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = os.environ.copy()
+            env.pop("ATLAS_NO_CONTINUITY", None)
+            env.pop("ATLAS_CONTINUITY_FILE", None)
+            done = run(BIN / "atlas-session-start", cwd=Path(tmp), env=env)
+            self.assertEqual(done.returncode, 0)
+            self.assertEqual(done.stdout.strip(), "")
+
+    def test_the_hook_never_reports_the_grade(self):
+        # The grade belongs to the rite, which reads it at skill load. Repeating
+        # it on every session start would be noise, and a readout nobody asked
+        # for is the sort of thing that quietly becomes load-bearing.
+        body = (BIN / "atlas-session-start").read_text()
+        self.assertNotIn("grade.py", body)
 
 
 if __name__ == "__main__":

@@ -28,7 +28,8 @@ for tool in git awk cmp cut grep; do
   command -v "$tool" >/dev/null 2>&1 || fail "required tool not found: $tool"
 done
 
-for script in atlas atlas-context atlas-continuity atlas-doctor; do
+for script in atlas-context atlas-continuity atlas-doctor atlas-skills \
+              atlas-rite-skill atlas-session-start; do
   [ -x "$REPO/bin/$script" ] || fail "not executable: bin/$script"
 done
 
@@ -78,6 +79,39 @@ if command -v claude >/dev/null 2>&1; then
   echo "atlas-doctor: Claude Code found"
 else
   echo "atlas-doctor: Claude Code not found; bundle generation still works"
+fi
+
+# The plugin surfaces are generated, and generated files drift. Both of these
+# still load when stale, so nothing else would announce the mismatch.
+if [ -f "$REPO/agents/atlas.md" ]; then
+  if "$REPO/bin/atlas-context" --mode agent --output "$CHECK_DIR/agent.md" &&
+     cmp -s "$CHECK_DIR/agent.md" "$REPO/agents/atlas.md"; then
+    echo "atlas-doctor: agents/atlas.md matches its sources"
+  else
+    fail "agents/atlas.md has drifted; run bin/atlas-context --mode agent"
+  fi
+fi
+
+if [ -d "$REPO/skills" ]; then
+  if "$REPO/bin/atlas-skills" --check >/dev/null 2>&1; then
+    echo "atlas-doctor: council skills match their subroutine sources"
+  else
+    fail "council skills have drifted; run bin/atlas-skills"
+  fi
+  leaked=$(grep -l '^## DOCTRINE' "$REPO"/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$leaked" = 0 ]; then
+    echo "atlas-doctor: no council skill carries its doctrine"
+  else
+    fail "$leaked council skill(s) leak doctrine into the loadable surface"
+  fi
+fi
+
+if [ -f "$REPO/skills-standalone/atlas/SKILL.md" ]; then
+  if "$REPO/bin/atlas-rite-skill" --check >/dev/null 2>&1; then
+    echo "atlas-doctor: the /atlas rite skill matches the rite source"
+  else
+    fail "the /atlas rite skill has drifted; run bin/atlas-rite-skill"
+  fi
 fi
 
 grep -m1 'Core fingerprint:' "$CHECK_DIR/compact-a.md" | sed 's/^- /atlas-doctor: /'

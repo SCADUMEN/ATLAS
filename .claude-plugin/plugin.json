@@ -1,0 +1,14 @@
+{
+  "name": "atlas",
+  "displayName": "ATLAS",
+  "description": "Le Conseil — a versioned movement fitted to a running model. Technical recovery, archive work, planning, and calm execution.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Tyler Etters",
+    "url": "https://github.com/SCADUMEN"
+  },
+  "homepage": "https://github.com/SCADUMEN/ATLAS",
+  "repository": "https://github.com/SCADUMEN/ATLAS",
+  "license": "MIT",
+  "keywords": ["atlas", "doctrine", "archive", "recovery", "preservation"]
+}
