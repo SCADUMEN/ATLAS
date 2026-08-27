@@ -142,7 +142,15 @@ atlas --model ...     # any claude flag passes straight through
 
 ### The Arrival rite
 
-A bare `atlas` (no arguments) is a boot. The launcher seeds a first turn — the operator winding the crown — and ATLAS answers with the Arrival rite: First Light, the motto, the trinity, and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and skips it. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
+A bare `atlas` (no arguments) is a boot. The launcher seeds a first turn — the operator winding the crown — and ATLAS answers with the Arrival rite: the masthead, the trinity, and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and skips it. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
+
+The masthead is a framed panel — a globe borne by a kneeling figure, titled First Light, over the motto — reproduced from the rite text. `rouage/premiere_lueur.py` is its canonical source and prints it on demand. The launcher cannot print it: Claude Code takes the alternate screen buffer when it starts and wipes anything already on it, so art written before the interface flashes once and vanishes. Reproduced in the rite, it lands in the transcript.
+
+```sh
+python3 rouage/premiere_lueur.py  # the canonical panel
+```
+
+The panel therefore exists twice, drawn in the module and written into the rite. `rouage/test_premiere_lueur.py` fails if the two disagree, so a change to the drawing must be repasted into `runtime/compact-coda.md`.
 
 ### Continuity between barrels
 
