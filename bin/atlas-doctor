@@ -105,5 +105,13 @@ if [ -d "$REPO/skills" ]; then
   fi
 fi
 
+if [ -f "$REPO/skills-standalone/atlas/SKILL.md" ]; then
+  if "$REPO/bin/atlas-rite-skill" --check >/dev/null 2>&1; then
+    echo "atlas-doctor: the /atlas rite skill matches the rite source"
+  else
+    fail "the /atlas rite skill has drifted; run bin/atlas-rite-skill"
+  fi
+fi
+
 grep -m1 'Core fingerprint:' "$CHECK_DIR/compact-a.md" | sed 's/^- /atlas-doctor: /'
 echo "atlas-doctor: compact and portable runtimes are deterministic and doctrine-stripped"

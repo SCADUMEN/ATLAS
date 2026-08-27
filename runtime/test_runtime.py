@@ -202,6 +202,58 @@ class TheCouncilSkillsCarryCoresOnly(unittest.TestCase):
         self.assertEqual(sealed, ["le-fripon"], f"unexpected seals: {sealed}")
 
 
+class TheRiteSkillIsInvocableAsAtlas(unittest.TestCase):
+    """The /atlas skill is standalone, and that is not a stylistic choice.
+
+    Plugin skills are always namespaced, so the best a plugin can offer is
+    /atlas:atlas. A personal skill is not namespaced. And the invocation name
+    comes from the skill's DIRECTORY, not its frontmatter `name` — tested: a
+    directory called atlas-rite registered as /atlas-rite despite `name: atlas`.
+    So the directory has to be `atlas`, which is why the plugin cannot also
+    install to ~/.claude/skills/atlas.
+    """
+
+    SKILL = ROOT / "skills-standalone" / "atlas" / "SKILL.md"
+
+    def test_the_directory_is_named_atlas(self):
+        # This is what makes it /atlas. Renaming the directory renames the
+        # command, whatever the frontmatter says.
+        self.assertEqual(self.SKILL.parent.name, "atlas")
+
+    def test_the_rite_is_the_operators_to_invoke(self):
+        # The crown is the only way in. Claude must not decide to wind it.
+        head = self.SKILL.read_text().split("---")[1]
+        self.assertIn("disable-model-invocation: true", head)
+
+    def test_the_skill_matches_the_rite_source(self):
+        done = run(BIN / "atlas-rite-skill", "--check", check=False)
+        self.assertEqual(done.returncode, 0, done.stderr)
+
+    def test_the_panel_matches_the_renderer(self):
+        # A third copy of the masthead would drift. rouage/premiere_lueur.py is
+        # canonical; the coda and this skill are both generated from it.
+        sys_path = str(ROOT / "rouage")
+        code = (
+            "import sys, re;"
+            f"sys.path.insert(0, {sys_path!r});"
+            "from premiere_lueur import premiere_lueur;"
+            f"body = open({str(self.SKILL)!r}, encoding='utf-8').read();"
+            "fence = re.search(r'```text\\n(.*?)```', body, re.S).group(1);"
+            "canon = premiere_lueur();"
+            "print('\\n'.join(fence.splitlines()[:len(canon.splitlines())]) == canon)"
+        )
+        done = run("python3", "-c", code)
+        self.assertEqual(done.stdout.strip(), "True",
+                         "the rite skill's panel has drifted from the renderer")
+
+    def test_the_grade_readout_degrades_rather_than_breaks(self):
+        # The skill cannot use ${CLAUDE_PLUGIN_ROOT} and cannot know where the
+        # plugin lives, so a missing grade script must leave the rite intact.
+        body = self.SKILL.read_text()
+        self.assertIn("ATLAS_REPO", body)
+        self.assertIn("|| true", body)
+
+
 class ContinuityCustody(unittest.TestCase):
 
     def make_project(self, parent: Path) -> Path:
