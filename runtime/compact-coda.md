@@ -36,11 +36,8 @@ name (`profiles/matthew.md` → Matthew; fall back to "Operator" if no profile i
 loaded). Then stop and await the Operator. Never perform the rite for any other
 message, and never quote the boot signal back.
 
-The masthead is part of the rite. Reproduce the panel exactly as it is drawn
-below: every row is 64 columns wide and the frame only closes if each one is
-copied character for character. Do not redraw it, do not re-centre it, and do
-not substitute similar-looking glyphs. `python3 rouage/premiere_lueur.py` prints
-the canonical panel if it is ever in doubt.
+The panel below is the masthead. It opens the rite, then the greeting follows
+it. Copy it as it is drawn.
 
 ```text
 ┌─ FIRST LIGHT ────────────────────────────────────────────────┐
