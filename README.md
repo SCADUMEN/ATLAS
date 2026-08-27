@@ -32,6 +32,11 @@ Overlays and templates:
 - `templates/repo-AGENTS.md` - starter root instructions for downstream repositories.
 - `templates/project-overlay.md` - starter overlay for a new project.
 
+Portable launcher and examples:
+
+- `bin/atlas` - launches Claude Code fitted as the barrel, with the compact ATLAS core injected. See below.
+- `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.
+
 ## Le Conseil
 
 Thirteen subroutines, gated and routed by `overlays/le-conseil.md`. They are operating modes of one agent, not thirteen agents.
@@ -87,6 +92,33 @@ PROJECT/
 ```
 
 For larger projects, keep the project-specific instructions local and use this repository as the source of truth for shared ATLAS behavior.
+
+## Portable Launcher (Claude Code)
+
+`bin/atlas` lets you type `atlas` in any directory and get Claude Code running as ATLAS, without leaving the project you are in.
+
+It assembles the compact core — `ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`, `overlays/le-conseil.md` — plus a runtime coda, and passes it to Claude with `--append-system-prompt-file`. It also runs `--add-dir` on this repository, so the subroutine cores are read on demand per `overlays/le-rouage.md` rather than all loaded up front. The session is layered on top of the current directory's own context; ATLAS voice governs.
+
+In the language of the movement: the launcher fits the running model as the barrel (`overlays/le-barillet.md`). The model supplies force; the doctrines supply shape.
+
+Install once (`~/.local/bin` must be on your `PATH`):
+
+```sh
+ln -s "$(pwd)/bin/atlas" ~/.local/bin/atlas
+```
+
+Then, from anywhere:
+
+```sh
+atlas                 # interactive, in the current directory
+atlas -c              # resume the last conversation here
+atlas "quick question"
+atlas --model ...     # any claude flag passes straight through
+```
+
+The core injected is compact by design; the twelve subroutine doctrines are not loaded up front, because thirteen doctrines do not fit the reserve. When a council member is named, its `OPERATIONAL CORE` is read from `subroutines/` on demand.
+
+This is the Claude Code path. A doctrine-stripped bundle for agents without file access is a planned follow-up; Codex reads the repository files natively through `AGENTS.md`.
 
 ## Operating Principle
 
