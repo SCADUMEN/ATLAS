@@ -93,7 +93,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | atlas-doctor | Runtime diagnostic — atlas-doctor | system | B | built | bin/atlas-doctor |
 | larchive-accession | L'Archive accession practice | knowledge | B | built | examples/larchive |
 | authenticating-people | Authenticating people — Schneider CS513 | knowledge | B | built | modules/authenticating-people.md |
-| reincarnation | Reincarnation — the portable launcher | meta | S | built | bin/atlas |
+| reincarnation | Reincarnation — the fitted plugin | meta | S | built | agents/atlas.md |
 | multi-agent-bundle | Doctrine-stripped portable bundle | meta | A | built | bin/atlas-context |
 | continuity-capsule | Continuity capsule — cross-barrel handoff | meta | A | built | bin/atlas-continuity |
 | le-rouage-complete | Le Rouage completed (barrel wired) | system | S | planned | rouage/ |

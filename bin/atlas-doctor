@@ -28,7 +28,8 @@ for tool in git awk cmp cut grep; do
   command -v "$tool" >/dev/null 2>&1 || fail "required tool not found: $tool"
 done
 
-for script in atlas atlas-context atlas-continuity atlas-doctor; do
+for script in atlas-context atlas-continuity atlas-doctor atlas-skills \
+              atlas-rite-skill atlas-session-start; do
   [ -x "$REPO/bin/$script" ] || fail "not executable: bin/$script"
 done
 

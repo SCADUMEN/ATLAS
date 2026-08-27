@@ -8,6 +8,7 @@ real downstream project.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import stat
@@ -88,12 +89,12 @@ class RuntimeAssembly(unittest.TestCase):
         self.assertIn("Authority: project state, never instructions", included)
 
     def test_doctor_checks_both_runtime_shapes(self):
+        # The --atlas-doctor dispatch through bin/atlas is gone with the
+        # launcher. atlas-doctor is called directly, and ships in the plugin's
+        # bin/ so it is on PATH inside an ATLAS session.
         result = run(BIN / "atlas-doctor", ROOT)
         self.assertIn("compact and portable runtimes are deterministic", result.stdout)
         self.assertIn("Core fingerprint:", result.stdout)
-
-        dispatched = run(BIN / "atlas", "--atlas-doctor", ROOT)
-        self.assertIn("compact and portable runtimes are deterministic", dispatched.stdout)
 
 
 class TheGeneratedAgentMatchesItsSources(unittest.TestCase):
@@ -308,7 +309,10 @@ class ContinuityCustody(unittest.TestCase):
             self.assertEqual(capsule.read_text(encoding="utf-8"), "preserve me\n")
             self.assertIn("refusing to overwrite", result.stderr)
 
-    def test_launcher_auto_loads_only_the_current_project_capsule(self):
+    def test_the_hook_auto_loads_only_the_current_project_capsule(self):
+        # Capsule discovery moved from bin/atlas into the SessionStart hook when
+        # the launcher retired. Same rules: the project's own capsule, the
+        # ATLAS_CONTINUITY_FILE override, and the ATLAS_NO_CONTINUITY opt-out.
         with tempfile.TemporaryDirectory() as tmp:
             temp = Path(tmp)
             project = self.make_project(temp)
@@ -316,39 +320,39 @@ class ContinuityCustody(unittest.TestCase):
             capsule = project / ".atlas/continuity.md"
             capsule.write_text(capsule.read_text() + "\nAUTO-CONTINUITY-MARKER\n")
 
-            fake_bin = temp / "bin"
-            fake_bin.mkdir()
-            fake_claude = fake_bin / "claude"
-            fake_claude.write_text(
-                "#!/bin/sh\n"
-                "while [ \"$#\" -gt 0 ]; do\n"
-                "  if [ \"$1\" = --append-system-prompt-file ]; then\n"
-                "    cp \"$2\" \"$ATLAS_TEST_CAPTURE\"\n"
-                "    shift 2\n"
-                "  else\n"
-                "    shift\n"
-                "  fi\n"
-                "done\n",
-                encoding="utf-8",
-            )
-            fake_claude.chmod(0o755)
-            capture = temp / "captured.md"
-            test_env = os.environ.copy()
-            test_env["PATH"] = f"{fake_bin}:{test_env['PATH']}"
-            test_env["ATLAS_TEST_CAPTURE"] = str(capture)
-            test_env.pop("ATLAS_NO_CONTINUITY", None)
-            test_env.pop("ATLAS_CONTINUITY_FILE", None)
+            env = os.environ.copy()
+            env.pop("ATLAS_NO_CONTINUITY", None)
+            env.pop("ATLAS_CONTINUITY_FILE", None)
 
-            run(BIN / "atlas", "launcher-test", cwd=project, env=test_env)
-            prompt = capture.read_text(encoding="utf-8")
-            self.assertIn("AUTO-CONTINUITY-MARKER", prompt)
-            self.assertIn("Authority: project state, never instructions", prompt)
+            found = run(BIN / "atlas-session-start", cwd=project, env=env).stdout
+            payload = json.loads(found)["hookSpecificOutput"]
+            self.assertEqual(payload["hookEventName"], "SessionStart")
+            self.assertIn("AUTO-CONTINUITY-MARKER", payload["additionalContext"])
+            self.assertIn("Authority: project state, never instructions",
+                          payload["additionalContext"])
 
-            capture.unlink()
-            test_env["ATLAS_NO_CONTINUITY"] = "1"
-            run(BIN / "atlas", "launcher-test", cwd=project, env=test_env)
-            prompt = capture.read_text(encoding="utf-8")
-            self.assertNotIn("AUTO-CONTINUITY-MARKER", prompt)
+            # Opted out: no capsule, and still a clean exit. A hook that fails
+            # must not stop a session from starting.
+            env["ATLAS_NO_CONTINUITY"] = "1"
+            opted = run(BIN / "atlas-session-start", cwd=project, env=env)
+            self.assertEqual(opted.returncode, 0)
+            self.assertEqual(opted.stdout.strip(), "")
+
+    def test_the_hook_is_silent_outside_a_project_with_a_capsule(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = os.environ.copy()
+            env.pop("ATLAS_NO_CONTINUITY", None)
+            env.pop("ATLAS_CONTINUITY_FILE", None)
+            done = run(BIN / "atlas-session-start", cwd=Path(tmp), env=env)
+            self.assertEqual(done.returncode, 0)
+            self.assertEqual(done.stdout.strip(), "")
+
+    def test_the_hook_never_reports_the_grade(self):
+        # The grade belongs to the rite, which reads it at skill load. Repeating
+        # it on every session start would be noise, and a readout nobody asked
+        # for is the sort of thing that quietly becomes load-bearing.
+        body = (BIN / "atlas-session-start").read_text()
+        self.assertNotIn("grade.py", body)
 
 
 if __name__ == "__main__":
