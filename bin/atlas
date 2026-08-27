@@ -89,6 +89,10 @@ convene none. Held members are not named, listed, or marked absent in output
 (\`overlays/le-sas.md\`). Le Sceptique (01) is always on; Le Fripon (05) never
 self-activates without L'Opérateur.
 
+**Your grade.** The movement's level, module ledger, and XP curve are in
+\`overlays/le-grade.md\`; \`python3 grade/grade.py\` prints the current grade
+deterministically. New knowledge modules and core-system work raise it.
+
 **When the power reserve runs low** (context filling), stop cleanly, record
 state, and hand off. Do not run down mid-cycle.
 

@@ -38,6 +38,12 @@ Portable launcher and examples:
 - `bin/atlas` - launches Claude Code fitted as the barrel, with the compact ATLAS core injected. See below.
 - `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.
 
+Grade and modules:
+
+- `overlays/le-grade.md` - the leveling system: tiers, XP curve, and the module ledger.
+- `grade/` - the grade computed in code. Python, stdlib only, parses the ledger, 8 tests.
+- `modules/` - knowledge and skill modules that raise the grade, one file each.
+
 ## Le Conseil
 
 Thirteen subroutines, gated and routed by `overlays/le-conseil.md`. They are operating modes of one agent, not thirteen agents.
@@ -137,6 +143,17 @@ ln -s "$(pwd)/bin/atlas" ~/.local/bin/atlas
 The twelve subroutine doctrines are not loaded up front, because thirteen doctrines do not fit the reserve. When a council member is named, its `OPERATIONAL CORE` is read from `subroutines/` on demand.
 
 This is the Claude Code path. A doctrine-stripped bundle for agents without file access is a planned follow-up; Codex reads the repository files natively through `AGENTS.md`.
+
+## Le Grade
+
+ATLAS levels up. Every capability is a module with a tier and fixed XP (S=1000, A=500, B=250, C=100, D=50); the grade is those XP on a 0–100 square-root curve, so the top grades are the steepest. It is deterministic: `grade/grade.py` parses the module ledger in `overlays/le-grade.md`, verifies each module's file exists, sums the XP, and prints the grade. A module earns nothing until its file is real.
+
+```sh
+python3 grade/grade.py            # full readout
+python3 grade/grade.py --oneline  # boot banner
+```
+
+Current grade: **80** (8,350 / 13,000 XP). The single S-tier module is Reincarnation — the portable launcher above. To level up, build a module (knowledge pack or core-system work), list it in the ledger with a real path, and rerun the script. Grade 100 is the design-complete instrument; modules past it earn Grand Complication prestige. Full doctrine and the leveling schedule are in `overlays/le-grade.md`.
 
 ## Operating Principle
 
