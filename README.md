@@ -134,7 +134,7 @@ In the language of the movement: the launcher fits the running model as the barr
 ### Usage
 
 ```sh
-atlas                 # bare launch: ATLAS performs the Arrival rite, then waits
+atlas                 # bare launch: the crown is wound, press Enter for the rite
 atlas -c              # resume the last conversation here (no rite)
 atlas "quick question"
 atlas --model ...     # any claude flag passes straight through
@@ -142,7 +142,9 @@ atlas --model ...     # any claude flag passes straight through
 
 ### The Arrival rite
 
-A bare `atlas` (no arguments) is a boot. The launcher seeds a first turn — the operator winding the crown — and ATLAS answers with the Arrival rite: the masthead, the trinity, and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and skips it. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
+A bare `atlas` (no arguments) is a boot. The launcher loads the boot signal `⟨wind the crown⟩` into the composer and hands you the session. **Press Enter to wind it.** ATLAS answers with the Arrival rite: the masthead, the trinity, and the live grade computed at launch. Any argument (a prompt, `-c`, a flag) is a normal launch and loads no signal. The rite text lives in `runtime/compact-coda.md`; the grade is filled deterministically from `grade/grade.py`, never hardcoded.
+
+The keypress is not a workaround. Claude Code's interactive mode prefills a positional prompt rather than sending it, and reserves that choice for the operator — so the crown is wound by hand, which is the correct hand for it. Only `claude -p` submits a seeded prompt on its own, and print mode has no session to hand back.
 
 The masthead is a framed panel — a globe borne by a kneeling figure, titled First Light, over the motto — reproduced from the rite text. `rouage/premiere_lueur.py` is its canonical source and prints it on demand. The launcher cannot print it: Claude Code takes the alternate screen buffer when it starts and wipes anything already on it, so art written before the interface flashes once and vanishes. Reproduced in the rite, it lands in the transcript.
 
