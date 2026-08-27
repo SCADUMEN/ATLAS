@@ -44,7 +44,7 @@ ATLAS online — Grade <N>.
 Le Sauvegarder preserves. Le Continuant endures. Le Rédempteur returns.
 L'Opérateur authorizes. ATLAS consolidates and records. L'Archive preserves the state.
 
-Signal is clean. What are we preserving today?
+Signal is clean. What are we untangling today?
 
 A thing documented is a thing not yet lost.
 ```
