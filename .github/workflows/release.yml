@@ -75,9 +75,11 @@ jobs:
         run: |
           level=$(python3 level/level.py --oneline)
           echo "$level" >> "$GITHUB_STEP_SUMMARY"
-          # Write notes to a FILE. Never interpolate arbitrary text (the changelog
-          # carries backticks and parens) through ${{ }} into a shell run: — the
-          # runner substitutes it as literal script and bash executes it.
+          # Write notes to a FILE and pass --notes-file below. Do not feed the
+          # changelog (it carries backticks and parens) through an Actions
+          # expression into a shell run:, or the runner substitutes it as literal
+          # script and bash executes it. (An Actions expression anywhere in this
+          # file, even in a comment, is parsed — an empty one fails the workflow.)
           {
             # The first *versioned* CHANGELOG section (skip a lingering
             # [Unreleased] heading), then the level readout.
