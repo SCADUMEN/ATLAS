@@ -262,6 +262,8 @@ class TheRiteSkillIsInvocableAsAtlas(unittest.TestCase):
         self.assertIn("ATLAS_REPO", text)
         self.assertIn(".claude/plugins/cache", text)
         self.assertIn("level/level.py", text)
+        # It also reads the plugin version so the rite can show it.
+        self.assertIn("plugin.json", text)
 
     def test_the_level_resolver_is_silent_when_it_finds_nothing(self):
         # Run it with a HOME that holds no ATLAS at all.
@@ -272,6 +274,17 @@ class TheRiteSkillIsInvocableAsAtlas(unittest.TestCase):
             done = run(self.SKILL.parent / "level", env=env, check=False)
             self.assertEqual(done.returncode, 0)
             self.assertEqual(done.stdout.strip(), "")
+
+    def test_the_level_resolver_reports_level_and_version(self):
+        # Pointed at the repo, the readout carries both the level and the plugin
+        # version, which the rite greeting surfaces as "v<V> · Level <N>".
+        version = json.loads(
+            (ROOT / ".claude-plugin" / "plugin.json").read_text())["version"]
+        env = os.environ.copy()
+        env["ATLAS_REPO"] = str(ROOT)
+        done = run(self.SKILL.parent / "level", env=env)
+        self.assertIn("Level", done.stdout)
+        self.assertIn(f"v{version}", done.stdout)
 
 
 class ContinuityCustody(unittest.TestCase):

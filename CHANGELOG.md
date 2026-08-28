@@ -8,11 +8,21 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-28
+
+### Added
+- The `/atlas` rite readout now shows the plugin version:
+  `ATLAS online — v1.2.0 · Level 89 (10350/13000 XP).`
+- CI enforces Conventional Commits on PR titles
+  (`.github/workflows/lint-pr-title.yml`); `AGENTS.md` and the README document the
+  versioning discipline.
+
 ### Fixed
-- Release workflow: pass changelog notes to `gh release create` via `--notes-file`
-  instead of a `${{ }}` shell interpolation (the changelog's backticks/parens were
-  executed by the runner), and create the tag and release atomically so a failure
-  can't strand a tag without a release.
+- Release workflow: pass changelog notes via `--notes-file` instead of a `${{ }}`
+  shell interpolation (the runner executed the changelog's backticks/parens),
+  create the tag and release atomically so a failure can't strand a tag, and drop
+  an empty `${{ }}` expression from a `run:` comment that failed the workflow at
+  startup.
 
 ## [1.1.0] - 2026-08-28
 

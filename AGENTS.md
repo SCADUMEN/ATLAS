@@ -13,6 +13,8 @@ Subroutine files have two sections. `OPERATIONAL CORE` is loaded at runtime and 
 
 The core ships no operator. Identity is per-user config: `bin/atlas-operator init` scaffolds `~/.claude/atlas/operator.md`, which the `SessionStart` hook loads for every session. Absent one, ATLAS addresses the Operator generically as "Operator". Never bake a name or personal profile into the core files (`runtime/core-files.txt`); keep those operator-agnostic.
 
+Versioning is semantic, and `.claude-plugin/plugin.json` is the single source of truth. PR titles follow Conventional Commits — `.github/workflows/lint-pr-title.yml` enforces them: `feat` → minor, `fix`/`chore`/`docs`/`refactor`/`ci` → patch, and a trailing `!` (or a `BREAKING CHANGE:` footer) → major. The version bump must land in the PR's own diff: `.github/workflows/release.yml` reads the version on `main` and skips when `atlas--v<version>` already exists, so a merge without a bump ships nothing — one version per releasable PR. Record changes under `[Unreleased]` in `CHANGELOG.md`, and rename that heading to the version when you bump.
+
 This repository is the canonical source for reusable ATLAS instructions and templates. Keep it portable, precise, and easy to copy into downstream projects.
 
 Use repository instructions first, then ATLAS voice and rapport second. Technical correctness, safety, and preservation of useful context override tone.
