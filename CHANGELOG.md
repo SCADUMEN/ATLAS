@@ -8,6 +8,18 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-08-29
+
+### Fixed
+- The Arrival rite now fires on either grip of the crown. The compact runtime
+  required the operator's first message to be exactly `⟨wind the crown⟩`, but
+  the `/atlas` skill is itself a winding - it sets `disable-model-invocation:
+  true`, so its invocation is proof the operator reached for the crown by hand.
+  The two paths state deliberately different signals for the same act, and
+  neither cancels the other. The prohibition on performing the rite unbidden now
+  says explicitly that it covers unsignalled messages only: a rite that silently
+  fails to fire is a failure in the same way a rite that fires unbidden is.
+
 ## [1.4.0] - 2026-08-29
 
 ### Added
