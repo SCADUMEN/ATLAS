@@ -13,7 +13,8 @@ disable-model-invocation: true
 
 Perform the Arrival rite once. Reproduce the panel and the greeting
 below, filling `<N>` from the BOOT READOUT above and `<Operator>`
-from the active operator profile. Then stop and await the Operator.
+from the active operator profile, or `Operator` if no profile is
+loaded. Then stop and await the Operator.
 
 ```text
 ┌─ FIRST LIGHT ────────────────────────────────────────────────┐

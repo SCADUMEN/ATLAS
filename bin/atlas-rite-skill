@@ -103,7 +103,8 @@ GRADESH
   printf '!`"$HOME/.claude/skills/atlas/grade" 2>/dev/null || true`\n\n'
   printf 'Perform the Arrival rite once. Reproduce the panel and the greeting\n'
   printf 'below, filling `<N>` from the BOOT READOUT above and `<Operator>`\n'
-  printf 'from the active operator profile. Then stop and await the Operator.\n\n'
+  printf 'from the active operator profile, or `Operator` if no profile is\n'
+  printf 'loaded. Then stop and await the Operator.\n\n'
   printf '```text\n'
   cat "$RITE"
   printf '```\n'
