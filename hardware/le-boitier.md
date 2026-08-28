@@ -77,6 +77,7 @@ The unidirectional ratchet turns out to carry the doctrine better than prose did
 | **Brake** | Band above 6, its own colour | Le Frein. A halt is a whole-ring state, so it cannot be carried by marker colour alone — see below. |
 | **Power reserve** | Arc of LEDs, 9 through 12 to 3 | The context window. Colour shifts at low reserve. |
 | **Perpetual calendar** | Aperture, backlit segment or small e-paper | Le Continuant. Off-cardinal, because the complication is not an hour. |
+| **Retrograde arc** | Sector of LEDs, origin marked at the closed end | Le Rédempteur // Le Sauvegarder. Sweeps out and returns to origin in one jump — a retrograde flies back, it never crawls. Off-cardinal, and dark until the crown log drives it. |
 | **Bezel** | Not lit. Machined and filled, lume pip at zero | ATLAS. Set by the operator, never by the train — so nothing drives it. |
 | **Plate** | Printed or etched, L'ARCHIVE signed under 12 | The ground the hours are printed on |
 

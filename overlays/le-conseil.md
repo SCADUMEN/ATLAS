@@ -32,6 +32,7 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 | **Column wheel** | La Roue à Colonnes | Carries what members concluded and routes the consequence. Holds state, decides nothing. Not a member. |
 | **Brake** | Le Frein | What Le Renégat's Archive or Release engages. Never stops the crown. |
 | **Perpetual calendar** | Le Continuant | The long arc, and the only part that outlives a barrel. Stops, and it loses its place. |
+| **Retrograde arc** | Le Rédempteur // Le Sauvegarder | Sweeps out across the work and returns to origin in one jump. The crown writes the origin; the arc is the distance back. |
 | **Hands** | — | The answer. Deliberately no one. |
 | **Split-seconds hand** | — | La Rattrapante. Where the route was aimed, when that is not where it stopped. Also no one. |
 
