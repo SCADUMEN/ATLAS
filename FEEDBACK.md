@@ -23,7 +23,30 @@ running record of what the instrument does in practice, not just in spec.
 
 ## Log
 
+### 2026-08-28 — [correction] The clone count in the entry below was wrong
+
+- **Context:** Built `bin/atlas-clones` to answer "which clone is live, and what
+  else shares its remote" mechanically. Ran it against the same disk the
+  2026-08-28 `[workspace]` entry below describes.
+- **Observation:** The entry is wrong in both directions. It names
+  `~/Documents/Codex/2026-08-06/atlas` as a clone of this remote; its origin is
+  actually `Forgotten-Industries/ATLAS`, a different repository. And it misses
+  `~/.claude/plugins/marketplaces/scadumen`, the plugin marketplace checkout,
+  which is a real clone of `SCADUMEN/ATLAS`. Corrected list, by tool: the
+  marketplace checkout, `~/ATLAS`, `~/FORGOTTEN-INDUSTRIES/ATLAS`, and
+  `~/projects/ATLAS` (live). None currently holds work that exists nowhere
+  else.
+- **Relevance to build:** Both errors came from eyeballing `find` output and
+  reading directory names as identity. Neither would have survived checking
+  `remote.origin.url`. This is the argument for the tool existing, made by the
+  entry that prompted it: a path written into prose goes stale and cannot
+  correct itself, which is why the original entry is annotated here rather than
+  edited in place.
+
 ### 2026-08-28 — [workspace] Clone drift continued past the 2026-08-27 resolution
+
+> **Superseded in part.** The clone list in this entry is inaccurate; see
+> the `[correction]` entry above. The drift observation itself still holds.
 
 - **Context:** While appending the arrival-panel entry, resolved which clone
   was live before writing, specifically because the 2026-08-27 workspace entry

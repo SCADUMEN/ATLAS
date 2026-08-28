@@ -29,7 +29,7 @@ for tool in git awk cmp cut grep; do
 done
 
 for script in atlas-context atlas-continuity atlas-doctor atlas-skills \
-              atlas-rite-skill atlas-session-start; do
+              atlas-rite-skill atlas-session-start atlas-clones; do
   [ -x "$REPO/bin/$script" ] || fail "not executable: bin/$script"
 done
 
