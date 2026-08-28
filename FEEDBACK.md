@@ -23,6 +23,32 @@ running record of what the instrument does in practice, not just in spec.
 
 ## Log
 
+### 2026-08-28 — [workspace] The fifth clone was ours all along; ATLAS was renamed
+
+- **Context:** The `[correction]` entry below records
+  `~/Documents/Codex/2026-08-06/atlas` as belonging to a different repository,
+  `Forgotten-Industries/ATLAS`, on the strength of its `remote.origin.url`.
+  The Operator identified that as wrong: he owns both orgs.
+- **Observation:** `gh api repos/Forgotten-Industries/ATLAS -q .full_name`
+  returns `SCADUMEN/ATLAS`. It is not a second repository — it is the former
+  name, and GitHub redirects it silently, so a clone left pointing at the old
+  URL keeps fetching and pushing correctly while reporting an identity that no
+  longer exists. Both share root commit `c8adac3`. The clone itself is a
+  2026-06-14 snapshot, 24 commits behind, and every one of its commits is an
+  ancestor of current `main` — verified with `git merge-base --is-ancestor`.
+  Nothing is stranded there. Operator context for the record: the SCADUMEN org
+  was created as an umbrella for the FI and ATLAS work so Tyler Etters could
+  pick it up at his leisure; the transfer is the cause of the rename.
+- **Relevance to build:** `bin/atlas-clones` matched clones on origin URL
+  alone, so this one was skipped in silence. Harmless this time because nothing
+  was at risk in it — but the tool exists precisely to catch a forgotten clone
+  holding the only copy of something, and a renamed remote was a blind spot
+  straight through the middle of that. Fixed by also matching on shared root
+  commit, tested against a fixture where the old matcher reported
+  `0 clones, verdict ok` on a dirty clone the new one flags `warn`. Remaining
+  known gap, documented in the script: a shallow clone has no root object and
+  is still missed.
+
 ### 2026-08-28 — [correction] The clone count in the entry below was wrong
 
 - **Context:** Built `bin/atlas-clones` to answer "which clone is live, and what
