@@ -8,7 +8,15 @@ for dir in \
   "$HOME"/projects/ATLAS
 do
   if [ -f "$dir/level/level.py" ]; then
-    python3 "$dir/level/level.py" --oneline 2>/dev/null
+    line=$(python3 "$dir/level/level.py" --oneline 2>/dev/null) || exit 0
+    [ -n "$line" ] || exit 0
+    ver=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' \
+      "$dir/.claude-plugin/plugin.json" 2>/dev/null)
+    if [ -n "$ver" ]; then
+      printf '%s · v%s\n' "$line" "$ver"
+    else
+      printf '%s\n' "$line"
+    fi
     exit 0
   fi
 done

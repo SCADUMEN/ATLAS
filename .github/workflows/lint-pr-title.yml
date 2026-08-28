@@ -1,0 +1,52 @@
+name: Lint PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title follows Conventional Commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if ! printf '%s' "$TITLE" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert)(\([a-z0-9_/-]+\))?!?: .+'; then
+            echo "::error::PR title does not match Conventional Commits format."
+            echo ""
+            echo "Got:      $TITLE"
+            echo "Expected: <type>(<scope>)?!?: <subject>"
+            echo ""
+            echo "Types:"
+            echo "  feat     — minor bump (new capability, module, rite output)"
+            echo "  fix      — patch (bug fix)"
+            echo "  chore    — patch (tooling, deps)"
+            echo "  docs     — patch (README, AGENTS.md, comments)"
+            echo "  refactor — patch (internal restructuring, no behavior change)"
+            echo "  perf     — patch (performance)"
+            echo "  test     — patch (test scaffolding)"
+            echo "  build    — patch (generators, build scripts)"
+            echo "  ci       — patch (workflow changes)"
+            echo "  style    — patch (whitespace, formatting)"
+            echo "  revert   — patch (revert a prior commit)"
+            echo ""
+            echo "Append '!' after the type (or a BREAKING CHANGE: footer) for a"
+            echo "major bump. ATLAS is post-1.0, so '!' means a real major."
+            echo ""
+            echo ".claude-plugin/plugin.json is the source of truth for the version;"
+            echo "bump it in the PR and release.yml cuts atlas--v<version> on merge."
+            echo "See the Versioning section in AGENTS.md."
+            echo ""
+            echo "Examples:"
+            echo "  feat(rite): show the plugin version in the readout"
+            echo "  fix(release): pass notes via --notes-file"
+            echo "  ci: enforce Conventional Commits on PR titles"
+            echo "  docs: document the versioning discipline in AGENTS.md"
+            echo "  feat!: rename the grade system to level"
+            exit 1
+          fi
+          echo "OK: $TITLE"

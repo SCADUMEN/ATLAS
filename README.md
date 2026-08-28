@@ -364,6 +364,12 @@ notes carry the changelog section and the movement's current Level — the level
 surfaced at release time. It fires only when that tag does not yet exist, so an
 ordinary push to `main` with no version bump releases nothing.
 
+PR titles follow Conventional Commits, enforced by
+`.github/workflows/lint-pr-title.yml`: `feat` → minor, `fix`/`chore`/`docs`/`ci`
+→ patch, a trailing `!` → major. The bump has to be in the PR's own diff, because
+the release fires on the version being new on `main` — a merge with no bump ships
+nothing, silently. One version per releasable PR.
+
 Because a marketplace install caches the plugin by version, downstream users pick
 up a release with:
 
