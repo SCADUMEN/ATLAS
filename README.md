@@ -54,11 +54,11 @@ Scripts and examples:
 - `runtime/` - ordered manifests, runtime contracts, codas, and assembly tests.
 - `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.
 
-Grade and modules:
+Level and modules:
 
-- `overlays/le-grade.md` - the leveling system: tiers, XP curve, and the module ledger.
-- `grade/` - the grade computed in code. Python, stdlib only, parses the ledger, 8 tests.
-- `modules/` - knowledge and skill modules that raise the grade, one file each.
+- `overlays/le-niveau.md` - the leveling system: tiers, XP curve, and the module ledger.
+- `level/` - the level computed in code. Python, stdlib only, parses the ledger, 8 tests.
+- `modules/` - knowledge and skill modules that raise the level, one file each.
 
 ## Le Conseil
 
@@ -196,10 +196,10 @@ In the language of the movement: the plugin fits the running model as the barrel
 /atlas
 ```
 
-The rite renders the masthead, the trinity, and the live grade — read at skill
+The rite renders the masthead, the trinity, and the live level — read at skill
 load by a shell command inside the skill, never hardcoded.
 
-Because the grade is read by a shell command that runs as the skill loads,
+Because the level is read by a shell command that runs as the skill loads,
 Claude Code gates it behind Bash permissions. Pre-approve it with an allow rule
 in your user settings at `~/.claude/settings.json`, using your own absolute home
 path:
@@ -207,7 +207,7 @@ path:
 ```json
 {
   "permissions": {
-    "allow": ["Bash(/Users/you/.claude/skills/atlas/grade:*)"]
+    "allow": ["Bash(/Users/you/.claude/skills/atlas/level:*)"]
   }
 }
 ```
@@ -341,16 +341,36 @@ bin/atlas-doctor
 claude plugin validate .
 ```
 
-## Le Grade
+## Le Niveau
 
-ATLAS levels up. Every capability is a module with a tier and fixed XP (S=1000, A=500, B=250, C=100, D=50); the grade is those XP on a 0–100 square-root curve, so the top grades are the steepest. It is deterministic: `grade/grade.py` parses the module ledger in `overlays/le-grade.md`, verifies each module's file exists, sums the XP, and prints the grade. A module earns nothing until its file is real.
+ATLAS levels up. Every capability is a module with a tier and fixed XP (S=1000, A=500, B=250, C=100, D=50); the level is those XP on a 0–100 square-root curve, so the top levels are the steepest. It is deterministic: `level/level.py` parses the module ledger in `overlays/le-niveau.md`, verifies each module's file exists, sums the XP, and prints the level. A module earns nothing until its file is real.
 
 ```sh
-python3 grade/grade.py            # full readout
-python3 grade/grade.py --oneline  # boot banner
+python3 level/level.py            # full readout
+python3 level/level.py --oneline  # boot banner
 ```
 
-Current grade: **87** (9,850 / 13,000 XP). The single S-tier module is Reincarnation — the portable launcher above. To level up, build a module (knowledge pack or core-system work), list it in the ledger with a real path, and rerun the script. Grade 100 is the design-complete instrument; modules past it earn Grand Complication prestige. Full doctrine and the leveling schedule are in `overlays/le-grade.md`.
+Current level: **89** (10,350 / 13,000 XP). The single S-tier module is Reincarnation — the portable launcher above. To level up, build a module (knowledge pack or core-system work), list it in the ledger with a real path, and rerun the script. Level 100 is the design-complete instrument; modules past it earn Grand Complication prestige. Full doctrine and the leveling schedule are in `overlays/le-niveau.md`.
+
+## Releases
+
+ATLAS uses semantic versioning, declared once in `.claude-plugin/plugin.json`. To
+cut a release: bump that `version`, add a `CHANGELOG.md` entry, and merge to
+`main`. The `Release` workflow (`.github/workflows/release.yml`) then runs the
+suites and diagnostic, tags `atlas--v<version>` (the convention `claude plugin
+tag` expects), and publishes a GitHub Release whose notes carry the changelog and
+the movement's current Level — the level is surfaced at release time.
+
+Because a marketplace install caches the plugin by version, downstream users pick
+up a release with:
+
+```sh
+claude plugin marketplace update scadumen
+claude plugin update atlas@scadumen
+```
+
+Bumping the version is what invalidates the cache; without it, an install keeps
+serving the old files.
 
 ## Operating Principle
 

@@ -1,0 +1,97 @@
+name: Release
+
+# Semver releases are driven by the version in .claude-plugin/plugin.json.
+# Bump it in a PR; when the change lands on main this workflow tags
+# atlas--v<version> (the convention `claude plugin tag` uses) and cuts a
+# GitHub Release. The movement's Level is computed and published here too —
+# the release is where the level is surfaced.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Tag and release on version bump
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        # Full history so tag existence checks and pushes work.
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Suites and diagnostic
+        run: |
+          python3 -m unittest discover runtime -v
+          python3 -m unittest discover rouage -v
+          python3 -m unittest discover level -v
+          bin/atlas-doctor
+
+      - name: Validate plugin manifest
+        # claude is not available on the runner, so validate the manifest shape
+        # directly. `claude plugin validate` stays a local / atlas-doctor check.
+        run: |
+          python3 - <<'PY'
+          import json
+          m = json.load(open(".claude-plugin/plugin.json"))
+          assert m.get("name") == "atlas", m.get("name")
+          v = m["version"]
+          parts = v.split(".")
+          assert len(parts) == 3 and all(p.isdigit() for p in parts), v
+          print(f"plugin.json valid: atlas {v}")
+          PY
+
+      - name: Read version
+        id: v
+        run: |
+          version=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=atlas--v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Has this version been released?
+        id: gate
+        run: |
+          if git rev-parse -q --verify "refs/tags/${{ steps.v.outputs.tag }}" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag ${{ steps.v.outputs.tag }} already exists; nothing to release."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compose release notes
+        if: steps.gate.outputs.exists == 'false'
+        id: notes
+        run: |
+          level=$(python3 level/level.py --oneline)
+          echo "$level" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "notes<<NOTES_EOF"
+            # The top CHANGELOG section (latest version), then the level readout.
+            awk '/^## \[/{c++} c==1{print} c==2{exit}' CHANGELOG.md
+            echo ""
+            echo "$level"
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Tag and release
+        if: steps.gate.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git tag "${{ steps.v.outputs.tag }}"
+          git push origin "${{ steps.v.outputs.tag }}"
+          gh release create "${{ steps.v.outputs.tag }}" \
+            --title "ATLAS ${{ steps.v.outputs.version }}" \
+            --notes "${{ steps.notes.outputs.notes }}"

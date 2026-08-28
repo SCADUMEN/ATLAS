@@ -247,28 +247,29 @@ class TheRiteSkillIsInvocableAsAtlas(unittest.TestCase):
         self.assertEqual(done.stdout.strip(), "True",
                          "the rite skill's panel has drifted from the renderer")
 
-    def test_the_grade_readout_degrades_rather_than_breaks(self):
+    def test_the_level_readout_degrades_rather_than_breaks(self):
         # The skill cannot use ${CLAUDE_PLUGIN_ROOT} and cannot know where the
         # plugin lives — a marketplace install caches it, a checkout is wherever
         # it was cloned. The search sits in a sibling script because a for-loop
         # with globs inside the ! substitution silently emitted nothing, which
-        # cost the entire readout. A miss must cost the grade, never the rite.
+        # cost the entire readout. A miss must cost the level, never the rite.
         body = self.SKILL.read_text()
         self.assertIn("|| true", body)
-        resolver = self.SKILL.parent / "grade"
+        resolver = self.SKILL.parent / "level"
         self.assertTrue(os.access(resolver, os.X_OK),
-                        "the grade resolver must be executable")
+                        "the level resolver must be executable")
         text = resolver.read_text()
         self.assertIn("ATLAS_REPO", text)
         self.assertIn(".claude/plugins/cache", text)
+        self.assertIn("level/level.py", text)
 
-    def test_the_grade_resolver_is_silent_when_it_finds_nothing(self):
+    def test_the_level_resolver_is_silent_when_it_finds_nothing(self):
         # Run it with a HOME that holds no ATLAS at all.
         with tempfile.TemporaryDirectory() as tmp:
             env = os.environ.copy()
             env["HOME"] = tmp
             env.pop("ATLAS_REPO", None)
-            done = run(self.SKILL.parent / "grade", env=env, check=False)
+            done = run(self.SKILL.parent / "level", env=env, check=False)
             self.assertEqual(done.returncode, 0)
             self.assertEqual(done.stdout.strip(), "")
 
@@ -368,12 +369,12 @@ class ContinuityCustody(unittest.TestCase):
             self.assertEqual(done.returncode, 0)
             self.assertEqual(done.stdout.strip(), "")
 
-    def test_the_hook_never_reports_the_grade(self):
-        # The grade belongs to the rite, which reads it at skill load. Repeating
+    def test_the_hook_never_reports_the_level(self):
+        # The level belongs to the rite, which reads it at skill load. Repeating
         # it on every session start would be noise, and a readout nobody asked
         # for is the sort of thing that quietly becomes load-bearing.
         body = (BIN / "atlas-session-start").read_text()
-        self.assertNotIn("grade.py", body)
+        self.assertNotIn("level.py", body)
 
 
 class OperatorIdentity(unittest.TestCase):
