@@ -6,6 +6,14 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [Unreleased]
+
+### Fixed
+- Release workflow: pass changelog notes to `gh release create` via `--notes-file`
+  instead of a `${{ }}` shell interpolation (the changelog's backticks/parens were
+  executed by the runner), and create the tag and release atomically so a failure
+  can't strand a tag without a release.
+
 ## [1.1.0] - 2026-08-28
 
 ### Added

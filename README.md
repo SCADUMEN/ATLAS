@@ -355,11 +355,14 @@ Current level: **89** (10,350 / 13,000 XP). The single S-tier module is Reincarn
 ## Releases
 
 ATLAS uses semantic versioning, declared once in `.claude-plugin/plugin.json`. To
-cut a release: bump that `version`, add a `CHANGELOG.md` entry, and merge to
-`main`. The `Release` workflow (`.github/workflows/release.yml`) then runs the
-suites and diagnostic, tags `atlas--v<version>` (the convention `claude plugin
-tag` expects), and publishes a GitHub Release whose notes carry the changelog and
-the movement's current Level — the level is surfaced at release time.
+cut a release: bump that `version`, rename the `CHANGELOG.md` `[Unreleased]`
+section to the new version (day-to-day changes accrue under `[Unreleased]`), and
+merge to `main`. The `Release` workflow (`.github/workflows/release.yml`) then
+runs the suites and diagnostic, tags `atlas--v<version>` (the convention `claude
+plugin tag` expects) at the merge commit, and publishes a GitHub Release whose
+notes carry the changelog section and the movement's current Level — the level is
+surfaced at release time. It fires only when that tag does not yet exist, so an
+ordinary push to `main` with no version bump releases nothing.
 
 Because a marketplace install caches the plugin by version, downstream users pick
 up a release with:
