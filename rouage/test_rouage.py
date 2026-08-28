@@ -20,6 +20,7 @@ from pathlib import Path
 from rouage import (
     CORE_HEADING,
     DOCTRINE_HEADING,
+    NEGATIVE_SECTION,
     Ring,
     Trace,
     admit_proposals,
@@ -550,6 +551,101 @@ class TheBarrelContract(unittest.TestCase):
 
     def test_the_menu_covers_the_whole_ring(self):
         self.assertEqual(len(citations(load_ring())), 12)
+
+    def test_the_menu_offers_no_prohibition(self):
+        # The other direction, and the one that was broken: a guard must
+        # never appear on the menu of things it is valid to cite. While it
+        # did, a barrel quoting the menu faithfully could convene Le
+        # Redempteur on the sentence written to keep him dark.
+        ring = load_ring()
+        offered = citations(ring)
+        for m in ring.members:
+            for guard in m.prohibitions:
+                self.assertNotIn(guard, offered.get(m.name, ()),
+                                 f"{m.name} offers a guard as quotable")
+
+
+class TheNegativeGate(unittest.TestCase):
+    """Gate-level prohibitions: what must not CONVENE a member.
+
+    Distinct from the '### Prohibitions' section every member carries, which
+    is behavioural - what a member must not DO once convened. The schema had
+    a home for the second kind and none for the first, so the one member who
+    needed one wrote it inline as bold text and parse_activation() collected
+    it as activation.
+    """
+
+    def setUp(self):
+        self.ring = load_ring()
+        self.member = self.ring.by_name("Le Rédempteur")
+        self.guard = "Matthew being tired, terse, or frustrated"
+
+    def test_the_reference_implementation_parses(self):
+        self.assertIn(self.guard, self.member.prohibitions)
+        self.assertNotIn(self.guard, self.member.bullets)
+
+    def test_a_cited_prohibition_leaves_the_position_dark(self):
+        # The exploit, verbatim. Before the split this returned 12 ACTIVE
+        # with failures == [] and engraved the guard on the dial as the
+        # reason it convened.
+        t = route(self.ring, "", proposals=[(self.member.name, self.guard)])
+        lit = [p["position"] for p in t.to_dict()["positions"]
+               if p["state"] != "dark"]
+        self.assertEqual(lit, ["01"])       # Le Sceptique, standing. Nobody else.
+
+    def test_the_failure_is_not_the_typo_failure(self):
+        # A barrel quoting sloppily and a barrel inverting a gate are
+        # different faults and the trace has to tell them apart.
+        inverted = Trace(utterance="")
+        admit_proposals(self.ring, inverted, [(self.member.name, self.guard)])
+        typo = Trace(utterance="")
+        admit_proposals(self.ring, typo, [(self.member.name, "not in any list")])
+
+        self.assertEqual(len(inverted.failures), 1)
+        self.assertEqual(len(typo.failures), 1)
+        self.assertIn("cited a prohibition", inverted.failures[0])
+        self.assertNotIn("cited a prohibition", typo.failures[0])
+
+    def test_a_cited_prohibition_admits_nothing(self):
+        t = Trace(utterance="")
+        got = admit_proposals(self.ring, t, [(self.member.name, self.guard)])
+        self.assertEqual(got, [])           # not held, not sealed - absent
+
+    def test_every_prohibition_of_every_member_is_refused(self):
+        for m in self.ring.members:
+            for guard in m.prohibitions:
+                t = Trace(utterance="")
+                got = admit_proposals(self.ring, t, [(m.name, guard)])
+                self.assertEqual(got, [], f"{m.name}: {guard[:40]!r}")
+                self.assertEqual(len(t.failures), 1)
+
+    def test_no_line_is_both_a_trigger_and_a_guard(self):
+        # The seam. A line that is both would be admissible and refused by
+        # the same check, and which one won would depend on statement order.
+        for m in self.ring.members:
+            both = set(m.bullets) & set(m.prohibitions)
+            self.assertEqual(both, set(), f"{m.name}: {both}")
+
+    def test_no_gate_still_carries_the_inline_form(self):
+        # The parser keys on a heading now, so an inline '**Do not fire on:**'
+        # would be silently collected as activation again - the original bug,
+        # reintroduced by prose rather than by code. Nothing asserts the shape
+        # of doctrine except this.
+        for m in self.ring.members:
+            body = m.path.read_text(encoding="utf-8")
+            body = body.split(CORE_HEADING, 1)[1].split(DOCTRINE_HEADING, 1)[0]
+            self.assertNotIn("**Do not fire on", body,
+                             f"{m.name}: inline negative gate, needs a heading")
+
+    def test_a_member_without_a_negative_gate_parses_empty(self):
+        # Most members have none. Absent section must be empty, never an error.
+        bare = [m for m in self.ring.members if not m.prohibitions]
+        self.assertTrue(bare)
+        for m in bare:
+            self.assertEqual(m.prohibitions, ())
+            self.assertIsNone(NEGATIVE_SECTION.search(
+                m.path.read_text(encoding="utf-8")
+                 .split(CORE_HEADING, 1)[1].split(DOCTRINE_HEADING, 1)[0]))
 
 
 class TheWindingLog(unittest.TestCase):

@@ -44,6 +44,12 @@ def doctrine(ring: Ring | None = None) -> dict:
                 "standing": m.standing,
                 "sealed": m.sealed,
                 "bullets": list(m.bullets),
+                # Shipped so the browser cannot be handed a wider menu than
+                # the Python train enforces. train.js does not read either
+                # list today - it handles the literal half only - but a
+                # doctrine field the two engines disagree about is the seam
+                # the conformance test exists to keep closed.
+                "prohibitions": list(m.prohibitions),
             }
             for m in ring.members
         ],

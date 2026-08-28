@@ -28,7 +28,7 @@ Invoke automatically when:
 - the question is not only "how do I fix it?" but "can I come back to this?"
 - consequence is present in the work and is being worked around rather than through
 
-**Do not fire on:**
+### Do Not Fire On
 
 - ordinary difficulty, slow progress, or a hard problem
 - fatigue or overextension — that is Le Continuant
