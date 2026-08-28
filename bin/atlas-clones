@@ -9,6 +9,16 @@
 # symlink is what a session actually loads. Directory names lie; the symlink
 # does not.
 #
+# A clone is ours if EITHER its origin normalizes to the same owner/repo, OR it
+# contains this repository's root commit. The second test is what survives a
+# rename, a transfer between orgs, or a fork: the URL changes and GitHub quietly
+# redirects the old one, so a stale clone keeps working while reporting an
+# identity that no longer exists. The root commit does not move.
+#
+# Known gap: a shallow clone does not contain the root object and will be
+# missed by the lineage test. It will still match on remote if its URL is
+# current.
+#
 # This never fetches. Every ahead/behind count is measured against the remote
 # refs already on disk, so a clone that has not been fetched in a week reports
 # as of a week ago. That is a deliberate trade: a diagnostic that reaches the
@@ -32,6 +42,7 @@ CHECK=0
 DEPTH=6
 SKILL_LINK=${ATLAS_SKILL_LINK:-$HOME/.claude/skills/atlas}
 ROOTS=''
+DEFAULT_ROOT=1
 
 SCAN=$(mktemp "${TMPDIR:-/tmp}/atlas-clones.XXXXXX") || exit 1
 trap 'rm -f "$SCAN"' EXIT INT TERM
@@ -45,7 +56,7 @@ while [ $# -gt 0 ]; do
   case $1 in
     --check) CHECK=1 ;;
     --root) shift; [ $# -gt 0 ] || fail "--root needs a directory"
-            ROOTS="$ROOTS $1" ;;
+            ROOTS="$ROOTS $1"; DEFAULT_ROOT=0 ;;
     --depth) shift; [ $# -gt 0 ] || fail "--depth needs a number"
              DEPTH=$1 ;;
     -h|--help) sed -n '2,16p' "$SOURCE" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -138,7 +149,14 @@ fi
 
 WANT=$(remote_id "$REPO")
 [ -n "$WANT" ] || fail "no origin remote on $REPO; nothing to match against"
+
+# Computed once. Testing each candidate with `cat-file -e` is an object lookup
+# rather than a history walk, so this stays cheap even in a home directory full
+# of large repositories.
+ROOT=$(git -C "$REPO" rev-list --max-parents=0 HEAD 2>/dev/null | tail -1)
+[ -n "$ROOT" ] || fail "cannot determine root commit of $REPO"
 echo "atlas-clones: remote      $WANT"
+echo "atlas-clones: root        $(echo "$ROOT" | cut -c1-7)"
 if [ -n "$LIVE" ]; then
   echo "atlas-clones: live clone  $(short "$LIVE")"
 else
@@ -161,7 +179,14 @@ for root in $ROOTS; do
 done | sed 's|/\.git$||' | sort -u > "$SCAN"
 
 while IFS= read -r dir; do
-  [ "$(remote_id "$dir")" = "$WANT" ] || continue
+  their_remote=$(remote_id "$dir")
+  if [ "$their_remote" = "$WANT" ]; then
+    via=remote
+  elif git -C "$dir" cat-file -e "$ROOT^{commit}" 2>/dev/null; then
+    via=lineage
+  else
+    continue
+  fi
   FOUND=$((FOUND + 1))
 
   branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')
@@ -186,8 +211,13 @@ while IFS= read -r dir; do
     *)   sync="+$ahead/-$behind" ;;
   esac
 
-  printf '%s %-4s %-34s %-14s %-9s %-10s %s\n' \
-    "$mark" "$verdict" "$(short "$dir")" "$branch" "$head" "$state" "$sync"
+  if [ "$via" = lineage ]; then
+    note=" [same lineage, origin says ${their_remote:-none}]"
+  else
+    note=""
+  fi
+  printf '%s %-4s %-34s %-14s %-9s %-10s %s%s\n' \
+    "$mark" "$verdict" "$(short "$dir")" "$branch" "$head" "$state" "$sync" "$note"
 
   case $verdict in
     warn) WORST=warn ;;
@@ -196,12 +226,16 @@ while IFS= read -r dir; do
 done < "$SCAN"
 
 echo
-echo "atlas-clones: $FOUND clone(s) of $WANT found; verdict $WORST"
+echo "atlas-clones: $FOUND clone(s) sharing this lineage; verdict $WORST"
 echo "atlas-clones: ahead/behind measured against local refs; no fetch was run"
 
-# Finding zero is not a clean bill of health: this script is running from
-# inside a clone, so a correct scan always finds at least that one.
-[ "$FOUND" -gt 0 ] || fail "scan matched no clones, including the one this ran from"
+# On a default scan, finding zero is not a clean bill of health: this script
+# runs from inside a clone, so a correct scan always finds at least that one.
+# An explicit --root may legitimately point somewhere with no clones at all, so
+# the guard does not apply there.
+if [ "$DEFAULT_ROOT" = 1 ] && [ "$FOUND" -eq 0 ]; then
+  fail "scan matched no clones, including the one this ran from"
+fi
 
 if [ "$CHECK" = 1 ] && [ "$WORST" = warn ]; then
   exit 1
