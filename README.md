@@ -49,6 +49,7 @@ Scripts and examples:
 - `bin/atlas-continuity` - initializes and checks an untracked project continuity capsule.
 - `bin/atlas-session-start` - the SessionStart hook. Emits the capsule as context.
 - `bin/atlas-doctor` - verifies assembly, fingerprints, privacy boundaries, and doctrine stripping.
+- `bin/atlas-clones` - reports which clone the `/atlas` symlink resolves to, and flags any clone holding work that exists nowhere else.
 - `adapters/` - handoff instructions for Codex and file-less agents.
 - `runtime/` - ordered manifests, runtime contracts, codas, and assembly tests.
 - `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.

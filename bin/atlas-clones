@@ -1,0 +1,208 @@
+#!/bin/sh
+# Report which ATLAS clone is live, and what other clones share its remote.
+#
+#       bin/atlas-clones            # report every clone found
+#       bin/atlas-clones --check    # exit 1 if any clone warrants attention
+#       bin/atlas-clones --root DIR # scan DIR instead of $HOME (repeatable)
+#
+# The live clone is whatever `~/.claude/skills/atlas` resolves to, because the
+# symlink is what a session actually loads. Directory names lie; the symlink
+# does not.
+#
+# This never fetches. Every ahead/behind count is measured against the remote
+# refs already on disk, so a clone that has not been fetched in a week reports
+# as of a week ago. That is a deliberate trade: a diagnostic that reaches the
+# network is one people stop running.
+set -eu
+CDPATH=''
+
+SOURCE=$0
+while [ -h "$SOURCE" ]; do
+  source_dir=$(cd -P "$(dirname "$SOURCE")" && pwd)
+  SOURCE=$(readlink "$SOURCE")
+  case $SOURCE in
+    /*) ;;
+    *) SOURCE=$source_dir/$SOURCE ;;
+  esac
+done
+SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+REPO=$(cd -P "$SCRIPT_DIR/.." && pwd)
+
+CHECK=0
+DEPTH=6
+SKILL_LINK=${ATLAS_SKILL_LINK:-$HOME/.claude/skills/atlas}
+ROOTS=''
+
+SCAN=$(mktemp "${TMPDIR:-/tmp}/atlas-clones.XXXXXX") || exit 1
+trap 'rm -f "$SCAN"' EXIT INT TERM
+
+fail() {
+  echo "atlas-clones: FAIL: $*" >&2
+  exit 1
+}
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    --check) CHECK=1 ;;
+    --root) shift; [ $# -gt 0 ] || fail "--root needs a directory"
+            ROOTS="$ROOTS $1" ;;
+    --depth) shift; [ $# -gt 0 ] || fail "--depth needs a number"
+             DEPTH=$1 ;;
+    -h|--help) sed -n '2,16p' "$SOURCE" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) fail "unknown argument: $1" ;;
+  esac
+  shift
+done
+[ -n "$ROOTS" ] || ROOTS=$HOME
+
+for tool in git find sed ;do
+  command -v "$tool" >/dev/null 2>&1 || fail "required tool not found: $tool"
+done
+
+# Reduce a remote URL to owner/repo so an https clone and an ssh clone of the
+# same repository compare equal.
+remote_id() {
+  git -C "$1" config --get remote.origin.url 2>/dev/null |
+    sed -e 's|^git@\([^:]*\):|https://\1/|' \
+        -e 's|\.git$||' \
+        -e 's|^.*://[^/]*/||' |
+    tr 'A-Z' 'a-z'
+}
+
+short() { echo "$1" | sed "s|^$HOME|~|"; }
+
+# --- OPERATOR DECISION -------------------------------------------------------
+# Decide what each clone's state means. Echo exactly one word:
+#
+#   ok    - nothing to say
+#   note  - worth seeing in the report, but not a problem
+#   warn  - warrants attention; this is what makes --check exit 1
+#
+# Arguments:
+#   $1  role    "live" or "other"
+#   $2  dirty   count of uncommitted files (0 when clean)
+#   $3  ahead   commits ahead of upstream, or "-" when there is no upstream
+#   $4  behind  commits behind upstream, or "-" when there is no upstream
+#
+# Policy: Le Sauvegarder's invariant is "the only copy is at risk". The test
+# is therefore not "uncommitted" but "exists in exactly one place", which has
+# three forms -- uncommitted files, commits never pushed, and a branch with no
+# upstream to push to at all. Watching only the first misses two of them.
+#
+# Role does not change the risk, only whether the Operator can see it. The live
+# clone is the one in front of him; a clone he has stopped opening is where a
+# single copy actually goes missing. So role sets severity, not kind.
+#
+# Mere existence of a second clone is not a finding. Preservation is not
+# hoarding, and a check that fires on every duplicate teaches people to ignore
+# it.
+clone_verdict() {
+  role=$1; dirty=$2; ahead=$3; behind=$4
+
+  unsaved=no
+  if [ "$dirty" != 0 ]; then
+    unsaved=yes
+  fi
+  if [ "$ahead" = - ]; then
+    unsaved=yes                        # no upstream: nowhere to have pushed
+  elif [ "$ahead" -gt 0 ]; then
+    unsaved=yes                        # committed here and nowhere else
+  fi
+
+  if [ "$unsaved" = no ]; then
+    echo ok
+  elif [ "$role" = live ]; then
+    echo note
+  else
+    echo warn
+  fi
+}
+# -----------------------------------------------------------------------------
+
+LIVE=''
+if [ -e "$SKILL_LINK" ]; then
+  target=$SKILL_LINK
+  while [ -h "$target" ]; do
+    tdir=$(cd -P "$(dirname "$target")" && pwd)
+    target=$(readlink "$target")
+    case $target in /*) ;; *) target=$tdir/$target ;; esac
+  done
+  if [ -d "$target" ]; then
+    LIVE=$(git -C "$target" rev-parse --show-toplevel 2>/dev/null || echo '')
+  fi
+  echo "atlas-clones: skill link  $(short "$SKILL_LINK")"
+  echo "atlas-clones: resolves to $(short "$target")"
+else
+  echo "atlas-clones: skill link  $(short "$SKILL_LINK") (missing)"
+fi
+
+WANT=$(remote_id "$REPO")
+[ -n "$WANT" ] || fail "no origin remote on $REPO; nothing to match against"
+echo "atlas-clones: remote      $WANT"
+if [ -n "$LIVE" ]; then
+  echo "atlas-clones: live clone  $(short "$LIVE")"
+else
+  echo "atlas-clones: live clone  UNRESOLVED"
+fi
+echo
+
+WORST=ok
+FOUND=0
+# The loop below must run in this shell, not a subshell, or WORST and FOUND
+# are lost when the pipeline ends and --check can never fail. So the scan is
+# spooled to a file and fed in by redirect instead of by pipe.
+# shellcheck disable=SC2086
+for root in $ROOTS; do
+  [ -d "$root" ] || continue
+  find "$root" -maxdepth "$DEPTH" \
+       \( -name node_modules -o -name Library -o -name .Trash \
+          -o -name .cache -o -name .npm \) -prune -o \
+       -type d -name .git -print 2>/dev/null
+done | sed 's|/\.git$||' | sort -u > "$SCAN"
+
+while IFS= read -r dir; do
+  [ "$(remote_id "$dir")" = "$WANT" ] || continue
+  FOUND=$((FOUND + 1))
+
+  branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')
+  head=$(git -C "$dir" rev-parse --short HEAD 2>/dev/null || echo '?')
+  dirty=$(git -C "$dir" status --porcelain 2>/dev/null | grep -c '' || true)
+  if git -C "$dir" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+    counts=$(git -C "$dir" rev-list --left-right --count '@{u}...HEAD' 2>/dev/null)
+    behind=${counts%%	*}
+    ahead=${counts##*	}
+  else
+    behind='-'; ahead='-'
+  fi
+
+  if [ "$dir" = "$LIVE" ]; then role=live; else role=other; fi
+  verdict=$(clone_verdict "$role" "$dirty" "$ahead" "$behind")
+
+  case $role in live) mark='LIVE' ;; *) mark='    ' ;; esac
+  case $dirty in 0) state='clean' ;; *) state="dirty:$dirty" ;; esac
+  case "$ahead/$behind" in
+    -/-) sync='no upstream' ;;
+    0/0) sync='in sync' ;;
+    *)   sync="+$ahead/-$behind" ;;
+  esac
+
+  printf '%s %-4s %-34s %-14s %-9s %-10s %s\n' \
+    "$mark" "$verdict" "$(short "$dir")" "$branch" "$head" "$state" "$sync"
+
+  case $verdict in
+    warn) WORST=warn ;;
+    note) [ "$WORST" = warn ] || WORST=note ;;
+  esac
+done < "$SCAN"
+
+echo
+echo "atlas-clones: $FOUND clone(s) of $WANT found; verdict $WORST"
+echo "atlas-clones: ahead/behind measured against local refs; no fetch was run"
+
+# Finding zero is not a clean bill of health: this script is running from
+# inside a clone, so a correct scan always finds at least that one.
+[ "$FOUND" -gt 0 ] || fail "scan matched no clones, including the one this ran from"
+
+if [ "$CHECK" = 1 ] && [ "$WORST" = warn ]; then
+  exit 1
+fi
