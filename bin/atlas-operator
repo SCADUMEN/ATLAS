@@ -1,0 +1,77 @@
+#!/bin/sh
+# Create or check a per-user ATLAS operator profile.
+#
+# The operator profile is who ATLAS is serving: it supplies the Operator's name
+# and any stated preferences. It is per-user, not per-project — the SessionStart
+# hook (bin/atlas-session-start) loads it for every session. Absent one, ATLAS
+# addresses the Operator generically as "Operator".
+#
+# The location is $ATLAS_OPERATOR_FILE, or the per-user default under the Claude
+# config home. This is deliberately not a repository file: identity is the
+# Operator's, not the movement's, and must never be baked into the core.
+set -eu
+CDPATH=''
+
+usage() {
+  cat <<'EOF'
+Usage: atlas-operator init
+       atlas-operator check
+       atlas-operator path
+
+init scaffolds a per-user operator profile and refuses to overwrite an existing
+one. The location is $ATLAS_OPERATOR_FILE, or
+${CLAUDE_CONFIG_DIR:-$HOME/.claude}/atlas/operator.md by default.
+EOF
+}
+
+COMMAND=${1:-}
+case $COMMAND in init|check|path) ;; *) usage >&2; exit 2 ;; esac
+
+if [ -n "${ATLAS_OPERATOR_FILE:-}" ]; then
+  OPERATOR=$ATLAS_OPERATOR_FILE
+else
+  OPERATOR=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/atlas/operator.md
+fi
+
+if [ "$COMMAND" = path ]; then
+  printf '%s\n' "$OPERATOR"
+  exit 0
+fi
+
+if [ "$COMMAND" = init ]; then
+  [ ! -e "$OPERATOR" ] || {
+    echo "atlas-operator: refusing to overwrite: $OPERATOR" >&2
+    exit 1
+  }
+  mkdir -p "$(dirname "$OPERATOR")"
+  cat > "$OPERATOR" <<'PROFILE'
+# Operator
+
+Replace the heading above with your name — ATLAS addresses you by it. Everything
+below is optional; keep what helps and delete the rest.
+
+## Preferences
+
+- (how you like ATLAS to work with you)
+
+## Working context
+
+- (recurring projects, domains, constraints)
+PROFILE
+  echo "atlas-operator: created operator profile: $OPERATOR"
+fi
+
+[ -f "$OPERATOR" ] || {
+  echo "atlas-operator: operator profile not found: $OPERATOR" >&2
+  echo "atlas-operator: run: atlas-operator init" >&2
+  exit 1
+}
+
+# The name is the first Markdown H1. Everything else in the profile is optional.
+NAME=$(grep -m1 '^# ' "$OPERATOR" | sed 's/^# *//')
+[ -n "$NAME" ] || {
+  echo "atlas-operator: profile has no '# Name' heading: $OPERATOR" >&2
+  exit 1
+}
+
+echo "atlas-operator: operator profile present: $NAME"
