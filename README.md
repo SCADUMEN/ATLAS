@@ -188,6 +188,28 @@ In the language of the movement: the plugin fits the running model as the barrel
 The rite renders the masthead, the trinity, and the live grade — read at skill
 load by a shell command inside the skill, never hardcoded.
 
+Because the grade is read by a shell command that runs as the skill loads,
+Claude Code gates it behind Bash permissions. Pre-approve it with an allow rule
+in your user settings at `~/.claude/settings.json`, using your own absolute home
+path:
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(/Users/you/.claude/skills/atlas/grade:*)"]
+  }
+}
+```
+
+It has to be user settings, and it has to be the absolute path. The plugin's own
+`settings.json` honours only `agent` and `subagentStatusLine` and silently drops
+everything else, so the rule cannot ship with the plugin. A `~/`-relative Bash
+rule is not reliable either: the command is matched after `$HOME` is expanded,
+and the `~/` and `//` anchors that permissions document are for path rules
+(Read, Edit, Cd), not for Bash command rules. Skip the rule and the first
+`/atlas` prompts to approve the command; answering "Yes, and don't ask again"
+writes an equivalent rule for you.
+
 Nothing fires it automatically, and that is a platform fact rather than a
 shortfall. No hook can submit a first turn: `SessionStart` adds context and
 cannot make the model speak. `initialPrompt` does auto-submit, but only for
