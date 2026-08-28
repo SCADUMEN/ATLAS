@@ -28,7 +28,7 @@ for tool in git awk cmp cut grep; do
   command -v "$tool" >/dev/null 2>&1 || fail "required tool not found: $tool"
 done
 
-for script in atlas-context atlas-continuity atlas-doctor atlas-skills \
+for script in atlas-context atlas-continuity atlas-operator atlas-doctor atlas-skills \
               atlas-rite-skill atlas-session-start atlas-clones; do
   [ -x "$REPO/bin/$script" ] || fail "not executable: bin/$script"
 done
@@ -72,6 +72,18 @@ if [ -d "$PROJECT_INPUT" ]; then
     echo "atlas-doctor: continuity capsule checked"
   else
     echo "atlas-doctor: no continuity capsule found (optional)"
+  fi
+fi
+
+# The operator profile is per-user, not project-scoped, so it is checked outside
+# the project block above.
+if [ "${ATLAS_NO_OPERATOR:-0}" != 1 ]; then
+  OPERATOR=${ATLAS_OPERATOR_FILE:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/atlas/operator.md}
+  if [ -f "$OPERATOR" ]; then
+    "$REPO/bin/atlas-operator" check >/dev/null || fail "operator profile failed its structure check"
+    echo "atlas-doctor: operator profile checked"
+  else
+    echo "atlas-doctor: no operator profile found (optional)"
   fi
 fi
 

@@ -13,7 +13,7 @@ Core layer:
 - `AGENTS.md` - root entrypoint for agents working inside this repository.
 - `ATLAS.md` - core ATLAS operating layer.
 - `rapport/AGENTS.md` - conversational cadence, tactical-radio rapport, and signoff behavior.
-- `profiles/matthew.md` - Matthew-specific collaboration guidance.
+- `profiles/matthew.md` - an example operator profile. Operator identity is per-user config, not core; see "Operator identity".
 
 Council:
 
@@ -140,6 +140,16 @@ git clone git@github.com:SCADUMEN/ATLAS.git
 ln -s "$(pwd)/ATLAS/skills-standalone/atlas" ~/.claude/skills/atlas
 ```
 
+Optionally, tell ATLAS who you are so it greets you by name instead of the
+generic "Operator":
+
+```sh
+ATLAS/bin/atlas-operator init   # scaffolds ~/.claude/atlas/operator.md
+```
+
+Edit the file's first heading to your name. See "Operator identity" for the full
+mechanism and the `ATLAS_OPERATOR_FILE` / `ATLAS_NO_OPERATOR` controls.
+
 To work on ATLAS itself, point Claude Code at your checkout instead of
 installing:
 
@@ -159,10 +169,11 @@ is why only the rite needs the standalone slot.
 
 `settings.json` names `agents/atlas.md` as the session agent, so its prompt,
 model, and tools govern the main thread. That agent carries the compact core:
-`ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`,
-`overlays/le-conseil.md`, the runtime contract, and the coda. ATLAS governs the
-interface; current direct instructions and project rules remain authoritative,
-and your own `CLAUDE.md` still applies.
+`ATLAS.md`, `rapport/AGENTS.md`, `overlays/le-conseil.md`, the runtime contract,
+and the coda. The core is operator-agnostic: no specific person ships in it, and
+ATLAS addresses you as "Operator" until you set an operator profile (see
+"Operator identity"). ATLAS governs the interface; current direct instructions
+and project rules remain authoritative, and your own `CLAUDE.md` still applies.
 
 The core is inline because it has to be. An agent's `skills:` field preloads
 full skill content for subagents, but not for the main-thread agent — tested,
@@ -244,6 +255,25 @@ accident. `/atlas:authoring` is the deliberate way in.
 Le Fripon carries `disable-model-invocation: true`. Doctrine says he never
 self-activates without L'Opérateur, and the harness enforces it: only
 `/atlas:le-fripon` reaches him.
+
+### Operator identity
+
+ATLAS serves one Operator, and by default addresses them generically as
+"Operator". To be greeted by name, create a per-user operator profile:
+
+```sh
+bin/atlas-operator init
+```
+
+This scaffolds `~/.claude/atlas/operator.md` (honouring `CLAUDE_CONFIG_DIR`). The
+first Markdown heading is your name; everything below — preferences, working
+context — is optional. The `SessionStart` hook loads it for every session, so
+ATLAS addresses you by that name and the rite reads "I'm here, `<name>`." Set
+`ATLAS_OPERATOR_FILE` to point elsewhere, or `ATLAS_NO_OPERATOR=1` to skip it.
+
+The profile is per-user, never a repository file: identity is the Operator's,
+not the movement's, so it is never baked into the core. `profiles/matthew.md`
+remains as an example of what one looks like.
 
 ### Continuity between barrels
 

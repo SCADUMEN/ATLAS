@@ -68,7 +68,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 |---|---|---|---|---|---|
 | atlas-core | ATLAS Core — the bezel | core | A | built | ATLAS.md |
 | rapport | Rapport layer | core | B | built | rapport/AGENTS.md |
-| operator-profile | Operator profile — Matthew | core | B | built | profiles/matthew.md |
+| operator-profile | Operator profile — per-user config | core | B | built | bin/atlas-operator |
 | agents-entry | AGENTS.md entrypoint | core | C | built | AGENTS.md |
 | le-sceptique | Le Sceptique (01) | council | A | built | subroutines/le-sceptique.md |
 | le-sauvegarder | Le Sauvegarder — the crown | council | A | built | subroutines/le-sauvegarder.md |
