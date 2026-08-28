@@ -8,6 +8,24 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-29
+
+### Added
+- `bin/atlas-clones` now finds and labels linked worktrees. Discovery tested
+  `-type d -name .git`, which encodes "a repository is a directory holding a
+  `.git` directory" - true of clones, false of worktrees, where `.git` is an
+  87-byte file holding a `gitdir:` pointer. Every worktree on the machine was
+  invisible, and a worktree is likelier than a clone to hold uncommitted work,
+  because holding in-progress work is what worktrees are for.
+- `clone_kind()` classifies each checkout by comparing `--absolute-git-dir`
+  against `--git-common-dir`; equal means clone, different means worktree and
+  the parent is the directory holding the common dir. The common dir is
+  resolved before comparing, because git answers it relative to the invocation
+  directory - commonly bare `.git` - and comparing raw reports every ordinary
+  clone as a worktree. Worktrees are listed as their own entries rather than
+  folded into the parent, on the grounds that listing is information-preserving
+  and folding is lossy.
+
 ## [1.3.1] - 2026-08-29
 
 ### Added

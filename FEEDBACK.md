@@ -92,6 +92,38 @@ running record of what the instrument does in practice, not just in spec.
   the specimen utterance where `dial.py` can default to it, so regenerating
   without an argument reproduces the committed sheet instead of replacing it.
 
+### 2026-08-28 — [bug] Discovery missed every linked worktree; `.git` is not always a directory
+
+- **Context:** Immediately after #14 merged, `bin/atlas-clones` was run against
+  this machine as verification. It reported 5 clones, verdict `ok`. A separate
+  `find` for `ATLAS.md` performed earlier in the same session had surfaced
+  `~/.codex/worktrees/atlas-continuity-95`, which the tool did not list.
+- **Observation:** That path is a real ATLAS checkout on branch
+  `codex/atlas-continuity-95`, origin `SCADUMEN/ATLAS`, not shallow, at scan
+  depth 4 against `DEPTH=6` — so neither the depth limit, the prune list, nor
+  the shallow-clone gap documented in #14 explains the miss. The cause is the
+  discovery predicate itself: the scan tested `-type d -name .git`, and in a
+  linked worktree `.git` is an 87-byte text file holding
+  `gitdir: /Users/…/FORGOTTEN-INDUSTRIES/ATLAS/.git/worktrees/atlas-continuity-95`.
+  Every linked worktree on the machine was therefore invisible. Harmless this
+  instance: tree clean, and that branch is PR #4, merged. Widening the
+  predicate to `\( -type d -o -type f \) -name .git` raises the count 5 → 6.
+- **Relevance to build:** Third instance of one pattern in this tool. #13
+  assumed a clone is identified by its origin URL; #14 corrected identity but
+  kept the URL as one arm; this assumed a repository is identified by its
+  on-disk layout. Each time the discovery predicate was narrower than the
+  category being discovered, and each time the failure was silent — a `clean,
+  in sync` report rather than an error. Worth treating "ask git rather than
+  pattern-match the filesystem" as the default: `rev-parse --git-common-dir`
+  answers "what repository is this" across clones, worktrees, and submodules in
+  one call. Risk ranking also runs the wrong way here — a worktree is likelier
+  than a clone to hold uncommitted work, since that is what worktrees are for,
+  so the blind spot pointed at the highest-value target. Classification of
+  worktrees as their own report entries (rather than folded into the parent) is
+  the Operator's call, recorded in the second `OPERATOR DECISION` block:
+  listing is information-preserving, folding is lossy, fold later if the noise
+  earns it.
+
 ### 2026-08-28 — [workspace] The fifth clone was ours all along; ATLAS was renamed
 
 - **Context:** The `[correction]` entry below records
