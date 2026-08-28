@@ -29,8 +29,8 @@ jobs:
       - name: Le Rouage
         run: python3 -m unittest discover rouage -v
 
-      - name: Le Grade
-        run: python3 -m unittest discover grade -v
+      - name: Le Niveau
+        run: python3 -m unittest discover level -v
 
       - name: Diagnostic pulse
         # Verifies determinism, doctrine stripping, and that the three

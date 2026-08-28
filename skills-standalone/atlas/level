@@ -7,8 +7,8 @@ for dir in \
   "$HOME"/projects/shadow-atlas \
   "$HOME"/projects/ATLAS
 do
-  if [ -f "$dir/grade/grade.py" ]; then
-    python3 "$dir/grade/grade.py" --oneline 2>/dev/null
+  if [ -f "$dir/level/level.py" ]; then
+    python3 "$dir/level/level.py" --oneline 2>/dev/null
     exit 0
   fi
 done
