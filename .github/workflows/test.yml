@@ -16,7 +16,11 @@ jobs:
       - name: Checkout
         # atlas-context and atlas-doctor fingerprint with git hash-object, and
         # the doctor reads the working tree, so the full checkout is required.
+        # fetch-depth: 0 also makes the PR base commit reachable for the level
+        # guard below, which scores the base tree in a detached worktree.
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -37,3 +41,26 @@ jobs:
         # generated surfaces still match their sources. A generated file that
         # has drifted still loads, so nothing else would report it.
         run: bin/atlas-doctor
+
+      - name: Level moved on a feature release
+        # The failproof for le-niveau.md: a minor/major version bump must raise
+        # the computed level, or the score silently stalls the way it did for
+        # nine releases after v1.1.0. The base tree is scored by *its own*
+        # level.py (the formula may change over time) via --oneline, which every
+        # released version prints; head uses --xp, added in this change.
+        # release_guard.py decides — a patch bump is exempt.
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          head_version=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          head_xp=$(python3 level/level.py --xp)
+
+          base_dir="$RUNNER_TEMP/atlas-base"
+          git worktree add --detach "$base_dir" "$BASE_SHA"
+          base_version=$(python3 -c "import json;print(json.load(open('$base_dir/.claude-plugin/plugin.json'))['version'])")
+          base_xp=$(cd "$base_dir" && python3 level/level.py --oneline | grep -oE '\(([0-9]+)' | tr -d '(')
+          git worktree remove --force "$base_dir"
+
+          echo "base $base_version @ ${base_xp} XP  ->  head $head_version @ ${head_xp} XP"
+          python3 level/release_guard.py "$base_version" "$head_version" "$base_xp" "$head_xp"
