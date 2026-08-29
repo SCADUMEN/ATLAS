@@ -60,6 +60,16 @@ Level and modules:
 - `level/` - the level computed in code. Python, stdlib only, parses the ledger, 8 tests.
 - `modules/` - knowledge and skill modules that raise the level, one file each.
 
+## Requirements
+
+- `git` - to clone the repository and link the rite.
+- `python3` 3.9+, standard library only - no pip packages.
+- Claude Code - to run ATLAS as a plugin.
+- Standard POSIX tools (`awk`, `sed`, `grep`, `cut`, `cmp`, `find`, `mktemp`) - present by default on macOS and Linux.
+- Network access is optional. The only outbound call is the update check when the
+  crown is wound; it is bounded by a five-second watchdog and silent on failure,
+  so ATLAS runs fully offline without it.
+
 ## Le Conseil
 
 Thirteen subroutines, gated and routed by `overlays/le-conseil.md`. They are operating modes of one agent, not thirteen agents.
@@ -156,8 +166,6 @@ installing:
 ```sh
 claude --plugin-dir /path/to/ATLAS
 ```
-
-Requirements: git, python3, and Claude Code.
 
 Two install locations, and the reason is not arbitrary. A skill's invocation
 name comes from its **directory**, so a bare `/atlas` requires the rite to sit
