@@ -8,6 +8,25 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-08-29
+
+### Added
+- The Module Ledger in `overlays/le-niveau.md` now scores three capabilities
+  that shipped since v1.1.0 but were never listed, so they earned nothing: the
+  update check (`update-check`, A, `level/latest.py`, from 1.3.0), worktree
+  discovery and the `clone_kind()` classifier (`worktree-discovery`, A,
+  `bin/atlas-clones`, from 1.4.0), and the Conventional Commits PR-title gate
+  (`pr-title-lint`, B, `.github/workflows/lint-pr-title.yml`, from 1.2.0). The
+  loop — build a module, list it as built with a real path, rerun the score —
+  had simply not been run for those releases. Level moves 89 → 94 (+1250 XP).
+- A release failproof: a minor or major version bump must raise the computed
+  level, or CI fails the PR. `level/release_guard.py` (pure, unit-tested,
+  reusing `parse_version()` from `latest.py`) decides; the `Test` workflow
+  scores the PR base tree in a detached worktree and compares. A patch bump
+  (fix/chore/docs) is exempt. This is why the level silently stalled for nine
+  releases after v1.1.0; it can no longer.
+- `level/level.py --xp` prints just the integer XP, for machine parsing.
+
 ## [1.4.3] - 2026-08-29
 
 ### Fixed

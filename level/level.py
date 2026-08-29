@@ -9,6 +9,7 @@ the evidence.
 
     python3 level/level.py            full readout
     python3 level/level.py --oneline  one line, for a boot banner
+    python3 level/level.py --xp       the integer XP only, for machine parsing
 """
 
 import math
@@ -105,6 +106,11 @@ def compute():
 def main(argv):
     r = compute()
     xp, xp100, level = r["xp"], r["xp100"], r["level"]
+
+    if "--xp" in argv:
+        # Just the integer XP, for machine parsing (the release guard reads this).
+        print(xp)
+        return 0
 
     if "--oneline" in argv:
         if xp > xp100:

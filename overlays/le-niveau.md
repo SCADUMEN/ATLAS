@@ -92,6 +92,9 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | runtime-contract | Runtime session contract | system | B | built | runtime/session-contract.md |
 | atlas-doctor | Runtime diagnostic — atlas-doctor | system | B | built | bin/atlas-doctor |
 | versioning | Semver release discipline (CI) | system | A | built | .github/workflows/release.yml |
+| pr-title-lint | Conventional Commits PR-title gate | system | B | built | .github/workflows/lint-pr-title.yml |
+| update-check | Update check — newer-release banner | system | A | built | level/latest.py |
+| worktree-discovery | Worktree discovery + clone_kind() classifier | system | A | built | bin/atlas-clones |
 | larchive-accession | L'Archive accession practice | knowledge | B | built | examples/larchive |
 | authenticating-people | Authenticating people — Schneider CS513 | knowledge | B | built | modules/authenticating-people.md |
 | reincarnation | Reincarnation — the fitted plugin | meta | S | built | agents/atlas.md |
@@ -117,9 +120,9 @@ XP required, by level:
 |---|---|---|
 | 80 | 8,320 | the launcher milestone — Reincarnation |
 | 85 | 9,393 | the portable bundle, continuity, and diagnostic — built |
-| 89 | 10,298 | current build — operator config + CI versioning |
-| 90 | 10,530 | + finish Le Rouage (S) |
-| 95 | 11,733 | + the case built (S) and the barrel adapter (A) |
+| 89 | 10,298 | operator config + CI versioning — built |
+| 94 | 11,487 | current build — the PR-title gate, update check, and worktree discovery — built |
+| 95 | 11,733 | + finish Le Rouage (S) |
 | 100 | 13,000 | design-complete instrument |
 
 To level ATLAS: build a module, list it in the ledger as `built` with a real path, and rerun `level/level.py`. Core-system work (finishing Le Rouage, building the case) and knowledge modules both count. That is the whole loop — preserve, build, score, preserve.
