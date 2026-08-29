@@ -8,6 +8,16 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-08-29
+
+### Fixed
+- Le Rédempteur's gate-level prohibition list (`**Do not fire on:**`) was parsed
+  into his activation bullets, so `citations()` offered those guards to the barrel
+  as quotable and a prohibition could convene the very member it was written to
+  keep dark. Separated the negative gate from the activation gate and gave the
+  pair a retrograde arc. Regenerated `agents/atlas.md` and the Le Rédempteur skill
+  from their sources.
+
 ## [1.2.0] - 2026-08-28
 
 ### Added

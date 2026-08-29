@@ -76,6 +76,21 @@ CONSEIL = REPO / "overlays" / "le-conseil.md"
 CORE_HEADING = "## OPERATIONAL CORE"
 DOCTRINE_HEADING = "## DOCTRINE"
 
+# The negative half of a gate: what must not CONVENE a member. Distinct from
+# the '### Prohibitions' section every member carries, which is what a member
+# must not DO once convened. Two different kinds, and only one had a home.
+#
+# Le Redempteur wrote his inline, as '**Do not fire on:**', in the first
+# subroutine written - two months before the other nine - because he is the
+# member most dangerous to fire wrongly. parse_activation() collected bullets
+# across the whole Activation section, so all five of his guards landed in
+# `bullets`, citations() offered them as quotable, and admit_proposals()
+# accepted a guard as grounds to convene. Promoting the marker to a sibling
+# heading is what separates them, and the section is matched here so the
+# doctrine declares its own structure instead of the parser inferring it.
+NEGATIVE_SECTION = re.compile(
+    r"^###\s+Do Not Fire On\s*$(.*?)(?=^###\s|\Z)", re.M | re.S | re.I)
+
 
 # --------------------------------------------------------------------------
 # Normalisation
@@ -116,6 +131,7 @@ class Member:
     standing: bool = False   # runs every turn, uncapped
     sealed: bool = False     # never self-activates; requires arming
     bullets: tuple[str, ...] = ()  # the semantic half of the gate, verbatim
+    prohibitions: tuple[str, ...] = ()   # negative half: what must NOT fire it
 
     def matches(self, utterance: str) -> str | None:
         """Return the phrase that fired, or None. Literal containment only."""
@@ -167,10 +183,21 @@ NUMBER_WORDS = {
 }
 
 
+def bullet_lines(section: str) -> tuple[str, ...]:
+    """The '- ' lines of a section, verbatim and in order.
+
+    Both halves of a gate are bullet lists and both must be read the same
+    way, byte for byte, or a citation could be admissible against one and
+    not the other.
+    """
+    return tuple(m.group(1).strip()
+                 for m in re.finditer(r"^-\s+(.+)$", section, re.M))
+
+
 def parse_activation(
     path: Path,
-) -> tuple[tuple[str, ...], bool, bool, tuple[str, ...]]:
-    """Extract (phrases, standing, sealed, bullets) from a gate block.
+) -> tuple[tuple[str, ...], bool, bool, tuple[str, ...], tuple[str, ...]]:
+    """Extract (phrases, standing, sealed, bullets, prohibitions) from a gate.
 
     Reads only the '### Activation' (or '### Standing Activation') section
     inside OPERATIONAL CORE. The quoted strings in that section are the
@@ -182,6 +209,14 @@ def parse_activation(
     the train from doing. They are still extracted, verbatim, because
     admit_proposals() needs something to check a barrel's citation against
     without re-reading the file for meaning itself.
+
+    '### Do Not Fire On' is the same kind of prose pointing the other way:
+    conditions that must NOT convene the member. It is a sibling section
+    rather than part of Activation, so the two cannot be collected into one
+    list - which is exactly what happened while the block was written inline
+    as bold text, and made every one of Le Redempteur's guards admissible as
+    grounds to convene him. Absent section, empty tuple; most members have no
+    negative gate yet.
     """
     text = path.read_text(encoding="utf-8")
 
@@ -199,9 +234,12 @@ def parse_activation(
     phrases = tuple(dict.fromkeys(re.findall(r'"([^"]+)"', section)))
     standing = "**Always on.**" in section
     sealed = "does not self-activate" in section
-    bullets = tuple(m.group(1).strip()
-                     for m in re.finditer(r"^-\s+(.+)$", section, re.M))
-    return phrases, standing, sealed, bullets
+    bullets = bullet_lines(section)
+
+    negative = NEGATIVE_SECTION.search(body)
+    prohibitions = bullet_lines(negative.group(1)) if negative else ()
+
+    return phrases, standing, sealed, bullets, prohibitions
 
 
 def load_ring(conseil: Path = CONSEIL) -> Ring:
@@ -214,9 +252,11 @@ def load_ring(conseil: Path = CONSEIL) -> Ring:
 
     for position, name, rel in rows:
         path = REPO / rel
-        phrases, standing, sealed, bullets = parse_activation(path)
+        phrases, standing, sealed, bullets, prohibitions = \
+            parse_activation(path)
         members.append(Member(position, name.strip(), path,
-                              phrases, standing, sealed, bullets))
+                              phrases, standing, sealed, bullets,
+                              prohibitions))
 
     # Scoped to the '## Precedence' section. The numbered list under
     # 'Adding Or Removing A Member' is membership criteria, not a ladder,
@@ -820,6 +860,13 @@ def citations(ring: Ring) -> dict[str, tuple[str, ...]]:
     strings parse_activation() already extracted, and the barrel decides which
     one fired. Deciding that is the semantic half, which is the barrel's whole
     job and is exactly what the train must not do.
+
+    Positives only. A member's prohibitions are deliberately NOT offered:
+    this menu is the list of things it is valid to cite, and a guard is never
+    valid grounds. Offering them made the menu itself the trap it exists to
+    prevent - a barrel quoting faithfully from it could convene Le Redempteur
+    on the sentence written to keep him dark. See admit_proposals() for what
+    happens to one cited anyway.
     """
     return {m.name: m.bullets for m in ring.members if m.bullets}
 
@@ -901,6 +948,26 @@ def admit_proposals(
             continue
 
         cited = citation.strip()
+        if cited in member.prohibitions:
+            # Not the same error as a typo, and the trace must not say it is.
+            # 'cited text not found' is a barrel quoting sloppily. This is a
+            # barrel that found the sentence saying DO NOT fire on this and
+            # offered it as grounds to fire - an inverted gate, which is what
+            # a barrel rationalising toward a member it wants looks like from
+            # here. Collapsing the two would make the louder failure the
+            # quieter one.
+            #
+            # Decided (L'Operateur, 2026-08-28): rejected with its own failure
+            # string, and the position stays dark. Not 'held' - held is for a
+            # member that convened and was stopped at the door by the cap or
+            # the brake, and this one never convened at all.
+            trace.failures.append(
+                f"rejected proposal: {member.name} cited a prohibition, not "
+                f"an activation - its gate names this as a reason to stay "
+                f"dark: {citation!r}"
+            )
+            continue
+
         if cited not in member.bullets:
             trace.failures.append(
                 f"rejected proposal: {member.name} cited text not found "

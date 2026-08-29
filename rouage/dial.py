@@ -941,6 +941,7 @@ MECHANISMS = (
     ("Column wheel", "column wheel", "verdicts"),
     ("Brake", "brake", "the halt"),
     ("Perpetual calendar", "perpetual calendar", "undriven"),
+    ("Retrograde arc", "retrograde arc", "undriven"),
     ("Hands", "hands", "answer"),
     ("Split-seconds hand", "split-seconds hand", "where it was aimed"),
 )
