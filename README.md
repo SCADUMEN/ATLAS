@@ -36,7 +36,7 @@ Overlays and templates:
 Plugin surface (generated — edit the sources, then regenerate):
 
 - `.claude-plugin/plugin.json` - the plugin manifest.
-- `settings.json` - names `atlas` as the session agent.
+- `settings.json` - plugin settings. Deliberately empty: ATLAS does not claim the main thread.
 - `agents/atlas.md` - the compact core, inline. Built by `bin/atlas-context --mode agent`.
 - `skills/` - the thirteen council members, cores only. Built by `bin/atlas-skills`.
 - `skills-standalone/atlas/` - the `/atlas` rite. Built by `bin/atlas-rite-skill`.
@@ -175,8 +175,10 @@ is why only the rite needs the standalone slot.
 
 ### What it does
 
-`settings.json` names `agents/atlas.md` as the session agent, so its prompt,
-model, and tools govern the main thread. That agent carries the compact core:
+`agents/atlas.md` is the session agent, and it is opt-in: launch it with
+`claude --agent atlas:atlas`, or pick it from `/agents`. A bare `claude` comes up
+as the built-in agent. When ATLAS is the agent, its prompt, model, and tools
+govern the main thread. That agent carries the compact core:
 `ATLAS.md`, `rapport/AGENTS.md`, `overlays/le-conseil.md`, the runtime contract,
 and the coda. The core is operator-agnostic: no specific person ships in it, and
 ATLAS addresses you as "Operator" until you set an operator profile (see

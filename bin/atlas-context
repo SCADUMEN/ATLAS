@@ -153,8 +153,8 @@ if [ "$MODE" = agent ]; then
   # accepted at all. `model: inherit` leaves /model in the Operator's hands.
   #
   # The core is inline because it has to be. An agent's `skills:` field
-  # preloads full skill content for subagents only; on the main thread, which
-  # is how settings.json activates this agent, nothing is preloaded. Tested,
+  # preloads full skill content for subagents only; on the main thread, where
+  # this agent runs when it is selected, nothing is preloaded. Tested,
   # not assumed.
   # No source commit here, unlike the bundle header. A bundle is built at
   # launch and discarded, so naming HEAD tells you what produced it. This file
