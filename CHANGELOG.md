@@ -8,6 +8,14 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-08-29
+
+### Added
+- A Requirements section in the README, naming the POSIX tools ATLAS actually
+  shells out to and stating that network access is optional - the update check
+  added in 1.3.0 is the only outbound call, and ATLAS runs fully offline without
+  it. Replaces the one-line "git, python3, and Claude Code" note further down.
+
 ## [1.3.0] - 2026-08-29
 
 ### Added
