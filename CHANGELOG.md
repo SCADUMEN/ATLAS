@@ -8,6 +8,17 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-08-29
+
+### Fixed
+- The `/atlas` level readout now resolves from a marketplace install. The
+  resolver globbed `~/.claude/plugins/cache/*/atlas`, but the marketplace caches
+  each release one level deeper, under its own version directory, so the lookup
+  never matched `level/level.py` and fell through to a hardcoded checkout. The
+  fallthrough is silent by design, so a stale clone could stay load-bearing
+  unnoticed. Versions are now compared as integer tuples, so 1.10.0 outranks
+  1.9.0 and a non-numeric name is skipped rather than ranked.
+
 ## [1.2.1] - 2026-08-29
 
 ### Fixed
