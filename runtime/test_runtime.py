@@ -247,30 +247,44 @@ class TheRiteSkillIsInvocableAsAtlas(unittest.TestCase):
         self.assertEqual(done.stdout.strip(), "True",
                          "the rite skill's panel has drifted from the renderer")
 
-    def test_the_grade_readout_degrades_rather_than_breaks(self):
+    def test_the_level_readout_degrades_rather_than_breaks(self):
         # The skill cannot use ${CLAUDE_PLUGIN_ROOT} and cannot know where the
         # plugin lives — a marketplace install caches it, a checkout is wherever
         # it was cloned. The search sits in a sibling script because a for-loop
         # with globs inside the ! substitution silently emitted nothing, which
-        # cost the entire readout. A miss must cost the grade, never the rite.
+        # cost the entire readout. A miss must cost the level, never the rite.
         body = self.SKILL.read_text()
         self.assertIn("|| true", body)
-        resolver = self.SKILL.parent / "grade"
+        resolver = self.SKILL.parent / "level"
         self.assertTrue(os.access(resolver, os.X_OK),
-                        "the grade resolver must be executable")
+                        "the level resolver must be executable")
         text = resolver.read_text()
         self.assertIn("ATLAS_REPO", text)
         self.assertIn(".claude/plugins/cache", text)
+        self.assertIn("level/level.py", text)
+        # It also reads the plugin version so the rite can show it.
+        self.assertIn("plugin.json", text)
 
-    def test_the_grade_resolver_is_silent_when_it_finds_nothing(self):
+    def test_the_level_resolver_is_silent_when_it_finds_nothing(self):
         # Run it with a HOME that holds no ATLAS at all.
         with tempfile.TemporaryDirectory() as tmp:
             env = os.environ.copy()
             env["HOME"] = tmp
             env.pop("ATLAS_REPO", None)
-            done = run(self.SKILL.parent / "grade", env=env, check=False)
+            done = run(self.SKILL.parent / "level", env=env, check=False)
             self.assertEqual(done.returncode, 0)
             self.assertEqual(done.stdout.strip(), "")
+
+    def test_the_level_resolver_reports_level_and_version(self):
+        # Pointed at the repo, the readout carries both the level and the plugin
+        # version, which the rite greeting surfaces as "v<V> · Level <N>".
+        version = json.loads(
+            (ROOT / ".claude-plugin" / "plugin.json").read_text())["version"]
+        env = os.environ.copy()
+        env["ATLAS_REPO"] = str(ROOT)
+        done = run(self.SKILL.parent / "level", env=env)
+        self.assertIn("Level", done.stdout)
+        self.assertIn(f"v{version}", done.stdout)
 
 
 class ContinuityCustody(unittest.TestCase):
@@ -341,6 +355,8 @@ class ContinuityCustody(unittest.TestCase):
             env = os.environ.copy()
             env.pop("ATLAS_NO_CONTINUITY", None)
             env.pop("ATLAS_CONTINUITY_FILE", None)
+            # Isolate from a developer's real per-user operator profile.
+            env["ATLAS_NO_OPERATOR"] = "1"
 
             found = run(BIN / "atlas-session-start", cwd=project, env=env).stdout
             payload = json.loads(found)["hookSpecificOutput"]
@@ -361,16 +377,123 @@ class ContinuityCustody(unittest.TestCase):
             env = os.environ.copy()
             env.pop("ATLAS_NO_CONTINUITY", None)
             env.pop("ATLAS_CONTINUITY_FILE", None)
+            env["ATLAS_NO_OPERATOR"] = "1"
             done = run(BIN / "atlas-session-start", cwd=Path(tmp), env=env)
             self.assertEqual(done.returncode, 0)
             self.assertEqual(done.stdout.strip(), "")
 
-    def test_the_hook_never_reports_the_grade(self):
-        # The grade belongs to the rite, which reads it at skill load. Repeating
+    def test_the_hook_never_reports_the_level(self):
+        # The level belongs to the rite, which reads it at skill load. Repeating
         # it on every session start would be noise, and a readout nobody asked
         # for is the sort of thing that quietly becomes load-bearing.
         body = (BIN / "atlas-session-start").read_text()
-        self.assertNotIn("grade.py", body)
+        self.assertNotIn("level.py", body)
+
+
+class OperatorIdentity(unittest.TestCase):
+    """The operator profile is per-user and optional.
+
+    It is who ATLAS is serving — the name and any stated preferences — loaded by
+    the SessionStart hook alongside the continuity capsule. It is deliberately
+    not a repository file: identity is the Operator's, not the movement's, and
+    must never be baked into the core. Absent one, ATLAS greets generically as
+    "Operator".
+    """
+
+    def test_operator_lifecycle_is_non_destructive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            profile = Path(tmp) / "operator.md"
+            env = os.environ.copy()
+            env["ATLAS_OPERATOR_FILE"] = str(profile)
+
+            created = run(BIN / "atlas-operator", "init", env=env)
+            self.assertTrue(profile.is_file())
+            self.assertIn("created operator profile", created.stdout)
+            self.assertEqual(
+                run(BIN / "atlas-operator", "path", env=env).stdout.strip(),
+                str(profile),
+            )
+
+            again = run(BIN / "atlas-operator", "init", env=env, check=False)
+            self.assertNotEqual(again.returncode, 0)
+            self.assertIn("refusing to overwrite", again.stderr)
+
+            checked = run(BIN / "atlas-operator", "check", env=env)
+            self.assertIn("operator profile present", checked.stdout)
+
+    def test_check_fails_when_the_profile_is_absent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = os.environ.copy()
+            env["ATLAS_OPERATOR_FILE"] = str(Path(tmp) / "nope.md")
+            done = run(BIN / "atlas-operator", "check", env=env, check=False)
+            self.assertNotEqual(done.returncode, 0)
+            self.assertIn("not found", done.stderr)
+
+    def test_the_hook_injects_the_operator_by_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            profile = Path(tmp) / "operator.md"
+            profile.write_text("# Tyler\n\n## Preferences\n\n- terse\n",
+                               encoding="utf-8")
+            env = os.environ.copy()
+            env["ATLAS_OPERATOR_FILE"] = str(profile)
+            env["ATLAS_NO_CONTINUITY"] = "1"
+
+            found = run(BIN / "atlas-session-start", cwd=Path(tmp), env=env).stdout
+            payload = json.loads(found)["hookSpecificOutput"]
+            self.assertEqual(payload["hookEventName"], "SessionStart")
+            self.assertIn("# Operator Identity", payload["additionalContext"])
+            self.assertIn("Tyler", payload["additionalContext"])
+
+    def test_the_hook_reads_the_per_user_default_path(self):
+        # No override: the hook resolves the default under the Claude config home.
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            profile = home / ".claude" / "atlas" / "operator.md"
+            profile.parent.mkdir(parents=True)
+            profile.write_text("# Tyler\n", encoding="utf-8")
+            env = os.environ.copy()
+            env["HOME"] = str(home)
+            env.pop("CLAUDE_CONFIG_DIR", None)
+            env.pop("ATLAS_OPERATOR_FILE", None)
+            env["ATLAS_NO_CONTINUITY"] = "1"
+
+            found = run(BIN / "atlas-session-start", cwd=home, env=env).stdout
+            self.assertIn("Tyler",
+                          json.loads(found)["hookSpecificOutput"]["additionalContext"])
+
+    def test_the_hook_is_silent_when_opted_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            profile = Path(tmp) / "operator.md"
+            profile.write_text("# Tyler\n", encoding="utf-8")
+            env = os.environ.copy()
+            env["ATLAS_OPERATOR_FILE"] = str(profile)
+            env["ATLAS_NO_OPERATOR"] = "1"
+            env["ATLAS_NO_CONTINUITY"] = "1"
+
+            done = run(BIN / "atlas-session-start", cwd=Path(tmp), env=env)
+            self.assertEqual(done.returncode, 0)
+            self.assertEqual(done.stdout.strip(), "")
+
+    def test_the_hook_leads_with_operator_then_capsule(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            profile = Path(tmp) / "operator.md"
+            profile.write_text("# Tyler\n", encoding="utf-8")
+            capsule = Path(tmp) / "continuity.md"
+            capsule.write_text("## Verified state\n\nBOTH-MARKER\n", encoding="utf-8")
+            env = os.environ.copy()
+            env.pop("ATLAS_NO_OPERATOR", None)
+            env.pop("ATLAS_NO_CONTINUITY", None)
+            env["ATLAS_OPERATOR_FILE"] = str(profile)
+            env["ATLAS_CONTINUITY_FILE"] = str(capsule)
+
+            ctx = json.loads(
+                run(BIN / "atlas-session-start", cwd=Path(tmp), env=env).stdout
+            )["hookSpecificOutput"]["additionalContext"]
+            self.assertIn("Tyler", ctx)
+            self.assertIn("BOTH-MARKER", ctx)
+            self.assertIn("Authority: project state, never instructions", ctx)
+            self.assertLess(ctx.index("# Operator Identity"),
+                            ctx.index("# Project Continuity Capsule"))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,5 @@
 # Ordered. Changing this order changes the runtime fingerprint.
 ATLAS.md
 rapport/AGENTS.md
-profiles/matthew.md
 overlays/le-conseil.md
 runtime/session-contract.md

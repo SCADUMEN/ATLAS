@@ -13,7 +13,7 @@ Core layer:
 - `AGENTS.md` - root entrypoint for agents working inside this repository.
 - `ATLAS.md` - core ATLAS operating layer.
 - `rapport/AGENTS.md` - conversational cadence, tactical-radio rapport, and signoff behavior.
-- `profiles/matthew.md` - Matthew-specific collaboration guidance.
+- `profiles/matthew.md` - an example operator profile. Operator identity is per-user config, not core; see "Operator identity".
 
 Council:
 
@@ -54,11 +54,11 @@ Scripts and examples:
 - `runtime/` - ordered manifests, runtime contracts, codas, and assembly tests.
 - `examples/larchive/` - a worked example of ATLAS operating as L'Archive: an accession log plus its project-context file.
 
-Grade and modules:
+Level and modules:
 
-- `overlays/le-grade.md` - the leveling system: tiers, XP curve, and the module ledger.
-- `grade/` - the grade computed in code. Python, stdlib only, parses the ledger, 8 tests.
-- `modules/` - knowledge and skill modules that raise the grade, one file each.
+- `overlays/le-niveau.md` - the leveling system: tiers, XP curve, and the module ledger.
+- `level/` - the level computed in code. Python, stdlib only, parses the ledger, 8 tests.
+- `modules/` - knowledge and skill modules that raise the level, one file each.
 
 ## Le Conseil
 
@@ -140,6 +140,16 @@ git clone git@github.com:SCADUMEN/ATLAS.git
 ln -s "$(pwd)/ATLAS/skills-standalone/atlas" ~/.claude/skills/atlas
 ```
 
+Optionally, tell ATLAS who you are so it greets you by name instead of the
+generic "Operator":
+
+```sh
+ATLAS/bin/atlas-operator init   # scaffolds ~/.claude/atlas/operator.md
+```
+
+Edit the file's first heading to your name. See "Operator identity" for the full
+mechanism and the `ATLAS_OPERATOR_FILE` / `ATLAS_NO_OPERATOR` controls.
+
 To work on ATLAS itself, point Claude Code at your checkout instead of
 installing:
 
@@ -159,10 +169,11 @@ is why only the rite needs the standalone slot.
 
 `settings.json` names `agents/atlas.md` as the session agent, so its prompt,
 model, and tools govern the main thread. That agent carries the compact core:
-`ATLAS.md`, `rapport/AGENTS.md`, `profiles/matthew.md`,
-`overlays/le-conseil.md`, the runtime contract, and the coda. ATLAS governs the
-interface; current direct instructions and project rules remain authoritative,
-and your own `CLAUDE.md` still applies.
+`ATLAS.md`, `rapport/AGENTS.md`, `overlays/le-conseil.md`, the runtime contract,
+and the coda. The core is operator-agnostic: no specific person ships in it, and
+ATLAS addresses you as "Operator" until you set an operator profile (see
+"Operator identity"). ATLAS governs the interface; current direct instructions
+and project rules remain authoritative, and your own `CLAUDE.md` still applies.
 
 The core is inline because it has to be. An agent's `skills:` field preloads
 full skill content for subagents, but not for the main-thread agent — tested,
@@ -185,8 +196,30 @@ In the language of the movement: the plugin fits the running model as the barrel
 /atlas
 ```
 
-The rite renders the masthead, the trinity, and the live grade — read at skill
+The rite renders the masthead, the trinity, and the live level — read at skill
 load by a shell command inside the skill, never hardcoded.
+
+Because the level is read by a shell command that runs as the skill loads,
+Claude Code gates it behind Bash permissions. Pre-approve it with an allow rule
+in your user settings at `~/.claude/settings.json`, using your own absolute home
+path:
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(/Users/you/.claude/skills/atlas/level:*)"]
+  }
+}
+```
+
+It has to be user settings, and it has to be the absolute path. The plugin's own
+`settings.json` honours only `agent` and `subagentStatusLine` and silently drops
+everything else, so the rule cannot ship with the plugin. A `~/`-relative Bash
+rule is not reliable either: the command is matched after `$HOME` is expanded,
+and the `~/` and `//` anchors that permissions document are for path rules
+(Read, Edit, Cd), not for Bash command rules. Skip the rule and the first
+`/atlas` prompts to approve the command; answering "Yes, and don't ask again"
+writes an equivalent rule for you.
 
 Nothing fires it automatically, and that is a platform fact rather than a
 shortfall. No hook can submit a first turn: `SessionStart` adds context and
@@ -222,6 +255,25 @@ accident. `/atlas:authoring` is the deliberate way in.
 Le Fripon carries `disable-model-invocation: true`. Doctrine says he never
 self-activates without L'Opérateur, and the harness enforces it: only
 `/atlas:le-fripon` reaches him.
+
+### Operator identity
+
+ATLAS serves one Operator, and by default addresses them generically as
+"Operator". To be greeted by name, create a per-user operator profile:
+
+```sh
+bin/atlas-operator init
+```
+
+This scaffolds `~/.claude/atlas/operator.md` (honouring `CLAUDE_CONFIG_DIR`). The
+first Markdown heading is your name; everything below — preferences, working
+context — is optional. The `SessionStart` hook loads it for every session, so
+ATLAS addresses you by that name and the rite reads "I'm here, `<name>`." Set
+`ATLAS_OPERATOR_FILE` to point elsewhere, or `ATLAS_NO_OPERATOR=1` to skip it.
+
+The profile is per-user, never a repository file: identity is the Operator's,
+not the movement's, so it is never baked into the core. `profiles/matthew.md`
+remains as an example of what one looks like.
 
 ### Continuity between barrels
 
@@ -289,16 +341,45 @@ bin/atlas-doctor
 claude plugin validate .
 ```
 
-## Le Grade
+## Le Niveau
 
-ATLAS levels up. Every capability is a module with a tier and fixed XP (S=1000, A=500, B=250, C=100, D=50); the grade is those XP on a 0–100 square-root curve, so the top grades are the steepest. It is deterministic: `grade/grade.py` parses the module ledger in `overlays/le-grade.md`, verifies each module's file exists, sums the XP, and prints the grade. A module earns nothing until its file is real.
+ATLAS levels up. Every capability is a module with a tier and fixed XP (S=1000, A=500, B=250, C=100, D=50); the level is those XP on a 0–100 square-root curve, so the top levels are the steepest. It is deterministic: `level/level.py` parses the module ledger in `overlays/le-niveau.md`, verifies each module's file exists, sums the XP, and prints the level. A module earns nothing until its file is real.
 
 ```sh
-python3 grade/grade.py            # full readout
-python3 grade/grade.py --oneline  # boot banner
+python3 level/level.py            # full readout
+python3 level/level.py --oneline  # boot banner
 ```
 
-Current grade: **87** (9,850 / 13,000 XP). The single S-tier module is Reincarnation — the portable launcher above. To level up, build a module (knowledge pack or core-system work), list it in the ledger with a real path, and rerun the script. Grade 100 is the design-complete instrument; modules past it earn Grand Complication prestige. Full doctrine and the leveling schedule are in `overlays/le-grade.md`.
+Current level: **89** (10,350 / 13,000 XP). The single S-tier module is Reincarnation — the portable launcher above. To level up, build a module (knowledge pack or core-system work), list it in the ledger with a real path, and rerun the script. Level 100 is the design-complete instrument; modules past it earn Grand Complication prestige. Full doctrine and the leveling schedule are in `overlays/le-niveau.md`.
+
+## Releases
+
+ATLAS uses semantic versioning, declared once in `.claude-plugin/plugin.json`. To
+cut a release: bump that `version`, rename the `CHANGELOG.md` `[Unreleased]`
+section to the new version (day-to-day changes accrue under `[Unreleased]`), and
+merge to `main`. The `Release` workflow (`.github/workflows/release.yml`) then
+runs the suites and diagnostic, tags `atlas--v<version>` (the convention `claude
+plugin tag` expects) at the merge commit, and publishes a GitHub Release whose
+notes carry the changelog section and the movement's current Level — the level is
+surfaced at release time. It fires only when that tag does not yet exist, so an
+ordinary push to `main` with no version bump releases nothing.
+
+PR titles follow Conventional Commits, enforced by
+`.github/workflows/lint-pr-title.yml`: `feat` → minor, `fix`/`chore`/`docs`/`ci`
+→ patch, a trailing `!` → major. The bump has to be in the PR's own diff, because
+the release fires on the version being new on `main` — a merge with no bump ships
+nothing, silently. One version per releasable PR.
+
+Because a marketplace install caches the plugin by version, downstream users pick
+up a release with:
+
+```sh
+claude plugin marketplace update scadumen
+claude plugin update atlas@scadumen
+```
+
+Bumping the version is what invalidates the cache; without it, an install keeps
+serving the old files.
 
 ## Operating Principle
 

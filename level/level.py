@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Compute ATLAS's grade deterministically from overlays/le-grade.md.
+"""Compute ATLAS's level deterministically from overlays/le-niveau.md.
 
 No dependencies. Everything — the tier values, XP100, and the module ledger — is
 parsed from the doctrine at runtime, so the number here and the number written in
 the doctrine cannot drift. XP is only counted for a built/partial module whose
-path actually exists: a grade is a claim about the repository, and the file is
+path actually exists: a level is a claim about the repository, and the file is
 the evidence.
 
-    python3 grade/grade.py            full readout
-    python3 grade/grade.py --oneline  one line, for a boot banner
+    python3 level/level.py            full readout
+    python3 level/level.py --oneline  one line, for a boot banner
 """
 
 import math
@@ -17,7 +17,7 @@ import re
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DOCTRINE = os.path.join(REPO, "overlays", "le-grade.md")
+DOCTRINE = os.path.join(REPO, "overlays", "le-niveau.md")
 COUNTED = ("built", "partial")
 
 
@@ -48,7 +48,7 @@ def parse_tiers(md):
 def parse_xp100(md):
     m = re.search(r"XP100\s*=\s*(\d+)", md)
     if not m:
-        raise SystemExit("grade: XP100 not found in le-grade.md")
+        raise SystemExit("level: XP100 not found in le-niveau.md")
     return int(m.group(1))
 
 
@@ -67,14 +67,14 @@ def parse_ledger(md):
     return modules
 
 
-def grade_for(xp, xp100):
+def level_for(xp, xp100):
     if xp <= 0:
         return 0
     return min(100, math.floor(100 * math.sqrt(xp / xp100)))
 
 
-def xp_for(grade, xp100):
-    return xp100 * (grade / 100) ** 2
+def xp_for(level, xp100):
+    return xp100 * (level / 100) ** 2
 
 
 def compute():
@@ -97,29 +97,29 @@ def compute():
         xp += m["xp"]
         counted.append(m)
 
-    grade = grade_for(xp, xp100)
-    return dict(xp=xp, xp100=xp100, grade=grade, tiers=tiers,
+    level = level_for(xp, xp100)
+    return dict(xp=xp, xp100=xp100, level=level, tiers=tiers,
                 counted=counted, planned=planned, missing=missing)
 
 
 def main(argv):
     r = compute()
-    xp, xp100, grade = r["xp"], r["xp100"], r["grade"]
+    xp, xp100, level = r["xp"], r["xp100"], r["level"]
 
     if "--oneline" in argv:
         if xp > xp100:
             over = round((xp - xp100) / 1000)
             print(f"ATLAS — Grand Complication +{over} ({xp} XP)")
         else:
-            print(f"ATLAS — Grade {grade} ({xp}/{xp100} XP)")
+            print(f"ATLAS — Level {level} ({xp}/{xp100} XP)")
         return 0
 
-    print(f"ATLAS — Grade {grade}")
+    print(f"ATLAS — Level {level}")
     print(f"XP: {xp} / {xp100}")
-    if grade < 100:
-        nxt = grade + 1
+    if level < 100:
+        nxt = level + 1
         need = math.ceil(xp_for(nxt, xp100) - xp)
-        print(f"Next: Grade {nxt} at {math.ceil(xp_for(nxt, xp100))} XP (+{need})")
+        print(f"Next: Level {nxt} at {math.ceil(xp_for(nxt, xp100))} XP (+{need})")
     else:
         over = xp - xp100
         print(f"Prestige: Grand Complication +{round(over / 1000)} ({over} XP past 100)")
