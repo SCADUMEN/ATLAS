@@ -38,7 +38,7 @@ Plugin surface (generated — edit the sources, then regenerate):
 - `.claude-plugin/plugin.json` - the plugin manifest.
 - `settings.json` - plugin settings. Deliberately empty: ATLAS does not claim the main thread.
 - `agents/atlas.md` - the compact core, inline. Built by `bin/atlas-context --mode agent`.
-- `skills/` - the thirteen council members, cores only. Built by `bin/atlas-skills`.
+- `skills/` - the thirteen council members (cores only, built by `bin/atlas-skills`), plus the hand-authored `git-cleanup` utility skill.
 - `skills-standalone/atlas/` - the `/atlas` rite. Built by `bin/atlas-rite-skill`.
 - `hooks/hooks.json` - loads a project continuity capsule at session start.
 

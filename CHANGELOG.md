@@ -8,6 +8,18 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-08-29
+
+### Added
+- A `git-cleanup` skill (`skills/git-cleanup/SKILL.md`), invocable as
+  `/atlas:git-cleanup`: remove merged worktrees, delete merged branches, prune
+  remote refs, and pull the latest main. It is hand-authored, not generated from
+  a subroutine — the first plugin skill outside the council. Its merge test adds
+  a tree-diff check (`git diff --quiet main <branch>`) so a squash-merged branch
+  whose remote head GitHub left in place is still recognized; the earlier
+  "upstream is gone" heuristic alone missed those and left the worktree behind.
+- Ledger module `git-cleanup` (C, `skills/git-cleanup/SKILL.md`); +100 XP.
+
 ## [1.5.0] - 2026-08-29
 
 ### Added

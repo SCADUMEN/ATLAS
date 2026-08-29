@@ -95,6 +95,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | pr-title-lint | Conventional Commits PR-title gate | system | B | built | .github/workflows/lint-pr-title.yml |
 | update-check | Update check — newer-release banner | system | A | built | level/latest.py |
 | worktree-discovery | Worktree discovery + clone_kind() classifier | system | A | built | bin/atlas-clones |
+| git-cleanup | Git cleanup — merged branches and worktrees | system | C | built | skills/git-cleanup/SKILL.md |
 | larchive-accession | L'Archive accession practice | knowledge | B | built | examples/larchive |
 | authenticating-people | Authenticating people — Schneider CS513 | knowledge | B | built | modules/authenticating-people.md |
 | reincarnation | Reincarnation — the fitted plugin | meta | S | built | agents/atlas.md |
