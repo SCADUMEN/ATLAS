@@ -286,6 +286,35 @@ class TheRiteSkillIsInvocableAsAtlas(unittest.TestCase):
         self.assertIn("Level", done.stdout)
         self.assertIn(f"v{version}", done.stdout)
 
+    def test_the_level_resolver_prefers_the_newest_cached_version(self):
+        # The marketplace installs each release into its own version directory:
+        # cache/<marketplace>/atlas/<version>/level/level.py. A glob stopping at
+        # .../atlas matches a directory holding only version directories, never
+        # finds the script, and falls through to a hardcoded checkout — silently,
+        # which is how a stale clone stayed load-bearing for two releases.
+        # Ordering is numeric, not lexicographic, so 1.10.0 outranks 1.9.0, and
+        # a non-numeric name is skipped rather than guessed at.
+        with tempfile.TemporaryDirectory() as tmp:
+            cache = Path(tmp) / ".claude" / "plugins" / "cache" / "mkt" / "atlas"
+            for version in ("1.0.0", "1.9.0", "1.10.0", "2.0.0-beta"):
+                release = cache / version
+                (release / "level").mkdir(parents=True)
+                (release / "level" / "level.py").write_text(
+                    "print('ATLAS \u2014 Level 1 (0/1 XP) [%s]')\n" % version,
+                    encoding="utf-8")
+                (release / ".claude-plugin").mkdir(parents=True)
+                (release / ".claude-plugin" / "plugin.json").write_text(
+                    json.dumps({"version": version}), encoding="utf-8")
+            env = os.environ.copy()
+            env["HOME"] = tmp
+            env.pop("ATLAS_REPO", None)
+            done = run(self.SKILL.parent / "level", env=env)
+            self.assertIn("[1.10.0]", done.stdout,
+                          "the resolver must order versions numerically")
+            self.assertIn("v1.10.0", done.stdout)
+            self.assertNotIn("beta", done.stdout,
+                             "a non-numeric version must be skipped, not ranked")
+
 
 class ContinuityCustody(unittest.TestCase):
 
