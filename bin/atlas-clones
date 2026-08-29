@@ -130,6 +130,69 @@ clone_verdict() {
 }
 # -----------------------------------------------------------------------------
 
+# --- OPERATOR DECISION -------------------------------------------------------
+# Classify a discovered checkout. Echo exactly one line:
+#
+#   clone                       an ordinary clone, with its own object store
+#   worktree|/path/to/parent    a linked worktree sharing a parent's store
+#
+# Arguments:
+#   $1  dir   absolute path to the checkout's working tree
+#
+# Why this exists: discovery used to test `-type d -name .git`, which encodes
+# "a repository is a directory holding a .git directory". True of clones, false
+# of linked worktrees, where .git is an 87-byte text file holding a gitdir:
+# pointer. Every worktree on the machine was therefore invisible -- and a
+# worktree is likelier than a clone to hold uncommitted work, because holding
+# in-progress work is what worktrees are for.
+#
+# The primitives:
+#
+#   git -C "$dir" rev-parse --git-dir         worktree: PARENT/.git/worktrees/NAME
+#                                             clone:    DIR/.git
+#   git -C "$dir" rev-parse --git-common-dir  both:     PARENT/.git  (shared store)
+#
+# Equal means ordinary clone. Different means linked worktree, and the parent
+# working tree is the directory holding the common dir.
+#
+# CONSTRAINT: either call may return a RELATIVE path -- commonly bare `.git` --
+# depending on where git is invoked from. Comparing them raw WILL misclassify.
+# Resolve before comparing. `rev-parse --absolute-git-dir` gives the first one
+# absolute; --git-common-dir has no --absolute variant.
+#
+# Operator's call (2026-08-28): report worktrees as their own entries rather
+# than folding them into the parent, on the grounds that listing is
+# information-preserving and folding is lossy. Fold later if the noise earns
+# it.
+clone_kind() {
+  dir=$1
+  gitdir=$(git -C "$dir" rev-parse --absolute-git-dir 2>/dev/null) || {
+    echo clone
+    return
+  }
+  common=$(git -C "$dir" rev-parse --git-common-dir 2>/dev/null) || {
+    echo clone
+    return
+  }
+  # The constraint above, handled. --git-common-dir answers relative to the
+  # directory git was invoked in, and for an ordinary clone it commonly answers
+  # bare `.git` while --absolute-git-dir answers a full path. Comparing those
+  # raw reports every clone on the machine as a worktree, so resolve first.
+  # dirname/basename rather than `cd "$common"`: the parent of a .git file is
+  # the working tree, and resolving the leaf separately keeps the final
+  # component intact when it is a symlink.
+  case $common in
+    /*) ;;
+    *) common=$(cd "$dir" && cd "$(dirname "$common")" 2>/dev/null && pwd)/$(basename "$common") ;;
+  esac
+  if [ "$gitdir" = "$common" ]; then
+    echo clone
+  else
+    echo "worktree|$(dirname "$common")"
+  fi
+}
+# -----------------------------------------------------------------------------
+
 LIVE=''
 if [ -e "$SKILL_LINK" ]; then
   target=$SKILL_LINK
@@ -166,6 +229,7 @@ echo
 
 WORST=ok
 FOUND=0
+WORKTREES=0
 # The loop below must run in this shell, not a subshell, or WORST and FOUND
 # are lost when the pipeline ends and --check can never fail. So the scan is
 # spooled to a file and fed in by redirect instead of by pipe.
@@ -175,7 +239,7 @@ for root in $ROOTS; do
   find "$root" -maxdepth "$DEPTH" \
        \( -name node_modules -o -name Library -o -name .Trash \
           -o -name .cache -o -name .npm \) -prune -o \
-       -type d -name .git -print 2>/dev/null
+       \( -type d -o -type f \) -name .git -print 2>/dev/null
 done | sed 's|/\.git$||' | sort -u > "$SCAN"
 
 while IFS= read -r dir; do
@@ -188,6 +252,15 @@ while IFS= read -r dir; do
     continue
   fi
   FOUND=$((FOUND + 1))
+
+  kind=$(clone_kind "$dir")
+  case $kind in
+    'worktree|'*)
+      wt_parent=${kind#'worktree|'}
+      WORKTREES=$((WORKTREES + 1)) ;;
+    *)
+      wt_parent='' ;;
+  esac
 
   branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')
   head=$(git -C "$dir" rev-parse --short HEAD 2>/dev/null || echo '?')
@@ -211,10 +284,12 @@ while IFS= read -r dir; do
     *)   sync="+$ahead/-$behind" ;;
   esac
 
+  note=""
   if [ "$via" = lineage ]; then
-    note=" [same lineage, origin says ${their_remote:-none}]"
-  else
-    note=""
+    note="$note [same lineage, origin says ${their_remote:-none}]"
+  fi
+  if [ -n "$wt_parent" ]; then
+    note="$note [worktree of $(short "$wt_parent")]"
   fi
   printf '%s %-4s %-34s %-14s %-9s %-10s %s%s\n' \
     "$mark" "$verdict" "$(short "$dir")" "$branch" "$head" "$state" "$sync" "$note"
@@ -226,7 +301,12 @@ while IFS= read -r dir; do
 done < "$SCAN"
 
 echo
-echo "atlas-clones: $FOUND clone(s) sharing this lineage; verdict $WORST"
+if [ "$WORKTREES" -gt 0 ]; then
+  echo "atlas-clones: $FOUND checkout(s) sharing this lineage" \
+       "($((FOUND - WORKTREES)) clone(s), $WORKTREES worktree(s)); verdict $WORST"
+else
+  echo "atlas-clones: $FOUND clone(s) sharing this lineage; verdict $WORST"
+fi
 echo "atlas-clones: ahead/behind measured against local refs; no fetch was run"
 
 # On a default scan, finding zero is not a clean bill of health: this script
