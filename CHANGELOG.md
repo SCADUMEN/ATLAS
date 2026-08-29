@@ -8,6 +8,16 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-08-29
+
+### Fixed
+- The plugin shipped a root `settings.json` with `"agent": "atlas"`, which Claude
+  Code applies as the main-thread agent whenever the plugin is enabled. Every bare
+  `claude` launch came up as `atlas:atlas` instead of the built-in `claude` agent,
+  with no way to opt out short of disabling the plugin. Dropped the `agent` key so
+  default launches fall back to the built-in agent; ATLAS stays available on demand
+  via `claude --agent atlas:atlas` or `/agents`.
+
 ## [1.4.1] - 2026-08-29
 
 ### Fixed
@@ -61,7 +71,6 @@ Release, and publishes the movement's Level.
   `http.connectTimeout` is not a real option, and `timeout(1)` is absent from a
   stock macOS. Measured 0.8s on a reachable network and 5.2s against a black
   hole, where it previously hung without limit.
-
 ## [1.2.2] - 2026-08-29
 
 ### Fixed
