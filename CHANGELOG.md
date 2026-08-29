@@ -8,6 +8,22 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-08-29
+
+### Fixed
+- Documentation that still described the `agent` key dropped in 1.4.2 as live
+  behaviour. `settings.json` is now `{}`, but the repository map said it "names
+  `atlas` as the session agent", the "What it does" paragraph had it naming
+  `agents/atlas.md` so that "its prompt, model, and tools govern the main
+  thread", `runtime/README.md` referred to "the main-thread agent that
+  `settings.json` activates", and a comment in `bin/atlas-context` said the same.
+  All four now describe the agent as opt-in, selected with
+  `claude --agent atlas:atlas` or from `/agents`.
+- The note at the foot of the permissions section is deliberately unchanged: that
+  ATLAS's own `settings.json` honours only `agent` and `subagentStatusLine` and
+  silently drops everything else is still true, and is still the reason a
+  permission rule cannot ship with the plugin.
+
 ## [1.4.2] - 2026-08-29
 
 ### Fixed

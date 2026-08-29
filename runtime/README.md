@@ -4,8 +4,8 @@
 
 - `agent` emits the same core as a Claude Code plugin agent definition and
   writes `agents/atlas.md`. This is the Claude Code path. The core is inline
-  because an agent's `skills:` field preloads only for subagents, not for the
-  main-thread agent that `settings.json` activates.
+  because an agent's `skills:` field preloads only for subagents, not for a
+  main-thread agent.
 - `compact` keeps the council in the canonical repository and loads subroutine
   cores on demand. It remains the inspectable view of what the agent carries.
 - `portable` extracts every `OPERATIONAL CORE` and excludes every `DOCTRINE`
