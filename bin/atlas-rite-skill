@@ -122,6 +122,42 @@ do
     else
       printf '%s\n' "$line"
     fi
+    # Update check — network, bounded, silent. Reachable only when the crown is
+    # wound, so the cost never touches an ordinary session. Any failure (offline,
+    # slow, moved repo, no git) leaves the readout exactly as it was. The remote
+    # URL is read from plugin.json so a repository move needs no edit here, and
+    # the comparison lives in level/latest.py, which never touches the network.
+    repo=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("repository",""))' \
+      "$dir/.claude-plugin/plugin.json" 2>/dev/null)
+    if [ -n "$ver" ] && [ -n "$repo" ] && [ -f "$dir/level/latest.py" ]; then
+      # The low-speed settings bound a transfer already in flight; they say
+      # nothing about DNS or TCP connect, so a blackholed host — a captive
+      # portal is the ordinary case — never reaches the stage they govern and
+      # hangs indefinitely. git has no connect-timeout config (http.connectTimeout
+      # is not a real option), and timeout(1) is absent from a stock macOS, so
+      # the ceiling has to be a watchdog. It lands on the crown, the only way
+      # into the movement and the one path with nothing behind it to fall
+      # through to, so an unbounded wait here is the single failure the rite
+      # cannot absorb. Output goes to a file because a backgrounded job cannot
+      # be captured by $( ) directly.
+      tags=
+      tmp=$(mktemp "${TMPDIR:-/tmp}/atlas-tags.XXXXXX" 2>/dev/null) || tmp=
+      if [ -n "$tmp" ]; then
+        ( GIT_TERMINAL_PROMPT=0 \
+          git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=3 \
+          ls-remote --tags --refs "$repo" 'atlas--v*' >"$tmp" 2>/dev/null ) &
+        gitpid=$!
+        ( sleep 5; kill -9 "$gitpid" 2>/dev/null ) >/dev/null 2>&1 &
+        watchdog=$!
+        wait "$gitpid" 2>/dev/null
+        kill -9 "$watchdog" 2>/dev/null
+        wait "$watchdog" 2>/dev/null
+        tags=$(cat "$tmp" 2>/dev/null)
+        rm -f "$tmp"
+      fi
+      [ -n "$tags" ] && printf '%s\n' "$tags" | \
+        python3 "$dir/level/latest.py" "$ver" 2>/dev/null || true
+    fi
     exit 0
   fi
 done
@@ -148,7 +184,11 @@ LEVELSH
   printf 'Perform the Arrival rite once. Reproduce the panel and the greeting\n'
   printf 'below, filling `<V>`, `<N>`, `<XP>`, and `<XP100>` from the BOOT\n'
   printf 'READOUT above and `<Operator>` from the active operator profile, or\n'
-  printf '`Operator` if no profile is loaded. Then stop and await the Operator.\n\n'
+  printf '`Operator` if no profile is loaded. The BOOT READOUT may include a\n'
+  printf 'second line beginning `UPDATE:`. If present, render it immediately\n'
+  printf 'beneath the `ATLAS online —` line as `↑ Update available: v<X> — run\n'
+  printf '/plugin to update`; if absent, omit that line entirely. Then stop and\n'
+  printf 'await the Operator.\n\n'
   printf '```text\n'
   cat "$RITE"
   printf '```\n'
