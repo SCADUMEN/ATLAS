@@ -124,6 +124,45 @@ running record of what the instrument does in practice, not just in spec.
   listing is information-preserving, folding is lossy, fold later if the noise
   earns it.
 
+### 2026-08-28 — [behavior] Arrival rite did not fire; two trigger statements disagreed
+
+- **Context:** Operator ran `/clear` followed by `/atlas` in sequence,
+  deliberately and repeatedly, to reproduce boot behavior — a cold context is
+  the only way to test the Arrival path, so `/clear` + `/atlas` is the repro
+  procedure, not operator error. Third occurrence in the sequence.
+- **Observation:** The rite did not fire at all. The model acknowledged the
+  skill had loaded and declined the rite in one line, citing the absence of the
+  boot signal, then proceeded into ordinary work. Both trigger statements were
+  live in the session and they disagree. `runtime/compact-coda.md` gated the
+  rite on the operator's first message being exactly `⟨wind the crown⟩` and
+  added "Never perform the rite for any other message"; the generated
+  `SKILL.md` contains zero occurrences of the boot signal and instructs
+  "Perform the Arrival rite once" unconditionally. Neither is wrong on its own.
+  `bin/atlas-rite-skill:5` states the skill exists "so the Operator can wind
+  the crown by typing `/atlas`", the generator writes its own preamble at line
+  104, and it lifts only the fenced panel from the coda — so the two triggers
+  are intentionally different signals for the same act. The coda's prohibition
+  was written absolutely and never carved out the skill path, so a session
+  holding both artifacts can resolve either way.
+- **Relevance to build:** This completes a set of three distinct failure modes
+  of one mechanism: 2026-08-27 fired too often, the entry above fired
+  incompletely, and this did not fire at all. The first and third share a
+  single root — two authoritative trigger statements that contradict, making
+  the outcome depend on which artifact a given session weights rather than on
+  anything testable. `bin/atlas-doctor` passed throughout and was right to:
+  it verifies the skill matches its source, and cannot detect that the two
+  triggers are incompatible, because they are deliberately not identical.
+  Nothing in the repo asserts a relationship between them. Closed here by
+  carving the skill path into the coda's gate and stating explicitly that the
+  prohibition covers unsignalled messages only, that the absence of one grip is
+  not the absence of both, and that a rite silently failing to fire is a
+  failure in the same way as one firing unbidden. Verified by regeneration:
+  only `runtime/compact-coda.md` and `agents/atlas.md` change and `SKILL.md`
+  stays byte-identical, so the skill path cannot regress from this edit. The
+  incomplete-render mode is untouched and still needs the durable fix already
+  recorded on 2026-08-28 — emit the masthead from outside the model, since
+  "reproduce verbatim" has no enforcement behind it.
+
 ### 2026-08-28 — [workspace] The fifth clone was ours all along; ATLAS was renamed
 
 - **Context:** The `[correction]` entry below records
