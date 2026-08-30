@@ -34,6 +34,11 @@ Release, and publishes the movement's Level.
 - `python3 level/level.py --service` prints the integer service points. The
   `--oneline` banner appends `· Service N`, placed after the parenthesised XP so
   the release guard's XP scrape in `test.yml` is unaffected — a test pins that.
+- The service ledger is backfilled to 1.2.1: five patch releases, 260 service
+  points. Two are deliberately absent — 1.3.1 (README Requirements) and 1.4.3
+  (documentation left stale by 1.4.2) repaired surfaces the Module Ledger does
+  not name, so the evidence rule refuses them. The refusal is left standing: it
+  is the mechanism reporting a gap in the ledger, not a row to paper over.
 - Ledger module `service-record` (C, `level/service.py`); +100 XP.
 
 ### Changed
