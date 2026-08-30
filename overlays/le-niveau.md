@@ -56,6 +56,7 @@ At Level 100 the movement is design-complete. Further knowledge modules do not r
 ```sh
 python3 level/level.py            # full readout: XP, level, next level, gap
 python3 level/level.py --oneline  # one line, for a boot banner
+python3 level/level.py --service  # service points only, for machine parsing
 ```
 
 The script is the source of truth. Any number written in prose in this file is a snapshot and defers to the script.
@@ -99,6 +100,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | worktree-discovery | Worktree discovery + clone_kind() classifier | system | A | built | bin/atlas-clones |
 | git-cleanup | Git cleanup — merged branches and worktrees | system | C | built | skills/git-cleanup/SKILL.md |
 | ledger-guard | Ledger integrity guard | system | C | built | level/ledger_guard.py |
+| service-record | Service record — the upkeep axis | system | C | built | level/service.py |
 | larchive-accession | L'Archive accession practice | knowledge | B | built | examples/larchive |
 | authenticating-people | Authenticating people — Schneider CS513 | knowledge | B | built | modules/authenticating-people.md |
 | reincarnation | Reincarnation — the fitted plugin | meta | S | built | agents/atlas.md |
@@ -109,6 +111,36 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | planned | adapters/barillet/README.md |
 
 ---
+
+## The Service Record
+
+**Maintenance prevents loss of integrity.** A repair builds no module, so it moves no level — the instrument is no more complete than it was the day before. But an instrument that is not maintained loses the integrity the level already claims for it, and that loss is silent. `git-cleanup` carried its full tier XP from 1.6.0 while the check its own text called *the reliable check* returned the wrong answer on nearly every branch. The evidence rule verified that a path exists. A path is not a behaviour.
+
+So service is its own axis. It never enters XP, never raises the Level, and never fills the gap to design-complete. It records that the modules already counted are still true.
+
+### Service credit
+
+**A repair is worth a tenth of what it protects.** The scale is derived from the module tiers rather than tuned separately: repairing the core matters more than repairing a convenience because more integrity stands behind it. No per-repair tuning, the same rule the tier table enforces.
+
+| Tier repaired | Module XP | Service credit |
+|---|---|---|
+| S | 1000 | 100 |
+| A | 500 | 50 |
+| B | 250 | 25 |
+| C | 100 | 10 |
+| D | 50 | 5 |
+
+The credits above are a snapshot; `level/level.py` derives them as one tenth of the tier's XP and is the source of truth. A test asserts the two agree.
+
+**Evidence rule.** A service row names a released patch version that appears in `CHANGELOG.md`, and a module ID that appears in the Module Ledger. A repair to something the ledger does not name cannot be recorded — that is a signal the ledger is incomplete, not licence to invent a row. Only the patch component may advance: a minor or major release is a module, and modules score XP, not service.
+
+### The Service Ledger
+
+| Version | Repaired | Note |
+|---|---|---|
+| 1.7.1 | git-cleanup | Merge detection compared whole trees, so the check documented as reliable called nearly every branch unmerged. Scoped the diff to the files the branch touched. |
+
+Releases before 1.7.1 predate this record and are not backfilled by guess.
 
 ## The Leveling Schedule
 

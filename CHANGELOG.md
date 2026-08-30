@@ -8,6 +8,38 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-08-30
+
+### Added
+- A service axis (`level/service.py`), recording upkeep without touching the
+  Level. Maintenance prevents loss of integrity: a repair builds no module, so
+  the instrument is no more complete than it was — but an unmaintained
+  instrument loses the integrity the level already claims for it, and that loss
+  is silent. `git-cleanup` carried its full tier XP from 1.6.0 while the check
+  its own text called *the reliable check* returned the wrong answer on nearly
+  every branch. The evidence rule verifies that a path exists, and a path is not
+  a behaviour.
+- Service credit is **derived from the module tiers, not tuned separately**: a
+  repair is worth a tenth of what it protects, so S/A/B/C/D repairs earn
+  100/50/25/10/5. Repairing the core counts for more than repairing a
+  convenience, and there is one scale to keep honest rather than two. A test
+  asserts the table written in the doctrine matches the value the script
+  derives.
+- The Service Ledger in `overlays/le-niveau.md`, with an evidence rule of its
+  own: a row must name a released patch version present in `CHANGELOG.md` and a
+  module ID present in the Module Ledger. A row naming no ledgered module is
+  reported, not scored — an incomplete ledger is a finding, not a licence to
+  invent credit. Only the patch component may advance; a minor or major release
+  is a module and scores XP.
+- `python3 level/level.py --service` prints the integer service points. The
+  `--oneline` banner appends `· Service N`, placed after the parenthesised XP so
+  the release guard's XP scrape in `test.yml` is unaffected — a test pins that.
+- Ledger module `service-record` (C, `level/service.py`); +100 XP.
+
+### Changed
+- Service points never enter XP and never move the Level. A test asserts XP
+  equals the sum of counted modules alone.
+
 ## [1.7.1] - 2026-08-30
 
 ### Fixed
