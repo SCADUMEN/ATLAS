@@ -8,6 +8,38 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-08-30
+
+### Fixed
+- `/git-cleanup`'s content-absorbed signal compared whole trees
+  (`git diff --quiet main <branch>`), which reports a difference whenever `main`
+  has advanced by even one unrelated commit — the normal state of any active
+  repo. The signal documented as "the reliable check" therefore returned a false
+  "unmerged" on nearly every branch, and it failed *closed-looking*: branches
+  were stranded rather than lost, so nothing surfaced the fault until the branch
+  list grew unmanageable. Verified on this repo on 2026-08-30 — the whole-tree
+  form called all 10 merged branches unmerged; the path-scoped form
+  (`git diff --quiet main <branch> -- <files touched since merge-base>`) called
+  all 10 correctly.
+- `/git-cleanup` permitted `git worktree remove --force` on a worktree holding
+  uncommitted changes when its branch was "otherwise merged". Uncommitted work
+  exists nowhere else by definition, so a merged branch says nothing about it.
+  A dirty worktree is now reported and skipped, and the operator is offered a
+  stash or a commit instead.
+
+### Added
+- `/git-cleanup` gained a merged-PR signal (`gh pr list --state merged`), the
+  only check that survives a branch being re-committed onto after its PR merged;
+  an archive step that writes a recovery manifest of every branch name and full
+  SHA before any deletion; and a note on the no-upstream class (`gh pr checkout`
+  branches such as `pr15`), which can never be marked `[gone]` and so stay
+  invisible to gone-based cleanup forever.
+
+### Changed
+- `/git-cleanup` demotes the upstream-gone marker to corroborating evidence: a
+  branch is also `gone` when someone deleted it unmerged, so it now requires an
+  ancestor, merged-PR, or content-absorbed signal alongside it.
+
 ## [1.7.0] - 2026-08-30
 
 ### Added
