@@ -10,6 +10,8 @@ A watch movement is graded — jewel count, finish, chronometer certification. A
 
 The rule that keeps it honest, borrowed from `overlays/le-rouage.md`: **XP is only earned by a module whose file exists.** A module can be listed as planned, but it scores nothing until it is built. `level/level.py` parses the ledger below, verifies each built module's path, sums the XP, and prints the level. Doctrine and score cannot drift.
 
+That rule has a second half, and it went unwritten long enough to leave a hole worth 2500 XP: **a planned module must name a path that does not exist yet.** A path can predate the row that claims it, and three roadmap rows once pointed at files already in the tree — so flipping the word `planned` to `built` would have scored their full tier with no work done and every check passing. The existence test asks *does something live here?*; the invariant needs *did this release produce it?* A roadmap row therefore names the artifact that will **prove** the work, not the artifact that **describes** it: `le-boitier-built` names the build record, not the case spec it is built from. `level/ledger_guard.py` enforces both halves, and rejects two counting rows on one path — one file is evidence for one module.
+
 ---
 
 ## OPERATIONAL CORE
@@ -96,14 +98,15 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | update-check | Update check — newer-release banner | system | A | built | level/latest.py |
 | worktree-discovery | Worktree discovery + clone_kind() classifier | system | A | built | bin/atlas-clones |
 | git-cleanup | Git cleanup — merged branches and worktrees | system | C | built | skills/git-cleanup/SKILL.md |
+| ledger-guard | Ledger integrity guard | system | C | built | level/ledger_guard.py |
 | larchive-accession | L'Archive accession practice | knowledge | B | built | examples/larchive |
 | authenticating-people | Authenticating people — Schneider CS513 | knowledge | B | built | modules/authenticating-people.md |
 | reincarnation | Reincarnation — the fitted plugin | meta | S | built | agents/atlas.md |
 | multi-agent-bundle | Doctrine-stripped portable bundle | meta | A | built | bin/atlas-context |
 | continuity-capsule | Continuity capsule — cross-barrel handoff | meta | A | built | bin/atlas-continuity |
-| le-rouage-complete | Le Rouage completed (barrel wired) | system | S | planned | rouage/ |
-| le-boitier-built | Le Boîtier — physical instrument | system | S | planned | hardware/le-boitier.md |
-| barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | planned | overlays/le-barillet.md |
+| le-rouage-complete | Le Rouage completed (barrel wired) | system | S | planned | rouage/CONFORMANCE.md |
+| le-boitier-built | Le Boîtier — physical instrument | system | S | planned | hardware/le-boitier-build.md |
+| barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | planned | adapters/barillet/README.md |
 
 ---
 
@@ -122,8 +125,10 @@ XP required, by level:
 | 80 | 8,320 | the launcher milestone — Reincarnation |
 | 85 | 9,393 | the portable bundle, continuity, and diagnostic — built |
 | 89 | 10,298 | operator config + CI versioning — built |
-| 94 | 11,487 | current build — the PR-title gate, update check, and worktree discovery — built |
-| 95 | 11,733 | + finish Le Rouage (S) |
+| 94 | 11,487 | the PR-title gate, update check, and worktree discovery — built |
+| 95 | 11,733 | current build — the ledger integrity guard — built |
+| 96 | 11,981 | + any B module |
+| 99 | 12,742 | + finish Le Rouage (S) |
 | 100 | 13,000 | design-complete instrument |
 
 To level ATLAS: build a module, list it in the ledger as `built` with a real path, and rerun `level/level.py`. Core-system work (finishing Le Rouage, building the case) and knowledge modules both count. That is the whole loop — preserve, build, score, preserve.

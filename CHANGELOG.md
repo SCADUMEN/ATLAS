@@ -8,6 +8,31 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-08-30
+
+### Added
+- A ledger integrity guard (`level/ledger_guard.py`), run by the level suite:
+  it rejects a planned row whose path already exists, and two counting rows on
+  one path. The evidence rule in `overlays/le-niveau.md` verified that a built
+  module's file exists, which a path predating its row satisfies for free —
+  three roadmap rows pointed at files already in the tree (`rouage/`,
+  `hardware/le-boitier.md`, `overlays/le-barillet.md`), so changing the word
+  `planned` to `built` three times would have scored 2500 XP with no work done
+  and `release_guard.py` passing, since the XP it watches would really have
+  risen. A spec row paired with one planned completion row is still allowed: it
+  cannot score twice, and the premature rule catches the flip.
+- Ledger module `ledger-guard` (C, `level/ledger_guard.py`); +100 XP.
+
+### Changed
+- The three planned ledger rows now name the artifact that will **prove** the
+  work rather than the one that describes it: `le-rouage-complete` →
+  `rouage/CONFORMANCE.md`, `le-boitier-built` → `hardware/le-boitier-build.md`
+  (the build record, not the case spec), `barrel-adapter` →
+  `adapters/barillet/README.md`. No XP moved — planned rows score nothing —
+  but the roadmap is now falsifiable.
+- `overlays/le-niveau.md` states the second half of the evidence rule: a planned
+  module must name a path that does not exist yet.
+
 ## [1.6.0] - 2026-08-29
 
 ### Added
