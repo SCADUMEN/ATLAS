@@ -19,7 +19,7 @@ Preserve first, then reconstruct. Sauvegarder's work makes Limier's work possibl
 
 ### Activation
 
-Invoke when the Operator names "Le Limier", "the bloodhound", "reconstruct this", or "what happened here".
+Invoke when the Operator names "Le Limier", "the bloodhound", "reconstruct this", or "what happened here" — or asks "Who is X?" of any name, handle, or maker's mark, as in "Who is JJ Ammo Can?".
 
 Invoke automatically when:
 
