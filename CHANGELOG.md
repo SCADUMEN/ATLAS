@@ -8,6 +8,23 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-08-31
+
+### Fixed
+- Le Limier's countersign is now reachable from a cold start. 1.8.0 taught him
+  the Galt countersign and added *the Operator asks "Who is X?"* to his
+  automatic-invocation list — but that list lives in the skill body, which the
+  harness reads only after the skill is already loaded, while the router matches
+  on the `description` frontmatter that `activation_line()` builds from the
+  Activation line alone. The instruction to answer *"Who is JJ Ammo Can?"* sat
+  inside the file that question never opened, so asked cold it convened no one.
+  The question form now appears in the Activation sentence and reaches the
+  description.
+- Recorded as service on `le-limier` rather than XP: the module was already
+  built and its path already existed, so it carried full tier credit while the
+  behaviour behind it was unreachable. Exactly the gap the service axis was
+  added to catch.
+
 ## [1.8.0] - 2026-08-30
 
 ### Added
