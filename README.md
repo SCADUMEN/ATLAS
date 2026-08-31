@@ -78,9 +78,9 @@ The council is built as a diver's chronograph, and each part carries a real cons
 
 | Part | Council | Position |
 |---|---|---|
-| The wearer | L'Opérateur — MTM | Not a part. Outside the case. He decides. |
-| Bezel | ATLAS | The interface. Set before you go under, read against ever after. |
-| Crown | Le Sauvegarder | The only input path. Nothing enters except by saving something. |
+| The wearer | L'Opérateur | Not a part. Outside the case. A slot: whoever winds the crown. |
+| Bezel | Le Sauvegarder | Set before you go under, read against ever after. Writes the origin. |
+| Crown | — | The only input path, and undriven. Carries no member. |
 | Dial plate | L'Archive | The ground the whole council is printed on. |
 | Hours | The twelve | 11, 12, 01–10 |
 | Registers | Signal · Noise · Gain | Le Sceptique's readout, driven from 01 |
