@@ -144,6 +144,7 @@ The credits above are a snapshot; `level/level.py` derives them as one tenth of 
 | 1.4.2 | reincarnation | The plugin shipped a root `settings.json` naming `atlas` as the main-thread agent, so every bare `claude` launch came up fitted, with no way to opt out. |
 | 1.7.1 | git-cleanup | Merge detection compared whole trees, so the check documented as reliable called nearly every branch unmerged. Scoped the diff to the files the branch touched. |
 | 1.8.1 | le-limier | The countersign was reachable only from inside the file it opens. Its trigger sat in the automatic-invocation list, which the harness reads after loading, while the router matches the description built from the Activation line alone — so "Who is X?" asked cold never convened the member written to answer it. |
+| 1.8.2 | le-rouage | The sign was parsed as two names. Doctrine wrote the gate as a form with an illustration, and the phrase parser takes every quoted string in the Activation section literally — so the gate fired for the placeholder and the one example printed beside it, and for no one else. The placeholder is now read as a placeholder.
 
 Two patch releases are deliberately absent. 1.3.1 added a README Requirements section and 1.4.3 corrected documentation left stale by 1.4.2 — both repaired surfaces the Module Ledger does not name, so the evidence rule refuses them. That refusal is the mechanism reporting a gap in the ledger, and it is left standing rather than papered over with a row.
 

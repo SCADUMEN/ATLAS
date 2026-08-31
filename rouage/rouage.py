@@ -22,6 +22,7 @@ Stdlib only. This runs on the single-board computer in the case.
 
 from __future__ import annotations
 
+import functools
 import json
 import re
 import subprocess
@@ -61,8 +62,9 @@ ROUTES_HEADER = re.compile(r"^\|\s*Route\s*\|\s*Sequence\s*\|.*$", re.M)
 #
 # The rule exists because every route name is a common English word: matching
 # them bare convened members out of ordinary prose. Member phrases survive loose
-# matching because 51 of 53 are multi-word constructions nobody types by
-# accident; route names are not, so they take a verb.
+# matching because 54 of 55 are multi-word constructions nobody types by
+# accident; route names are not, so they take a verb. The one that is not a
+# construction is Le Limier's `Who is X?`, which is a form - see PLACEHOLDER.
 INVOKE_PHRASE = re.compile(
     r"\*\*Routes are invoked by verb:\*\*\s*(.+?)(?:,\s*followed|\.)", re.S)
 INVOKE_VERB = re.compile(r"`(\w+)`")
@@ -118,6 +120,51 @@ def fold(text: str) -> str:
     return "".join(c for c in decomposed if not unicodedata.combining(c))
 
 
+# A quoted activation phrase may carry a placeholder: a bare capital X standing
+# in for the thing the Operator actually names. Le Limier's gate is written
+# `asks "Who is X?" of any name, handle, or maker's mark, as in "Who is JJ Ammo
+# Can?"` - a form and an illustration of it. parse_activation() collects every
+# quoted string in the section, so both arrived here as literals, and literal
+# containment made the sign fire for exactly two names: the placeholder itself,
+# and the one example doctrine happened to print. Every other name asked the
+# question correctly and convened nobody.
+#
+# So the placeholder is read as a placeholder. Doctrine is unchanged - it
+# already wrote the form - and no member's trigger is named in Python, which is
+# the whole arrangement: the phrases are parsed from the markdown, and teaching
+# the parser a wider notion of "phrase" keeps them there. `Who is X?` is the
+# only phrase in the ring carrying a bare X, so nothing else changes shape.
+PLACEHOLDER = re.compile(r"(?<![A-Za-z])X(?![A-Za-z])")
+
+# Decided (L'Operateur, 2026-08-31): **name-shaped, terminator optional.** The
+# slot takes a run with no sentence-ender in it, and a phrase ending in `?`
+# accepts either the mark or the end of the utterance - so `who is jj ammo can`
+# typed without one still lands. This over-fires on prose of the same shape
+# ("who is running the tests?"), which is deliberate and cheap: EVALUATE is
+# half the gate, and the bullets, the Do Not Fire On section and the panel cap
+# are the half that refuses. A sign that occasionally over-fires is recoverable
+# downstream. A sign that never fires is the shrug the countersign exists to
+# refuse.
+PLACEHOLDER_RUN = r"[^?!.,;:]{1,60}"
+QUESTION_MARK = re.escape("?")
+
+
+@functools.lru_cache(maxsize=None)
+def phrase_pattern(phrase: str) -> re.Pattern[str] | None:
+    """Compile a placeholder phrase, or None if it is an ordinary literal.
+
+    Built on the folded phrase so a pattern matches on the same terms
+    `matches()` compares everything else on.
+    """
+    if not PLACEHOLDER.search(phrase):
+        return None
+    body = PLACEHOLDER_RUN.join(
+        re.escape(fold(part)) for part in PLACEHOLDER.split(phrase))
+    if body.endswith(QUESTION_MARK):
+        body = body[:-len(QUESTION_MARK)] + r"(?:\?|$)"
+    return re.compile(body)
+
+
 # --------------------------------------------------------------------------
 # The parsed ring
 # --------------------------------------------------------------------------
@@ -134,10 +181,20 @@ class Member:
     prohibitions: tuple[str, ...] = ()   # negative half: what must NOT fire it
 
     def matches(self, utterance: str) -> str | None:
-        """Return the phrase that fired, or None. Literal containment only."""
+        """Return the phrase that fired, or None.
+
+        Literal containment, except where doctrine wrote a placeholder - then
+        the phrase is the form and the slot takes what the Operator named.
+        Either way the phrase returned is the verbatim doctrine string, so the
+        trace and the dial report the gate as written rather than as compiled.
+        """
         folded = fold(utterance)
         for phrase in self.phrases:
-            if fold(phrase) in folded:
+            pattern = phrase_pattern(phrase)
+            if pattern is None:
+                if fold(phrase) in folded:
+                    return phrase
+            elif pattern.search(folded):
                 return phrase
         return None
 
