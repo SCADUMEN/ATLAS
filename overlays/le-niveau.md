@@ -143,6 +143,7 @@ The credits above are a snapshot; `level/level.py` derives them as one tenth of 
 | 1.4.1 | runtime-contract | The Arrival rite fired on only one grip of the crown; the `/atlas` skill is itself a winding and was not accepted as one. |
 | 1.4.2 | reincarnation | The plugin shipped a root `settings.json` naming `atlas` as the main-thread agent, so every bare `claude` launch came up fitted, with no way to opt out. |
 | 1.7.1 | git-cleanup | Merge detection compared whole trees, so the check documented as reliable called nearly every branch unmerged. Scoped the diff to the files the branch touched. |
+| 1.8.1 | le-limier | The countersign was reachable only from inside the file it opens. Its trigger sat in the automatic-invocation list, which the harness reads after loading, while the router matches the description built from the Activation line alone — so "Who is X?" asked cold never convened the member written to answer it. |
 
 Two patch releases are deliberately absent. 1.3.1 added a README Requirements section and 1.4.3 corrected documentation left stale by 1.4.2 — both repaired surfaces the Module Ledger does not name, so the evidence rule refuses them. That refusal is the mechanism reporting a gap in the ledger, and it is left standing rather than papered over with a row.
 
