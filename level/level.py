@@ -10,12 +10,19 @@ the evidence.
     python3 level/level.py            full readout
     python3 level/level.py --oneline  one line, for a boot banner
     python3 level/level.py --xp       the integer XP only, for machine parsing
+    python3 level/level.py --service  the integer service points only
+
+Service is a second axis and is deliberately kept off the XP path: a repair
+builds no module, so it moves no level. It records that the modules already
+counted are still true. See "The Service Record" in the doctrine.
 """
 
 import math
 import os
 import re
 import sys
+
+import service
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCTRINE = os.path.join(REPO, "overlays", "le-niveau.md")
@@ -98,14 +105,27 @@ def compute():
         xp += m["xp"]
         counted.append(m)
 
+    # Service is computed after XP and never folded into it. A repair names the
+    # module it kept true; a row naming no ledgered module is not scored, which
+    # surfaces a gap in the ledger instead of inventing credit for it.
+    svc, service_unledgered, service_pts = service.account(md, _rows, modules, tiers)
+
     level = level_for(xp, xp100)
     return dict(xp=xp, xp100=xp100, level=level, tiers=tiers,
-                counted=counted, planned=planned, missing=missing)
+                counted=counted, planned=planned, missing=missing,
+                service=svc, service_pts=service_pts,
+                service_unledgered=service_unledgered)
 
 
 def main(argv):
     r = compute()
     xp, xp100, level = r["xp"], r["xp100"], r["level"]
+
+    service_pts = r["service_pts"]
+
+    if "--service" in argv:
+        print(service_pts)
+        return 0
 
     if "--xp" in argv:
         # Just the integer XP, for machine parsing (the release guard reads this).
@@ -115,9 +135,14 @@ def main(argv):
     if "--oneline" in argv:
         if xp > xp100:
             over = round((xp - xp100) / 1000)
-            print(f"ATLAS — Grand Complication +{over} ({xp} XP)")
+            line = f"ATLAS — Grand Complication +{over} ({xp} XP)"
         else:
-            print(f"ATLAS — Level {level} ({xp}/{xp100} XP)")
+            line = f"ATLAS — Level {level} ({xp}/{xp100} XP)"
+        # Appended after the XP group so anything parsing the parenthesised XP
+        # out of this line (the release guard in CI does) is unaffected.
+        if service_pts:
+            line += f" · Service {service_pts}"
+        print(line)
         return 0
 
     print(f"ATLAS — Level {level}")
@@ -129,6 +154,10 @@ def main(argv):
     else:
         over = xp - xp100
         print(f"Prestige: Grand Complication +{round(over / 1000)} ({over} XP past 100)")
+    if service_pts or r["service"]:
+        print(f"Service: {service_pts} pts across {len(r['service'])} "
+              f"patch release{'' if len(r['service']) == 1 else 's'} "
+              f"(does not raise the Level)")
     print()
     print(f"Modules counted: {len(r['counted'])}  planned: {len(r['planned'])}")
     by_cat = {}
@@ -137,6 +166,11 @@ def main(argv):
         by_cat[m["category"]] += m["xp"]
     for cat in sorted(by_cat):
         print(f"  {cat:12} {by_cat[cat]:>6} XP")
+    if r["service_unledgered"]:
+        print()
+        print("WARNING — service rows naming no ledgered module (not counted):")
+        for row in r["service_unledgered"]:
+            print(f"  {row['version']}  ->  {row['repaired']}")
     if r["missing"]:
         print()
         print("WARNING — listed built but file missing (not counted):")
