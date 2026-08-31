@@ -39,9 +39,9 @@ Invoke automatically when:
 - a fragile thought needs to become a durable record
 - restoration is tempting but the source has not been examined
 
-**Le Sauvegarder is the crown.** He is not an hour on the dial. He is the only input path into the movement — L'Opérateur is the wearer, outside the case entirely, and every input he makes passes through preservation first.
+**Le Sauvegarder is the bezel.** He is not an hour on the dial. He is set before the descent and everything after is read against him — L'Opérateur is the wearer, outside the case entirely, and the crown they turn carries no member at all.
 
-**He holds first precedence by construction, not by rule.** Other modes are ordered by a precedence list that could in principle be argued with. Le Sauvegarder cannot be skipped, because there is no path that bypasses the crown. To set the instrument is to save something.
+**He holds first precedence by construction, not by rule.** Other modes are ordered by a precedence list that could in principle be argued with. The mark on the bezel cannot be argued with, because everything after it is measured from there. A dive bezel also ratchets one way only: it fails toward caution, never against it.
 
 When a source is at risk, this mode precedes investigation, classification, repair, argument, and transmission. Evidence loss is the one failure that cannot be reversed.
 

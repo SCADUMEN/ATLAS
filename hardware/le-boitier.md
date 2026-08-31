@@ -14,8 +14,8 @@ That is the whole argument. The chassis that needs no translation layer is the c
 
 | Already committed | Chronograph, as actually built |
 |---|---|
-| ATLAS is the bezel, and unidirectional by construction | A **dive bezel** ratchets one way only. It can report that less time remains than you thought, never more |
-| Le Sauvegarder is the crown, and the only way in | A **screw-down crown**, unscrewed deliberately, sealing when it is closed. Nothing enters the movement past it |
+| Le Sauvegarder is the bezel, and unidirectional by construction | A **dive bezel** ratchets one way only. It can report that less time remains than you thought, never more — it fails toward caution |
+| The crown is undriven and carries no member | A **screw-down crown**, unscrewed deliberately, sealing when it is closed. Nothing in the movement turns it; the hand on it comes from outside the case |
 | Le Fripon never self-activates | The **upper pusher** — guarded, momentary, per engagement |
 | Signal · Noise · Gain | **Registers.** The horological term for a chronograph's subdials is the word the doctrine already used |
 | "Reserve is the context window" | The **up-and-down complication**, showing what is left before rewinding |
@@ -35,24 +35,24 @@ Every control maps to a mode, and the mapping constrains the mechanism.
 
 | Control | Mode | Mechanism | Why that mechanism |
 |---|---|---|---|
-| **Crown** | Le Sauvegarder | Screw-down, at 3 | **The only path into the movement.** It must be unscrewed before it will turn, and screwing it back is what seals the case. Preservation cannot be accidental, and it cannot be reached for absently. |
-| **Bezel** | ATLAS | Unidirectional, 60-click ratchet | Not a control so much as a frame. Set before you go under, read against ever after. The ratchet is the fail-safe: it can only ever report that less time remains than you thought. |
+| **Crown** | — | Screw-down, at 3 | **The only path into the movement, and undriven.** No member is engraved on it. It must be unscrewed before it will turn, and screwing it back is what seals the case — so input cannot be accidental, and it cannot be reached for absently. That deliberateness is the wearer's discipline, not a member's. |
+| **Bezel** | Le Sauvegarder | Unidirectional, 60-click ratchet | Set before you go under, read against ever after, and the only control operated *before* the work rather than during it. The ratchet is the fail-safe: it can only ever report that less time remains than you thought. Writes the origin the retrograde arc returns to. |
 | **Upper pusher** | Le Fripon | Guarded momentary | The only control that authorizes a mode. Guarded because accidental engagement is the exact failure the charter exists to prevent. |
-| **Lower pusher** | Reset | Momentary | Clears the reading. Never touches L'Archive. |
+| **Lower pusher** | Le Rédempteur | Momentary, flyback | Clears the reading. **Never touches L'Archive.** A flyback: it re-datums while the movement is still running, so returning never requires a halt. The hammer falls on the heart cams and every hand goes to the bezel mark — one destination, from any position, so the answer is voided rather than rewritten. |
 
 ### The Screw-Down Crown Is Doctrine, Not Styling
 
-To give input, L'Opérateur must unscrew the crown. To seal the instrument, he screws it back down.
+To give input, L'Opérateur must unscrew the crown. To seal the instrument, they screw it back down.
 
-A screw-down crown cannot be turned absently — it has to be released first, and releasing it is the act that unseals the case. That makes preservation deliberate rather than a gesture, and it makes the sealed state the resting state. A watch with its crown screwed home is an archive that is protected. That is the correct default and the case should make it obvious at a glance.
+A screw-down crown cannot be turned absently — it has to be released first, and releasing it is the act that unseals the case. That makes input deliberate rather than a gesture, and it makes the sealed state the resting state. The crown carries no member, so this deliberateness belongs to whoever is wearing the instrument; it is not a mode's guarantee and should not be recorded as one. A watch with its crown screwed home is an archive that is protected. That is the correct default and the case should make it obvious at a glance.
 
-**The winding is logged, and now there is a mechanism for it.** A crown records nothing by itself — a key had to be fetched, a crown does not — so this chassis asked for discipline where the chronometer draft would have had the key enforce it. `record_winding()` in `rouage/rouage.py` closes that: one JSON object per turn, appended, never rewritten, because a log that rewrites is a log that can lose an entry and this is the crown's.
+**The winding is logged, and now there is a mechanism for it.** A crown records nothing by itself — a key had to be fetched, a crown does not — so this chassis asked for discipline where the chronometer draft would have had the key enforce it. `record_winding()` in `rouage/rouage.py` closes that: one JSON object per turn, appended, never rewritten, because a log that rewrites is a log that can lose an entry. The crown is undriven and owns nothing, so the log is **Le Sauvegarder's** — what was admitted is preservation's to record, wherever the hand that wound it came from.
 
-It stays a procedure in the sense that matters: **the caller invokes it and the train never does.** Archive I/O belongs to the crown. The timestamp is a parameter rather than a clock the function reaches for, because `route()` is pure and a hidden clock would make a turn unreproducible.
+It stays a procedure in the sense that matters: **the caller invokes it and the train never does.** Archive I/O belongs to the bezel. The timestamp is a parameter rather than a clock the function reaches for, because `route()` is pure and a hidden clock would make a turn unreproducible.
 
 ### The Bezel Question Is Closed
 
-It was open only because a marine chronometer has no rotating bezel, and `overlays/le-conseil.md` assigns ATLAS to one. The chronograph resolves it by having the part: ATLAS is the bezel, literally, and the anatomy table needs no rewrite.
+It was open only because a marine chronometer has no rotating bezel, and `overlays/le-conseil.md` assigns one. The chronograph resolves it by having the part: Le Sauvegarder is the bezel, literally, and the anatomy table needs no rewrite.
 
 The unidirectional ratchet turns out to carry the doctrine better than prose did. `rouage/dial.py` used to print "rate recorded, never reset" on the dial to state the honesty constraint in words; the teeth state it as structure, and a dive dial earns its legibility by carrying less.
 
@@ -77,8 +77,8 @@ The unidirectional ratchet turns out to carry the doctrine better than prose did
 | **Brake** | Band above 6, its own colour | Le Frein. A halt is a whole-ring state, so it cannot be carried by marker colour alone — see below. |
 | **Power reserve** | Arc of LEDs, 9 through 12 to 3 | The context window. Colour shifts at low reserve. |
 | **Perpetual calendar** | Aperture, backlit segment or small e-paper | Le Continuant. Off-cardinal, because the complication is not an hour. |
-| **Retrograde arc** | Sector of LEDs, origin marked at the closed end | Le Rédempteur // Le Sauvegarder. Sweeps out and returns to origin in one jump — a retrograde flies back, it never crawls. Off-cardinal, and dark until the crown log drives it. |
-| **Bezel** | Not lit. Machined and filled, lume pip at zero | ATLAS. Set by the operator, never by the train — so nothing drives it. |
+| **Retrograde arc** | Sector of LEDs, origin marked at the closed end | Le Rédempteur // Le Sauvegarder. Sweeps out and returns to origin in one jump — a retrograde flies back, it never crawls. The origin is the bezel's mark. Off-cardinal, and dark until the winding log drives it. |
+| **Bezel** | Not lit. Machined and filled, lume pip at zero | Le Sauvegarder. Set by the operator, never by the train — so nothing drives it. The pip is zero, and the flyback returns every hand to it. |
 | **Plate** | Printed or etched, L'ARCHIVE signed under 12 | The ground the hours are printed on |
 
 ### A Halt Needs A Band, Not A Colour

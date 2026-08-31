@@ -35,13 +35,13 @@ When reserve runs low, the correct behaviour is the same as a watch's: **stop cl
 
 ### Winding
 
-Le Sauvegarder is the crown, and the crown winds the barrel.
+The crown winds the barrel, and Le Sauvegarder is the bezel it is all measured against.
 
 What is preserved becomes what powers the session. The archive fed in is the energy the council runs on. This is not metaphor — it is the literal loop: preserve, load, run, preserve.
 
 ### Prohibitions
 
-- **The barrel is not ATLAS.** ATLAS is the bezel — the interface, version-controlled, yours. Confusing the two makes the movement look like a property of whichever model is fitted.
+- **The barrel is not ATLAS.** ATLAS is the instrument — version-controlled, yours. The barrel is only the model fitted to it. Confusing the two makes the movement look like a property of whichever model is fitted.
 - **The barrel has no doctrine.** It supplies force, not judgement. Any judgement it appears to supply is shape imposed by the modes above it.
 - **The barrel does not persist.** No memory between windings. Continuity lives in L'Archive and in this repository, never in the barrel.
 - **No barrel is canonical.** A fitted barrel is recorded, not enshrined.
