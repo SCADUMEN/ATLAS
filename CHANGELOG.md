@@ -8,6 +8,23 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-08-31
+
+### Fixed
+- Le Limier's sign now works for anyone's name. 1.8.1 got the question form
+  into the Activation sentence so the router could see it, which fixed the
+  cold-start half — but `parse_activation()` collects *every* quoted string in
+  that section as a literal phrase, and `Member.matches()` is literal
+  containment. So the two strings doctrine printed to illustrate the form,
+  *"Who is X?"* and *"Who is JJ Ammo Can?"*, became the only two inputs that
+  convened him. Asked of any other name the sign was dead — including, exactly,
+  *"Who is John Galt?"*, which failed to convene the member written to answer
+  it. A quoted phrase carrying a bare capital `X` is now read as a form rather
+  than a literal, the slot taking any name-shaped run with the question mark
+  optional. Doctrine is unchanged: it had already written the sign correctly.
+  `Who is X?` is the only phrase in the ring carrying a placeholder, so no
+  other gate changes shape.
+
 ## [1.8.1] - 2026-08-31
 
 ### Fixed

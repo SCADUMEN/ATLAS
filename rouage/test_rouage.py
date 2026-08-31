@@ -19,6 +19,8 @@ from pathlib import Path
 
 from rouage import (
     CORE_HEADING,
+    PLACEHOLDER,
+    phrase_pattern,
     DOCTRINE_HEADING,
     NEGATIVE_SECTION,
     Ring,
@@ -1075,6 +1077,74 @@ class TheBarrelBoundaryIsWhereItSays(unittest.TestCase):
                      if c.member.name == m.name and not m.standing]
             self.assertEqual(fired, [],
                              f"{m.name} fired on its own bullet as prose")
+
+
+class TheSignIsAFormNotTwoNames(unittest.TestCase):
+    """Le Limier's gate is a sign, and a sign has to work for anyone's name.
+
+    Doctrine writes it as a form with an illustration: `asks "Who is X?" of
+    any name, handle, or maker's mark, as in "Who is JJ Ammo Can?"`.
+    parse_activation() takes every quoted string in the section, so both
+    landed as literals and containment fired the sign for exactly two inputs -
+    the placeholder, and the single example doctrine happened to print. Asked
+    of any other name it convened nobody, and a sign nobody else can give is
+    not a sign. That is what these tests hold open.
+
+    The first is the report as it arrived: another person tried the exchange
+    with their own name and got nothing back.
+    """
+
+    def setUp(self):
+        self.ring = load_ring()
+        self.limier = self.ring.by_name("Le Limier")
+
+    def _fired(self, utterance):
+        t = route(self.ring, utterance)
+        return any(c.member.name == "Le Limier" for c in t.candidates)
+
+    def test_the_sign_fires_for_a_name_doctrine_never_printed(self):
+        for name in ("Who is Tyler Etters?",
+                     "Who is John Galt?",
+                     "Who is this maker's mark?",
+                     "who is JOHN JUICESTER?"):
+            self.assertTrue(self._fired(name), f"the sign died on {name!r}")
+
+    def test_the_printed_examples_still_fire(self):
+        for phrase in self.limier.phrases:
+            self.assertTrue(self._fired(phrase), f"named gate missed {phrase!r}")
+
+    def test_the_question_mark_is_optional(self):
+        # Decided with the width: a phrase ending in `?` takes the mark or the
+        # end of the utterance, because the Operator types the sign faster
+        # than he punctuates it.
+        self.assertTrue(self._fired("who is jj ammo can"))
+
+    def test_the_gate_reports_the_form_it_matched(self):
+        # The compiled pattern is an implementation detail. What comes back is
+        # the doctrine string, so the trace cites the gate as written.
+        self.assertEqual(self.limier.matches("Who is Tyler Etters?"),
+                         "Who is X?")
+
+    def test_only_a_placeholder_widens_a_phrase(self):
+        # The mechanism is general but it is not loose: every other phrase in
+        # the ring stays literal containment, because none of them carry an X.
+        widened = [(m.name, p) for m in self.ring.members for p in m.phrases
+                   if phrase_pattern(p) is not None]
+        self.assertEqual(widened, [("Le Limier", "Who is X?")])
+
+    def test_the_placeholder_is_a_bare_capital_not_any_x(self):
+        # 'X' inside a word is a letter, not a slot - otherwise a phrase like
+        # "the axle" would start taking arbitrary text.
+        self.assertIsNone(PLACEHOLDER.search("the axle"))
+        self.assertIsNone(PLACEHOLDER.search("Xenon"))
+        self.assertTrue(PLACEHOLDER.search("Who is X?"))
+
+    def test_the_sign_is_a_gate_not_the_countersign(self):
+        # What convenes him is the train's half. The countersign itself is
+        # prose in his core, and stays there - the train never speaks.
+        core = load_core(self.limier)
+        self.assertIn("Who is John Galt?", core)
+        self.assertIn("echo the countersign once, then work", core)
 
 
 class RoutesFireOnlyWhenInvoked(unittest.TestCase):
