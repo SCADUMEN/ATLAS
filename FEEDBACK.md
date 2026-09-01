@@ -23,6 +23,41 @@ running record of what the instrument does in practice, not just in spec.
 
 ## Log
 
+### 2026-08-31 — [workspace] A fourth clone, and two blind spots in "is this tree safe to retire"
+
+- **Context:** The 2026-08-30 untangle collapsed ATLAS to one working tree and
+  attic'd three. Reconstructing an unrelated question today surfaced a *fourth*
+  redundant tree it never touched, because it was a FORGOTTEN-INDUSTRIES clone
+  rather than an ATLAS one: `~/Documents/ChatGPT/FORGOTTEN-INDUSTRIES`, 3.8 GB,
+  15 days behind, sitting inside a declared-sensitive directory.
+- **Observation:** Two things nearly went wrong while retiring it, and neither
+  is caught by the checks the 08-30 untangle used.
+  - **`git status` says nothing about linked worktrees.** The clone reported
+    clean — 0 dirty, 0 stashes — while `git worktree list` showed a live Codex
+    worktree at `~/.codex/worktrees/1cfd/FORGOTTEN-INDUSTRIES` on a detached
+    HEAD. Moving the repo would have silently broken it. A clone-level clean
+    check is not a tree-level clean check.
+  - **`git log --all` does not reach another worktree's detached HEAD.**
+    `--all` walks `refs/`, and a detached worktree HEAD is not under `refs/`.
+    So the commit that worktree sat on (`e2f2d311`) was outside the
+    unique-commit diff entirely. It turned out to be reachable from
+    `codex/atlas-dossier-transcription`, which the survivor also has — but that
+    was luck, established after the fact, not by the check that was run.
+- **Relevance to build:** `bin/atlas-clones` answers "which clone is live, and
+  what else shares its remote." Both gaps above sit just outside that question
+  and would bite it the same way the renamed-remote gap did on 08-28: a tool
+  built to catch a forgotten tree holding the only copy, blind to a *worktree*
+  holding one. Two cheap additions would close it — enumerate
+  `git worktree list --porcelain` per clone, and fold detached worktree HEADs
+  into any reachability comparison rather than trusting `--all`.
+- **Also worth recording:** nine of that clone's ten branches existed on no
+  remote, so unlike the ATLAS attic there is no ~90-day GitHub backstop behind
+  it. A 24 KB `git bundle` of the only two commits absent from the survivor now
+  sits *outside* the attic at `~/fi-unique-2026-08-31.bundle`, so the
+  2026-09-30 expiry deletion stays reversible without keeping 3.9 GB to do it.
+  Absorption was verified per-commit by path-scoped diff, not
+  `git branch --merged`, which under-reports on a squash-merging repo.
+
 ### 2026-08-28 — [behavior] A gate that inverted: prohibitions parsed as activations
 
 - **Context:** Starting work on the barrel's proposal side — the semantic half
