@@ -8,6 +8,40 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.8.4] - 2026-08-31
+
+### Fixed
+- Grand Complication is a count of modules again, and Level 100 can be printed.
+  `le-niveau.md` defines prestige as `+N` "where N counts modules earned past
+  `XP100`"; `level/level.py` computed `round((xp - XP100) / 1000)` — a rounded
+  thousand of XP, which is a different quantity and disagreed with the sentence
+  it implemented. Two consequences, both in the region the instrument is now
+  close enough to reach. Any build sitting less than 500 XP past the line
+  printed `Grand Complication +0`, a readout that reads as a downgrade from
+  Level 99 and means nothing; and because the banner branched on `xp > XP100`,
+  `Level 100` was printed only for an XP total landing *exactly* on 13000,
+  which no combination of 50/100/250/500/1000-tier modules on the current
+  roadmap can produce. The design-complete readout the whole scale is anchored
+  to was unreachable in the banner it was designed for.
+
+  Prestige now walks the ledger in order and counts modules that begin wholly
+  past `XP100` — the module that *crosses* the line reached design-complete
+  rather than being earned beyond it, so it scores none. `+0` is therefore not
+  a value the readout can produce: prestige is absent and the level reads 100,
+  or it is at least `+1`. The XP stays the first parenthesised integer in
+  `--oneline` on both branches, which is the contract `.github/workflows/
+  test.yml` scrapes the base XP with. Doctrine updated to state the counting
+  rule precisely, and `--prestige` added for machine parsing.
+
+### Note
+- No service row. This repair touches `level/level.py` and
+  `overlays/le-niveau.md`, and **neither path is a module in the Module
+  Ledger** — the scoring system does not score itself. Per the evidence rule a
+  repair to something the ledger does not name cannot be recorded, so 1.8.4
+  joins 1.3.1 and 1.4.3 as a deliberate absence, noted in the Service Record.
+  Adding a row to close the gap would score XP for files that already existed,
+  which is the exact failure `level/ledger_guard.py` exists to block.
+
 ## [1.8.3] - 2026-08-31
 
 ### Added
