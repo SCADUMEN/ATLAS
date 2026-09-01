@@ -129,7 +129,113 @@ function settleRouteEnd(trace, cands) {
   trace.routeEnd = null;
 }
 
-export function route(D, utterance, armed = null, capAuthorized = null) {
+// Python's repr(), for the failure strings. The two engines are compared field
+// by field, so a rejection reported here must read exactly as rouage.py writes
+// it - including the quoting, which Python chooses by content.
+function pyRepr(s) {
+  const q = (s.includes("'") && !s.includes('"')) ? '"' : "'";
+  let out = "";
+  for (const ch of s) {
+    if (ch === "\\") out += "\\\\";
+    else if (ch === q) out += "\\" + ch;
+    else if (ch === "\n") out += "\\n";
+    else if (ch === "\r") out += "\\r";
+    else if (ch === "\t") out += "\\t";
+    else {
+      const c = ch.codePointAt(0);
+      out += (c < 0x20 || c === 0x7f)
+        ? "\\x" + c.toString(16).padStart(2, "0")
+        : ch;
+    }
+  }
+  return q + out + q;
+}
+
+// Stage 6 - COLLECT. The barrel's half, admitted into the train.
+//
+// This is the one stage whose input the train cannot derive: something read an
+// artifact for meaning and decided a prose bullet fired. That reading happened
+// upstream, in the barrel. What happens here is still a literal string match -
+// the citation against the member's own Activation bullets - which is why the
+// browser may do it at all. Reading the bullets FOR meaning would be
+// interpreting, and this file is forbidden that.
+//
+// Mirrors admit_proposals() in rouage.py, policy (b) Cited. Every rejection
+// string is duplicated from there deliberately: the conformance test compares
+// them verbatim, so a divergence is a test failure rather than a dial that
+// quietly disagrees with the council.
+function admitProposals(D, trace, proposals, cands, resolvable, requireEvidence) {
+  const admitted = [];
+  const seen = new Set(cands.map((c) => fold(c.m.name)));
+
+  for (const proposal of proposals) {
+    const [name, citation, rawEvidence] = proposal;
+    const evidence = rawEvidence ? rawEvidence.trim() : "";
+
+    const m = D.members.find((x) => fold(x.name) === fold(name));
+    if (!m) {
+      trace.failures.push(`rejected proposal: unknown member ${pyRepr(name)}`);
+      continue;
+    }
+
+    const folded = fold(m.name);
+    if (seen.has(folded)) continue;
+
+    const cited = citation.trim();
+    if ((m.prohibitions || []).includes(cited)) {
+      // An inverted gate: the barrel found the sentence saying DO NOT fire on
+      // this and offered it as grounds to fire. Louder than a typo, and the
+      // trace must not collapse the two.
+      trace.failures.push(
+        `rejected proposal: ${m.name} cited a prohibition, not ` +
+        `an activation - its gate names this as a reason to stay ` +
+        `dark: ${pyRepr(citation)}`);
+      continue;
+    }
+
+    if (!(m.bullets || []).includes(cited)) {
+      trace.failures.push(
+        `rejected proposal: ${m.name} cited text not found ` +
+        `verbatim in its Activation section: ${pyRepr(citation)}`);
+      continue;
+    }
+
+    // A citation proves the gate is real; it cannot prove the premise was.
+    // Evidence is an object id the train resolves without reading it.
+    // `resolvable === null` is no verifier at all, which is recorded as
+    // explicitly unchecked - not as a verification that never happened.
+    let note = "";
+    if (evidence) {
+      if (resolvable === null || resolvable === undefined) {
+        note = `evidence ${evidence} (unverified)`;
+      } else if (resolvable.includes(evidence)) {
+        note = `evidence ${evidence}`;
+      } else {
+        trace.failures.push(
+          `rejected proposal: ${m.name} cited evidence that ` +
+          `does not resolve: ${pyRepr(evidence)}`);
+        continue;
+      }
+    } else if (requireEvidence) {
+      trace.failures.push(`rejected proposal: ${m.name} supplied no evidence`);
+      continue;
+    }
+
+    seen.add(folded);
+    if (m.sealed && fold(trace.armed || "") !== folded) {
+      const unauth = "proposed without authorization";
+      admitted.push({
+        m, reason: `proposed:${cited}`, state: "sealed",
+        note: note ? `${unauth}; ${note}` : unauth,
+      });
+    } else {
+      admitted.push({ m, reason: `proposed:${cited}`, state: "active", note });
+    }
+  }
+  return admitted;
+}
+
+export function route(D, utterance, armed = null, capAuthorized = null, opts = {}) {
   const trace = {
     utterance, armed, capAuthorized,
     stages: [], failures: [], notices: [],
@@ -143,6 +249,14 @@ export function route(D, utterance, armed = null, capAuthorized = null) {
     cands = routed.concat(cands.filter((c) => !seen.has(fold(c.m.name))));
     trace.stages.push("ROUTE->named");
   }
+  const proposals = opts.proposals || null;
+  if (proposals && proposals.length) {
+    cands = cands.concat(admitProposals(
+      D, trace, proposals, cands,
+      opts.resolvable === undefined ? null : opts.resolvable,
+      Boolean(opts.requireEvidence)));
+  }
+
   trace.stages.push("ORDER");
   cands = order(D, cands);
   trace.stages.push("METER");

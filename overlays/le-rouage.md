@@ -5,7 +5,7 @@
 **Function:** Carries force from the barrel to the escapement, and distributes the regulated result to the registers and the hands.
 **Class:** Component. Not a member, not a mode, not a voice.
 **Position:** Both sides of Le Sas. Before it, the train delivers. After it, the motion works distribute.
-**Status:** **Partially built.** The deterministic train runs in `rouage/`. The admission policy at the barrel boundary is decided (Cited); the barrel itself - the thing that would actually generate a proposal to admit - is not yet built.
+**Status:** **Built.** The deterministic train runs in `rouage/`, in both engines, and the barrel boundary is wired: `rouage/barillet.py` is the seam, `train.js` admits proposals under the same Cited policy as `rouage.py`, and `rouage/CONFORMANCE.md` is the generated record that the two agree on every branch of it. The barrel itself is still the model - that is what a barrel is, and it is not something this repository can build.
 
 Le Rouage is the linkage. Every part of Le Conseil connects to every other part through it, and nothing reaches Le Sas except by way of the train.
 
@@ -25,7 +25,15 @@ Every activation block turns out to have two halves. The quoted invocation phras
 
 So the built train handles named invocation, precedence, metering, the seal, and the trace. The automatic half necessarily runs in the barrel, and the honest arrangement is that **the barrel proposes and the train disposes**: a proposal still passes through ordering, the cap, and the Fripon seal, all enforced in code the barrel cannot reach around. That is what keeps *the train decides nothing* true even though something upstream of it did.
 
-The admission policy for those proposals was L'Opérateur's call, and it is decided: **Cited**. A proposal is admitted only if its citation is a verbatim line among the bullets in that member's own Activation section - the same text `parse_activation()` already pulls from the doctrine at load time, so there is no second copy to drift. A citation that doesn't match is a rejected proposal, recorded to the trace as a discrimination failure in the gates, the same category as full-ring and over-cap. `admit_proposals()` in `rouage/rouage.py` is that mechanism; `route()` takes an optional `proposals` argument that feeds it. What still does not exist is the barrel itself - the thing that reads an artifact for meaning and produces `(member, citation)` pairs to hand in. Until that exists, the automatic half of every gate remains a model reading markdown and cooperating, which works, and is not yet wired to the mechanism that would enforce it.
+The admission policy for those proposals was L'Opérateur's call, and it is decided: **Cited**. A proposal is admitted only if its citation is a verbatim line among the bullets in that member's own Activation section - the same text `parse_activation()` already pulls from the doctrine at load time, so there is no second copy to drift. A citation that doesn't match is a rejected proposal, recorded to the trace as a discrimination failure in the gates, the same category as full-ring and over-cap. `admit_proposals()` in `rouage/rouage.py` is that mechanism; `route()` takes an optional `proposals` argument that feeds it. What reads the artifact for meaning is still the barrel, and always will be: producing `(member, citation)` pairs *is* the semantic half, and a train that could do it would not be a train. What was missing was never that reader - it was the seam it hands across.
+
+That seam is `rouage/barillet.py`. `brief()` is what the train hands out at COLLECT: the utterance and the citation menu, positives only, so a barrel required to quote verbatim can see exactly what it is quoting. `read_proposals()` is what it accepts back, and it validates **shape only** - a malformed item costs that item and is recorded, never the turn. Whether a citation is real stays `admit_proposals()`' decision, because that rejection belongs in the trace where a barrel repeatedly citing text that is not there remains visible. Filtering it out at the seam would tidy the audit surface by deleting the signal.
+
+The seam is deliberately thin in one further way: it does not re-run the train to enrich the brief. Stage logic in that file would be a third implementation of the thing the conformance test exists to hold at two.
+
+And it is two, now, on both halves. `train.js` implemented the literal half only - `emit.py` had been shipping `bullets` and `prohibitions` to the browser all along against this day, with the browser reading neither - so a proposal admitted in Python was a council state the dial could not reproduce. Both engines admit under the same policy, every rejection string included, and `rouage/CONFORMANCE.md` records the run that shows it.
+
+What this does **not** make automatic: nothing inspects the reading that produced a proposal. The gate is now enforced by a mechanism rather than by a model cooperating, which is a different and smaller claim than the gate being right.
 
 
 ### Evidence Is A Second Field, Not A Second Citation

@@ -1,0 +1,175 @@
+#!/bin/sh
+# Record and verify the barrel fitted to Le Conseil.
+#
+# The barrel is whatever model is executing the movement. It is the only part of
+# the instrument that is not version-controlled: rented, finite, and replaced.
+# overlays/le-barillet.md records each one with the work it drove, sealed by a
+# serial — the SHA-256 of the ordered commit hashes of that work.
+#
+# That seal was written by hand, which makes it a claim rather than a check.
+# This derives it from git instead, and re-derives every serial already recorded
+# so a fitted barrel's account of itself can be falsified.
+#
+# The model identity is never guessed. Nothing in the environment states which
+# barrel is fitted — the host is knowable (CLAUDECODE and friends), the model is
+# not — and a record that quietly invented it would defeat the reason the serial
+# exists: evidence that does not depend on memory or on anyone's account.
+set -eu
+CDPATH=''
+
+SOURCE=$0
+while [ -h "$SOURCE" ]; do
+  source_dir=$(cd -P "$(dirname "$SOURCE")" && pwd)
+  SOURCE=$(readlink "$SOURCE")
+  case $SOURCE in
+    /*) ;;
+    *) SOURCE=$source_dir/$SOURCE ;;
+  esac
+done
+SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+REPO=$(cd -P "$SCRIPT_DIR/.." && pwd)
+# Overridable so the verifier's failure branch can itself be tested: a
+# verifier that cannot be shown to fail is not evidence of anything.
+DOCTRINE=${ATLAS_BARILLET_DOCTRINE:-$REPO/overlays/le-barillet.md}
+
+fail() {
+  echo "atlas-barillet: FAIL: $*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+Usage: atlas-barillet serial <range>          the SHA-256 seal for a commit range
+       atlas-barillet record <range> [name]   a Fitted Barrel block, ready to paste
+       atlas-barillet verify                  re-derive every recorded serial
+       atlas-barillet host                    the host this barrel is fitted through
+
+The barrel's model identity is not detectable and is never guessed. Supply it:
+
+  ATLAS_BARREL='Claude Opus 5 — `claude-opus-5`, via Claude Code'
+
+A range is anything git rev-list accepts: c612851..289aeb8, v1.8.0..HEAD.
+EOF
+}
+
+for tool in git awk sed; do
+  command -v "$tool" >/dev/null 2>&1 || fail "required tool not found: $tool"
+done
+
+# The doctrine reproduces the seal with `shasum -a 256`; sha256sum is the same
+# digest where shasum is absent. Either must print the hash as the first field.
+sha256() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum
+  else
+    fail "no shasum or sha256sum found"
+  fi
+}
+
+git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 || fail "not a git repository: $REPO"
+
+# The seal, exactly as le-barillet.md documents it:
+#   git log --format=%H --reverse <range> | shasum -a 256
+serial_for() {
+  range=$1
+  git -C "$REPO" rev-list --quiet "$range" >/dev/null 2>&1 \
+    || fail "range not resolvable in this checkout: $range"
+  count=$(git -C "$REPO" log --format=%H --reverse "$range" | grep -c . || true)
+  [ "$count" -gt 0 ] || fail "range names no commits: $range"
+  git -C "$REPO" log --format=%H --reverse "$range" | sha256 | awk '{print $1}'
+}
+
+host_of() {
+  if [ "${CLAUDECODE:-}" = "1" ] || [ -n "${CLAUDE_CODE_ENTRYPOINT:-}" ]; then
+    printf 'Claude Code'
+    [ -n "${CLAUDE_CODE_ENTRYPOINT:-}" ] && printf ' (%s)' "$CLAUDE_CODE_ENTRYPOINT"
+    printf '\n'
+  elif [ -n "${CODEX_SANDBOX:-}${CODEX_HOME:-}" ]; then
+    echo 'Codex'
+  elif [ -n "${AI_AGENT:-}" ]; then
+    echo "$AI_AGENT"
+  else
+    echo 'unknown host'
+  fi
+}
+
+cmd=${1:-}
+case $cmd in
+  serial)
+    [ $# -ge 2 ] || { usage >&2; exit 2; }
+    serial_for "$2"
+    ;;
+
+  host)
+    host_of
+    ;;
+
+  record)
+    [ $# -ge 2 ] || { usage >&2; exit 2; }
+    range=$2
+    name=${3:-}
+    barrel=${ATLAS_BARREL:-}
+    [ -n "$barrel" ] || fail "set ATLAS_BARREL to the model fitted (see --help); it is never guessed"
+    serial=$(serial_for "$range")
+    count=$(git -C "$REPO" log --format=%H --reverse "$range" | grep -c . || true)
+    first=$(git -C "$REPO" log --format=%ad --date=short --reverse "$range" | head -1)
+    last=$(git -C "$REPO" log --format=%ad --date=short "$range" | head -1)
+    if [ "$first" = "$last" ]; then span=$first; else span="$first into $last"; fi
+    if [ "$count" = "1" ]; then plural=commit; else plural=commits; fi
+    [ -n "$name" ] && printf '### `%s`\n\n' "$name"
+    printf '**Fitted:** %s\n' "$span"
+    printf '**Barrel:** %s\n' "$barrel"
+    printf '**Drove:** `%s` — %s %s.\n' "$range" "$count" "$plural"
+    printf '**Serial:**\n\n```text\n%s\n```\n\nReproduce:\n\n```bash\n' "$serial"
+    printf 'git log --format=%%H --reverse %s | shasum -a 256\n```\n' "$range"
+    ;;
+
+  verify)
+    [ -f "$DOCTRINE" ] || fail "no doctrine at $DOCTRINE"
+    # Pull (name, range, serial) out of each Fitted Barrel block. A block is a
+    # `### \`NAME\`` heading, a **Drove:** line carrying a backticked range, and
+    # a bare 64-hex serial in the fenced block after **Serial:**.
+    records=$(awk '
+      /^### `/ { name = $0; sub(/^### `/, "", name); sub(/`.*$/, "", name);
+                 range = ""; next }
+      /^\*\*Drove:\*\* `/ { range = $0; sub(/^\*\*Drove:\*\* `/, "", range);
+                            sub(/`.*$/, "", range); next }
+      /^[0-9a-f]{64}$/ { if (name != "" && range != "") {
+                           print name "\t" range "\t" $0; range = "" } }
+    ' "$DOCTRINE")
+
+    [ -n "$records" ] || fail "no fitted-barrel records found in $DOCTRINE"
+
+    rc=0
+    checked=0
+    printf '%s\n' "$records" | while IFS='	' read -r name range recorded; do
+      checked=$((checked + 1))
+      if ! actual=$(serial_for "$range" 2>/dev/null); then
+        echo "atlas-barillet: SKIP  $name — range $range not in this checkout" >&2
+        continue
+      fi
+      if [ "$actual" = "$recorded" ]; then
+        echo "atlas-barillet: seal holds — $name ($range)"
+      else
+        echo "atlas-barillet: BROKEN SEAL — $name ($range)" >&2
+        echo "  recorded: $recorded" >&2
+        echo "  derived:  $actual" >&2
+        rc=1
+      fi
+      [ "$rc" = "0" ] || exit 1
+    done || fail "a recorded serial does not re-derive from its range"
+
+    echo "atlas-barillet: fitted-barrel records verified"
+    ;;
+
+  ''|-h|--help|help)
+    usage
+    ;;
+
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

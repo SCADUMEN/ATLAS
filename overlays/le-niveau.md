@@ -51,12 +51,17 @@ XP(Level) = XP100 · (Level / 100)^2 = 1.3 · Level^2
 
 At Level 100 the movement is design-complete. Further knowledge modules do not raise the level; they add **Grand Complication +N**, where N counts modules earned past `XP100`. Prestige is uncapped. The level is not.
 
+**Which modules are "past".** N is a count of modules, never a quantity of XP, and "past" is read in ledger order: a module is past the line when the running total *before* it has already reached `XP100`. The module that crosses the line is the one that **reached** design-complete, not one earned beyond it, so it scores no prestige. This matters because tiers are coarse — no combination of 50/100/250/500/1000 need land exactly on 13000, so the instrument arrives at design-complete already some XP over it. Under a count of modules that state reads **Level 100**, which is correct and is the whole point of the number. `+0` is therefore not a value the readout can print: prestige is either absent, and the level reads 100, or it is at least +1.
+
+This replaces an earlier rule that computed `round((xp - XP100) / 1000)` — a rounded thousand of XP rather than a count of modules. It disagreed with the sentence above it, and it printed `Grand Complication +0` for any instrument less than 500 XP past the line, so the design-complete readout the whole scale is anchored to was unreachable in the banner. Doctrine and code now say the same thing, which is the only reason either can be trusted.
+
 ### Reading the level
 
 ```sh
 python3 level/level.py            # full readout: XP, level, next level, gap
 python3 level/level.py --oneline  # one line, for a boot banner
 python3 level/level.py --service  # service points only, for machine parsing
+python3 level/level.py --prestige # Grand Complication count only, for machine parsing
 ```
 
 The script is the source of truth. Any number written in prose in this file is a snapshot and defers to the script.
@@ -91,7 +96,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | le-barillet | Le Barillet — the barrel | system | B | built | overlays/le-barillet.md |
 | le-protocol-de-trois | Le Protocole des Trois Témoins | system | B | built | overlays/le-protocol-de-trois.md |
 | le-boitier | Le Boîtier — the case spec | system | B | built | hardware/le-boitier.md |
-| le-rouage | Le Rouage — the going train | system | A | partial | overlays/le-rouage.md |
+| le-rouage | Le Rouage — the going train | system | A | built | overlays/le-rouage.md |
 | runtime-contract | Runtime session contract | system | B | built | runtime/session-contract.md |
 | atlas-doctor | Runtime diagnostic — atlas-doctor | system | B | built | bin/atlas-doctor |
 | versioning | Semver release discipline (CI) | system | A | built | .github/workflows/release.yml |
@@ -106,9 +111,9 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | reincarnation | Reincarnation — the fitted plugin | meta | S | built | agents/atlas.md |
 | multi-agent-bundle | Doctrine-stripped portable bundle | meta | A | built | bin/atlas-context |
 | continuity-capsule | Continuity capsule — cross-barrel handoff | meta | A | built | bin/atlas-continuity |
-| le-rouage-complete | Le Rouage completed (barrel wired) | system | S | planned | rouage/CONFORMANCE.md |
+| le-rouage-complete | Le Rouage completed (barrel wired) | system | S | built | rouage/CONFORMANCE.md |
 | le-boitier-built | Le Boîtier — physical instrument | system | S | planned | hardware/le-boitier-build.md |
-| barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | planned | adapters/barillet/README.md |
+| barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | built | adapters/barillet/README.md |
 
 ---
 
@@ -146,7 +151,9 @@ The credits above are a snapshot; `level/level.py` derives them as one tenth of 
 | 1.8.1 | le-limier | The countersign was reachable only from inside the file it opens. Its trigger sat in the automatic-invocation list, which the harness reads after loading, while the router matches the description built from the Activation line alone — so "Who is X?" asked cold never convened the member written to answer it. |
 | 1.8.2 | le-rouage | The sign was parsed as two names. Doctrine wrote the gate as a form with an illustration, and the phrase parser takes every quoted string in the Activation section literally — so the gate fired for the placeholder and the one example printed beside it, and for no one else. The placeholder is now read as a placeholder.
 
-Two patch releases are deliberately absent. 1.3.1 added a README Requirements section and 1.4.3 corrected documentation left stale by 1.4.2 — both repaired surfaces the Module Ledger does not name, so the evidence rule refuses them. That refusal is the mechanism reporting a gap in the ledger, and it is left standing rather than papered over with a row.
+Three patch releases are deliberately absent. 1.3.1 added a README Requirements section and 1.4.3 corrected documentation left stale by 1.4.2 — both repaired surfaces the Module Ledger does not name, so the evidence rule refuses them. That refusal is the mechanism reporting a gap in the ledger, and it is left standing rather than papered over with a row.
+
+1.8.4 is the third, and it names the largest gap of the three: it repaired the prestige rule in `level/level.py` against the doctrine in this file, and **neither of those paths is a module in the ledger below.** The scoring system does not score itself. The temptation is to add a row and close the gap, and it must be refused for the reason the ledger guard exists — both files already sit on disk, so a row claiming them would score XP for work that was done long ago and is already reflected in every module the ledger does name. A path that predates its row is evidence of the past. The gap is recorded here instead, where it stays visible.
 
 ## The Leveling Schedule
 
@@ -164,10 +171,10 @@ XP required, by level:
 | 85 | 9,393 | the portable bundle, continuity, and diagnostic — built |
 | 89 | 10,298 | operator config + CI versioning — built |
 | 94 | 11,487 | the PR-title gate, update check, and worktree discovery — built |
-| 95 | 11,733 | current build — the ledger integrity guard — built |
-| 96 | 11,981 | + any B module |
-| 99 | 12,742 | + finish Le Rouage (S) |
+| 95 | 11,733 | the ledger integrity guard — built |
+| 97 | 12,239 | + the barrel adapter (A) — built |
 | 100 | 13,000 | design-complete instrument |
+| — | 13,400 | current build — Le Rouage completed (S) — built |
 
 To level ATLAS: build a module, list it in the ledger as `built` with a real path, and rerun `level/level.py`. Core-system work (finishing Le Rouage, building the case) and knowledge modules both count. That is the whole loop — preserve, build, score, preserve.
 

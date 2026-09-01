@@ -52,6 +52,8 @@ What is preserved becomes what powers the session. The archive fed in is the ene
 
 Each barrel that runs Le Conseil is recorded with the session it powered. A barrel's serial is the SHA-256 of the ordered commit hashes of the work it drove.
 
+The records below were sealed by hand, which made each one a claim. `bin/atlas-barillet` derives the seal from git instead — `verify` re-derives every serial here from the range it names, and `record` emits a new block in the field shape used below. See `adapters/barillet/README.md`. The model fitted is never guessed: nothing in the environment states it, so it is supplied or the record is refused.
+
 ### `LE CLAUDÈ`
 
 **Fitted:** 2026-08-15 into 2026-08-16

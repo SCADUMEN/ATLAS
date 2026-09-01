@@ -11,6 +11,7 @@ the evidence.
     python3 level/level.py --oneline  one line, for a boot banner
     python3 level/level.py --xp       the integer XP only, for machine parsing
     python3 level/level.py --service  the integer service points only
+    python3 level/level.py --prestige the integer Grand Complication count only
 
 Service is a second axis and is deliberately kept off the XP path: a repair
 builds no module, so it moves no level. It records that the modules already
@@ -85,6 +86,32 @@ def xp_for(level, xp100):
     return xp100 * (level / 100) ** 2
 
 
+def prestige_for(counted, xp100):
+    """Grand Complication +N — the number of modules earned *past* XP100.
+
+    The doctrine says N counts modules earned past XP100. "Past" needs an
+    order, and the ledger is an ordered document, so this walks the counted
+    modules in ledger order and counts those that begin entirely beyond the
+    line: a module is past when the running total *before* it has already
+    reached XP100.
+
+    The module that crosses the line is the one that *reached* design-complete,
+    not one earned beyond it, so it scores no prestige. That is deliberate. The
+    previous rule read `round((xp - xp100) / 1000)` — a rounded thousand of XP,
+    not a module count — which disagreed with the doctrine it was implementing
+    and printed `Grand Complication +0` for any instrument sitting less than
+    500 XP past the line. Counting modules makes +0 unreachable: prestige is
+    either absent, and the readout says Level 100, or it is at least +1.
+    """
+    running = 0
+    past = 0
+    for m in counted:
+        if running >= xp100:
+            past += 1
+        running += m.get("xp", 0)
+    return past
+
+
 def compute():
     with open(DOCTRINE, encoding="utf-8") as fh:
         md = fh.read()
@@ -111,7 +138,8 @@ def compute():
     svc, service_unledgered, service_pts = service.account(md, _rows, modules, tiers)
 
     level = level_for(xp, xp100)
-    return dict(xp=xp, xp100=xp100, level=level, tiers=tiers,
+    prestige = prestige_for(counted, xp100)
+    return dict(xp=xp, xp100=xp100, level=level, tiers=tiers, prestige=prestige,
                 counted=counted, planned=planned, missing=missing,
                 service=svc, service_pts=service_pts,
                 service_unledgered=service_unledgered)
@@ -122,9 +150,14 @@ def main(argv):
     xp, xp100, level = r["xp"], r["xp100"], r["level"]
 
     service_pts = r["service_pts"]
+    prestige = r["prestige"]
 
     if "--service" in argv:
         print(service_pts)
+        return 0
+
+    if "--prestige" in argv:
+        print(prestige)
         return 0
 
     if "--xp" in argv:
@@ -133,10 +166,12 @@ def main(argv):
         return 0
 
     if "--oneline" in argv:
-        if xp > xp100:
-            over = round((xp - xp100) / 1000)
-            line = f"ATLAS — Grand Complication +{over} ({xp} XP)"
+        if prestige:
+            line = f"ATLAS — Grand Complication +{prestige} ({xp} XP)"
         else:
+            # Level 100 is printed here, not skipped: crossing XP100 without a
+            # module wholly past it is design-complete, not prestige. The XP
+            # stays the first parenthesised integer either way — CI scrapes it.
             line = f"ATLAS — Level {level} ({xp}/{xp100} XP)"
         # Appended after the XP group so anything parsing the parenthesised XP
         # out of this line (the release guard in CI does) is unaffected.
@@ -151,9 +186,13 @@ def main(argv):
         nxt = level + 1
         need = math.ceil(xp_for(nxt, xp100) - xp)
         print(f"Next: Level {nxt} at {math.ceil(xp_for(nxt, xp100))} XP (+{need})")
-    else:
+    elif prestige:
         over = xp - xp100
-        print(f"Prestige: Grand Complication +{round(over / 1000)} ({over} XP past 100)")
+        mods = "module" if prestige == 1 else "modules"
+        print(f"Prestige: Grand Complication +{prestige} "
+              f"({prestige} {mods} past XP100, {over} XP past 100)")
+    else:
+        print("Design-complete. Grand Complication +1 at the next module past XP100.")
     if service_pts or r["service"]:
         print(f"Service: {service_pts} pts across {len(r['service'])} "
               f"patch release{'' if len(r['service']) == 1 else 's'} "

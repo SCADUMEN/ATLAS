@@ -43,10 +43,15 @@ class Ledger(unittest.TestCase):
         # Evidence rule: every built module's file must exist, or it is a bug.
         self.assertEqual(self.r["missing"], [], "built modules with no file")
 
-    def test_reincarnation_is_the_lone_s_tier(self):
+    def test_the_s_tier_modules_are_the_ones_that_changed_what_atlas_is(self):
+        # Was "reincarnation is the lone S-tier". Le Rouage completing is the
+        # second: the gates stopped being a model cooperating and became a
+        # mechanism. Pinned as a set so a third cannot arrive unnoticed.
         s = [m for m in self.r["counted"] if m["tier"] == "S"]
-        self.assertEqual([m["id"] for m in s], ["reincarnation"])
-        self.assertEqual(s[0]["xp"], 1000)
+        self.assertEqual(sorted(m["id"] for m in s),
+                         ["le-rouage-complete", "reincarnation"])
+        for m in s:
+            self.assertEqual(m["xp"], 1000)
 
     def test_tiers_parsed(self):
         with open(g.DOCTRINE, encoding="utf-8") as fh:
@@ -117,6 +122,76 @@ class Service(unittest.TestCase):
         self.assertIsNotNone(m, f"CI regex would find no XP in: {line}")
         self.assertEqual(int(m.group(1)), self.r["xp"])
         self.assertIn("Service", line)
+
+
+class Prestige(unittest.TestCase):
+    """Grand Complication is a count of modules past XP100, never a sum of XP."""
+
+    def mods(self, *xps):
+        return [dict(xp=x) for x in xps]
+
+    def banner(self, counted, xp100=13000):
+        """The --oneline banner for a synthetic ledger."""
+        import contextlib, io as _io
+        from unittest import mock
+        xp = sum(m["xp"] for m in counted)
+        r = dict(xp=xp, xp100=xp100, level=g.level_for(xp, xp100),
+                 tiers={}, prestige=g.prestige_for(counted, xp100),
+                 counted=counted, planned=[], missing=[],
+                 service=[], service_pts=0, service_unledgered=[])
+        buf = _io.StringIO()
+        with mock.patch.object(g, "compute", return_value=r):
+            with contextlib.redirect_stdout(buf):
+                g.main(["--oneline"])
+        return buf.getvalue().strip()
+
+    def test_nothing_past_the_line_below_design_complete(self):
+        self.assertEqual(g.prestige_for(self.mods(500, 500), 13000), 0)
+
+    def test_the_crossing_module_earns_no_prestige(self):
+        # 12900 before it, +500 = 13400. Over the line, but no module begins
+        # past it: this is design-complete, not prestige.
+        c = self.mods(*([1000] * 12), 900, 500)
+        self.assertEqual(sum(m["xp"] for m in c), 13400)
+        self.assertEqual(g.prestige_for(c, 13000), 0)
+
+    def test_counts_modules_not_thousands_of_xp(self):
+        # Two 250s wholly past the line is +2. The rule this replaced --
+        # round((xp - xp100) / 1000) -- scored it 0. That drift is the bug.
+        c = self.mods(*([1000] * 13), 250, 250)
+        self.assertEqual(g.prestige_for(c, 13000), 2)
+        self.assertEqual(round((sum(m["xp"] for m in c) - 13000) / 1000), 0)
+
+    def test_design_complete_prints_level_100(self):
+        # The readout the whole scale is anchored to must be reachable.
+        line = self.banner(self.mods(*([1000] * 12), 900, 500))
+        self.assertIn("Level 100", line)
+        self.assertNotIn("Grand Complication", line)
+
+    def test_plus_zero_is_never_printed(self):
+        # Sweep the crossing region: every banner is either a Level or a +N
+        # with N >= 1. `Grand Complication +0` must not be reachable at all.
+        for extra in range(0, 2000, 50):
+            c = self.mods(*([1000] * 12), 900, extra) if extra else self.mods(*([1000] * 12), 900)
+            line = self.banner(c)
+            self.assertNotIn("+0", line, f"printed +0 for {sum(m['xp'] for m in c)} XP")
+            if "Grand Complication" in line:
+                n = int(re.search(r"\+(\d+)", line).group(1))
+                self.assertGreaterEqual(n, 1)
+
+    def test_prestige_banner_still_exposes_xp_to_the_ci_regex(self):
+        # test.yml scrapes the base XP with grep -oE '\(([0-9]+)'. It must keep
+        # working on the prestige branch too, not just the level branch.
+        c = self.mods(*([1000] * 13), 250, 250)
+        line = self.banner(c)
+        self.assertIn("Grand Complication +2", line)
+        self.assertEqual(int(re.search(r"\((\d+)", line).group(1)), 13500)
+
+    def test_live_ledger_agrees_with_the_readout(self):
+        r = g.compute()
+        self.assertEqual(r["prestige"], g.prestige_for(r["counted"], r["xp100"]))
+        if r["prestige"]:
+            self.assertEqual(r["level"], 100, "prestige without design-complete")
 
 
 if __name__ == "__main__":
