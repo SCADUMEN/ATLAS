@@ -96,7 +96,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | le-barillet | Le Barillet — the barrel | system | B | built | overlays/le-barillet.md |
 | le-protocol-de-trois | Le Protocole des Trois Témoins | system | B | built | overlays/le-protocol-de-trois.md |
 | le-boitier | Le Boîtier — the case spec | system | B | built | hardware/le-boitier.md |
-| le-rouage | Le Rouage — the going train | system | A | partial | overlays/le-rouage.md |
+| le-rouage | Le Rouage — the going train | system | A | built | overlays/le-rouage.md |
 | runtime-contract | Runtime session contract | system | B | built | runtime/session-contract.md |
 | atlas-doctor | Runtime diagnostic — atlas-doctor | system | B | built | bin/atlas-doctor |
 | versioning | Semver release discipline (CI) | system | A | built | .github/workflows/release.yml |
@@ -111,9 +111,9 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | reincarnation | Reincarnation — the fitted plugin | meta | S | built | agents/atlas.md |
 | multi-agent-bundle | Doctrine-stripped portable bundle | meta | A | built | bin/atlas-context |
 | continuity-capsule | Continuity capsule — cross-barrel handoff | meta | A | built | bin/atlas-continuity |
-| le-rouage-complete | Le Rouage completed (barrel wired) | system | S | planned | rouage/CONFORMANCE.md |
+| le-rouage-complete | Le Rouage completed (barrel wired) | system | S | built | rouage/CONFORMANCE.md |
 | le-boitier-built | Le Boîtier — physical instrument | system | S | planned | hardware/le-boitier-build.md |
-| barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | planned | adapters/barillet/README.md |
+| barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | built | adapters/barillet/README.md |
 
 ---
 
@@ -171,10 +171,10 @@ XP required, by level:
 | 85 | 9,393 | the portable bundle, continuity, and diagnostic — built |
 | 89 | 10,298 | operator config + CI versioning — built |
 | 94 | 11,487 | the PR-title gate, update check, and worktree discovery — built |
-| 95 | 11,733 | current build — the ledger integrity guard — built |
-| 96 | 11,981 | + any B module |
-| 99 | 12,742 | + finish Le Rouage (S) |
+| 95 | 11,733 | the ledger integrity guard — built |
+| 97 | 12,239 | + the barrel adapter (A) — built |
 | 100 | 13,000 | design-complete instrument |
+| — | 13,400 | current build — Le Rouage completed (S) — built |
 
 To level ATLAS: build a module, list it in the ledger as `built` with a real path, and rerun `level/level.py`. Core-system work (finishing Le Rouage, building the case) and knowledge modules both count. That is the whole loop — preserve, build, score, preserve.
 

@@ -197,5 +197,181 @@ console.log(JSON.stringify(t.failures));
                         "engine ignored the doctrine cap")
 
 
+# --------------------------------------------------------------------------
+# Stage 6 - COLLECT. The barrel's half, and the second place the trains can
+# disagree. Until this matrix existed, train.js implemented the literal half
+# only: emit.py shipped `bullets` and `prohibitions` to the browser and the
+# browser read neither. A proposal admitted in Python was a council state the
+# dial could not reproduce, which is the one thing the instrument exists not
+# to do.
+# --------------------------------------------------------------------------
+
+def roles(ring):
+    """Pick the members the matrix needs, by property rather than by name.
+
+    Derived, not written down: a doctrine rename must not be able to leave a
+    stale member name in this file, which is the same rule train.js lives by.
+    """
+    sealed = next(m for m in ring.members if m.sealed and m.bullets)
+    prohibited = next(m for m in ring.members if m.prohibitions)
+    plain = next(m for m in ring.members
+                 if m.bullets and not m.sealed and not m.standing
+                 and m.name not in (sealed.name, prohibited.name))
+    return sealed, prohibited, plain
+
+
+def proposal_cases(ring):
+    """Every branch of admit_proposals(), as data both engines can be handed."""
+    sealed, prohibited, plain = roles(ring)
+    # The utterance that convenes `plain` literally, for the duplicate case.
+    convening = plain.phrases[0] if plain.phrases else ""
+
+    def case(name, proposals, utterance="a quiet turn with nothing in it",
+             armed=None, resolvable=None, require_evidence=False):
+        return dict(name=name, utterance=utterance, armed=armed,
+                    proposals=proposals, resolvable=resolvable,
+                    requireEvidence=require_evidence)
+
+    return [
+        case("admitted on a verbatim citation",
+             [[plain.name, plain.bullets[0]]]),
+        case("citation with surrounding whitespace is still verbatim",
+             [[plain.name, "  " + plain.bullets[0] + "  "]]),
+        case("unknown member",
+             [["Le Fantome", plain.bullets[0]]]),
+        case("citation not found in the activation section",
+             [[plain.name, "because it felt right"]]),
+        case("a prohibition offered as grounds - the inverted gate",
+             [[prohibited.name, prohibited.prohibitions[0]]]),
+        case("already convened literally, so not duplicated",
+             [[plain.name, plain.bullets[0]]], utterance=convening),
+        case("sealed member proposed without authorization",
+             [[sealed.name, sealed.bullets[0]]]),
+        case("sealed member proposed with the crown armed",
+             [[sealed.name, sealed.bullets[0]]], armed=sealed.name),
+        case("evidence recorded but explicitly unverified",
+             [[plain.name, plain.bullets[0], "deadbeef"]]),
+        case("evidence that resolves",
+             [[plain.name, plain.bullets[0], "deadbeef"]],
+             resolvable=["deadbeef"]),
+        case("evidence that does not resolve",
+             [[plain.name, plain.bullets[0], "notanobject"]],
+             resolvable=["deadbeef"]),
+        case("evidence required and none supplied",
+             [[plain.name, plain.bullets[0]]], require_evidence=True),
+        case("several proposals, mixed outcomes",
+             [[plain.name, plain.bullets[0]],
+              ["Le Fantome", "nothing"],
+              [prohibited.name, prohibited.prohibitions[0]],
+              [sealed.name, sealed.bullets[0]]]),
+        case("proposals alongside a named route",
+             [[plain.name, plain.bullets[0]]], utterance="run Publish"),
+        case("no proposals at all routes exactly as an unwired train",
+             []),
+    ]
+
+
+def js_proposal_traces(cases) -> list[dict]:
+    script = f"""
+import {{ route }} from {json.dumps(str(HERE / 'train.js'))};
+const D = {emit.as_json()};
+const cases = {json.dumps(cases, ensure_ascii=False)};
+console.log(JSON.stringify(cases.map((c) => route(D, c.utterance, c.armed, null, {{
+  proposals: c.proposals,
+  resolvable: c.resolvable,
+  requireEvidence: c.requireEvidence,
+}}))));
+"""
+    out = subprocess.run([NODE, "--input-type=module", "-e", script],
+                         capture_output=True, text=True, cwd=HERE)
+    if out.returncode:
+        raise AssertionError(out.stderr[:2000])
+    return json.loads(out.stdout)
+
+
+def verifier_for(resolvable):
+    """`None` is no verifier at all; a list is a verifier that resolves it."""
+    if resolvable is None:
+        return None
+    allowed = set(resolvable)
+    return lambda ref: ref in allowed
+
+
+@unittest.skipUnless(NODE, "node not available")
+class TheTwoTrainsAgreeOnTheBarrelsHalf(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.ring = load_ring()
+        cls.cases = proposal_cases(cls.ring)
+        cls.js = js_proposal_traces(cls.cases)
+
+    def _py(self, c):
+        return route(self.ring, c["utterance"], c["armed"],
+                     proposals=[tuple(p) for p in c["proposals"]],
+                     verify=verifier_for(c["resolvable"]),
+                     require_evidence=c["requireEvidence"]).to_dict()
+
+    def test_positions_and_states_match(self):
+        for c, j in zip(self.cases, self.js):
+            p = self._py(c)
+            self.assertEqual(
+                [(x["position"], x["state"]) for x in p["positions"]],
+                [(x["position"], x["state"]) for x in j["positions"]],
+                c["name"])
+
+    def test_the_reason_and_note_each_member_carries_match(self):
+        # `reason` is "proposed:<citation>" and `note` carries the evidence
+        # string. Both are rendered on the dial, so a divergence here is the
+        # browser attributing a member's presence to something else.
+        for c, j in zip(self.cases, self.js):
+            p = self._py(c)
+            self.assertEqual([(x["reason"], x["note"]) for x in p["positions"]],
+                             [(x["reason"], x["note"]) for x in j["positions"]],
+                             c["name"])
+
+    def test_every_rejection_reads_identically(self):
+        # The rejection strings are duplicated in train.js by hand. This is
+        # what makes that duplication survivable.
+        for c, j in zip(self.cases, self.js):
+            self.assertEqual(self._py(c)["failures"], j["failures"], c["name"])
+
+    def test_notices_and_stages_match(self):
+        for c, j in zip(self.cases, self.js):
+            p = self._py(c)
+            self.assertEqual(p["notices"], j["notices"], c["name"])
+            self.assertEqual(p["stages"], j["stages"], c["name"])
+
+    def test_the_precedence_ordering_matches(self):
+        for c, j in zip(self.cases, self.js):
+            self.assertEqual(self._py(c)["admitted"], j["admitted"], c["name"])
+
+    def test_the_matrix_actually_exercises_every_branch(self):
+        # A matrix that silently stopped covering a branch would keep passing.
+        seen = set()
+        for c in self.cases:
+            for f in self._py(c)["failures"]:
+                if "unknown member" in f: seen.add("unknown")
+                elif "cited a prohibition" in f: seen.add("prohibition")
+                elif "cited text not found" in f: seen.add("not-found")
+                elif "does not resolve" in f: seen.add("bad-evidence")
+                elif "supplied no evidence" in f: seen.add("no-evidence")
+        self.assertEqual(
+            seen, {"unknown", "prohibition", "not-found", "bad-evidence",
+                   "no-evidence"},
+            "the admission matrix stopped covering a rejection branch")
+
+    def test_a_proposal_can_actually_convene_someone(self):
+        # The positive case, stated separately: if this ever silently stopped
+        # admitting, every "they agree" test above would still pass on two
+        # engines agreeing to do nothing.
+        c = self.cases[0]
+        p = self._py(c)
+        self.assertTrue(
+            any(x["reason"].startswith("proposed:") and x["state"] == "active"
+                for x in p["positions"]),
+            "no proposal was admitted in the admission case")
+
+
 if __name__ == "__main__":
     unittest.main()

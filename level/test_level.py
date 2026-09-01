@@ -43,10 +43,15 @@ class Ledger(unittest.TestCase):
         # Evidence rule: every built module's file must exist, or it is a bug.
         self.assertEqual(self.r["missing"], [], "built modules with no file")
 
-    def test_reincarnation_is_the_lone_s_tier(self):
+    def test_the_s_tier_modules_are_the_ones_that_changed_what_atlas_is(self):
+        # Was "reincarnation is the lone S-tier". Le Rouage completing is the
+        # second: the gates stopped being a model cooperating and became a
+        # mechanism. Pinned as a set so a third cannot arrive unnoticed.
         s = [m for m in self.r["counted"] if m["tier"] == "S"]
-        self.assertEqual([m["id"] for m in s], ["reincarnation"])
-        self.assertEqual(s[0]["xp"], 1000)
+        self.assertEqual(sorted(m["id"] for m in s),
+                         ["le-rouage-complete", "reincarnation"])
+        for m in s:
+            self.assertEqual(m["xp"], 1000)
 
     def test_tiers_parsed(self):
         with open(g.DOCTRINE, encoding="utf-8") as fh:
