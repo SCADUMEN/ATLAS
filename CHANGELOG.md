@@ -8,6 +8,20 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.8.3] - 2026-08-31
+
+### Added
+- `CONTRIBUTORS.md` — the readable version of who built what. The history
+  carries six author identities for two people, which makes `git log` a poor
+  place to learn the split: `README.md` credits Matthew Marx, while
+  `.claude-plugin/plugin.json` names Tyler Etters as `author`, and neither file
+  knew about the other. The new file reconciles both against the commit record
+  — Matthew's 34 commits across four identity strings (including the
+  `JOHN JUICESTER` fallback git synthesized from `username@hostname` before
+  `user.name` was ever configured), Tyler's 22 that turned a private operating
+  layer into a distributable plugin, the working relationship between them, and
+  the `Co-Authored-By` trailers naming the models that worked on it.
+
 ## [1.8.2] - 2026-08-31
 
 ### Fixed
