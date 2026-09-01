@@ -7,3 +7,6 @@ build/
 coverage/
 __pycache__/
 *.pyc
+
+# Derived from cadran.html by `dial.py --publish`; regenerate, never commit.
+rouage/cadran-publish.html

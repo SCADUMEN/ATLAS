@@ -38,6 +38,19 @@ from rouage import CONSEIL, STATES, Trace, load_ring, load_routes, route
 
 OUT = Path(__file__).resolve().parent / "cadran.html"
 
+# The publish-shaped twin: the same sheet with no document wrapper, for a host
+# that supplies its own. Derived, never authored, and not committed - it holds
+# no information cadran.html does not, and two blobs that must never disagree
+# are the duplication the rest of this build refuses.
+PUBLISH_OUT = Path(__file__).resolve().parent / "cadran-publish.html"
+
+# What the committed sheet depicts. A generated artifact under version control
+# carries an input recorded nowhere except inside its own output, so any
+# regeneration silently re-chooses its subject and the loss hides inside a diff
+# already expected to be large. Naming it here is the difference between
+# regenerating the sheet and replacing it. See FEEDBACK.md, 2026-08-28.
+SPECIMEN = "run Publish, security check"
+
 # The anatomy table in le-conseil.md, scoped by its header row. Unscoped, the
 # 'Not an hour' table below it also matches and silently reassigns the crown.
 ANATOMY_HEADER = re.compile(r"^\|\s*Part\s*\|\s*Council\s*\|.*$", re.M)
@@ -1213,8 +1226,15 @@ def main() -> None:
         python3 rouage/dial.py "red team this" --arm "Le Fripon"
         python3 rouage/dial.py "argue against this" --verdict "Le Renégat:Archive"
         python3 rouage/dial.py "run Publish" --tier "Le Curateur"
+
+    With no utterance it re-renders SPECIMEN, reproducing the committed sheet
+    rather than replacing it. --publish additionally writes the wrapper-less
+    twin, from the same trace in the same run, so the published page cannot
+    depict a turn the committed sheet does not.
     """
     args = list(sys.argv[1:])
+    publish = "--publish" in args
+    args = [a for a in args if a != "--publish"]
 
     def take(flag: str) -> list[str]:
         out = []
@@ -1229,14 +1249,15 @@ def main() -> None:
     verdicts = [tuple(v.split(":", 1)) for v in take("--verdict") if ":" in v]
     cap = (take("--cap") or [None])[0]
 
-    utterance = " ".join(args) or \
-        "preserve this, map this, security check, argue against this"
+    utterance = " ".join(args) or SPECIMEN
 
     trace = route(load_ring(), utterance, armed,
                   verdicts=verdicts or None,
                   tiered=tiers or None,
                   authorize_cap=int(cap) if cap else None)
     OUT.write_text(render(trace), encoding="utf-8")
+    if publish:
+        PUBLISH_OUT.write_text(render(trace, standalone=False), encoding="utf-8")
 
     d = trace.to_dict()
     lit = [p for p in d["positions"] if p["state"] != "dark"]
@@ -1250,7 +1271,9 @@ def main() -> None:
     print(f"faults  {json.dumps(d['failures'])}")
     print(f"notices {json.dumps(d['notices'], ensure_ascii=False)}")
     print(f"wrote   {OUT}")
-    if sys.platform == "darwin":
+    if publish:
+        print(f"wrote   {PUBLISH_OUT}  (no wrapper, for publishing)")
+    if sys.platform == "darwin" and not publish:
         subprocess.run(["open", str(OUT)], check=False)
 
 
