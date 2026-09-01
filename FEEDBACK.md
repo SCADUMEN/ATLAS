@@ -23,6 +23,34 @@ running record of what the instrument does in practice, not just in spec.
 
 ## Log
 
+### 2026-09-01 — [workspace] The published sheet had drifted, and neither input was recorded
+
+- **Context:** Republishing the Le Cadran artifact from `rouage/cadran.html`.
+  Closes the fix left open by the 2026-08-28 entry below on regenerating a
+  committed generated artifact from the wrong input.
+- **Observation:** Three findings, one cause. (1) The committed sheet still
+  engraved `ATLAS` on the bezel and `LE SAUVEGARDER` on the crown, six commits
+  after `le-conseil.md` reassigned both to `LE SAUVEGARDER` and `DELIBERATELY
+  NO ONE`. The dial parses ownership from doctrine at render time and is
+  correct by construction — but only when it is re-rendered, and nothing had
+  re-rendered or compared it. (2) Regenerating to fix that reproduced the
+  2026-08-28 failure exactly: a bare `dial.py` re-chose the specimen utterance
+  and produced a 26-line diff for a 3-line change. (3) `render()` has carried a
+  `standalone` parameter for the wrapper-less form since it was written, and
+  nothing ever passed it — the published page had been built by hand-stripping
+  the wrapper with `sed`, a step recorded nowhere and repeated from memory.
+- **Relevance to build:** The 2026-08-28 entry named one unrecorded input; there
+  were two, and the second reached further, because it stood between the repo
+  and a surface outside it. A published artifact is the one output no test can
+  see. Fixed: `SPECIMEN` records what the sheet depicts, so a bare `dial.py`
+  reproduces it rather than replacing it; `--publish` writes the wrapper-less
+  twin from the same trace in the same run, so the published page cannot depict
+  a turn the committed sheet does not; and `TheSheetIsReproducible` asserts the
+  sheet still equals what doctrine renders, which is the guard that would have
+  caught (1) on the commit that caused it. The derived file is gitignored — it
+  holds nothing `cadran.html` does not, and two blobs that must never disagree
+  are the duplication `CONFORMANCE.md` exists to police.
+
 ### 2026-08-31 — [workspace] A fourth clone, and two blind spots in "is this tree safe to retire"
 
 - **Context:** The 2026-08-30 untangle collapsed ATLAS to one working tree and

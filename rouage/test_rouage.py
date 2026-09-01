@@ -920,6 +920,67 @@ class ThePanelCoversTheAnatomy(unittest.TestCase):
             self.assertIn(key, anat, f"panel lists {key!r}, doctrine does not")
 
 
+class TheSheetIsReproducible(unittest.TestCase):
+    """The committed sheet and the page that gets published must be one thing.
+
+    Fifth seam of the same failure, and the first where the surface is outside
+    the repository. `cadran.html` is generated and committed; the artifact that
+    is published is that sheet with its document wrapper removed. Both steps had
+    an input recorded nowhere - the utterance lived only inside the output it
+    produced, and the wrapper was stripped by hand at publish time. So the sheet
+    could be regenerated from the wrong turn, and the published page could
+    depict a turn the committed sheet did not, with nothing failing either way.
+    Both inputs are named in dial.py now, and these are the guards on that.
+    """
+
+    def test_the_fragment_is_the_sheet_without_its_wrapper(self):
+        # The fragment path shipped unexercised for its whole life: `standalone`
+        # was never passed, so nothing had ever run the branch the published
+        # page is built from.
+        from dial import render
+        trace = route(load_ring(), "run Publish, security check")
+        standalone, fragment = render(trace), render(trace, standalone=False)
+        stripped = standalone
+        for wrapper in ('<!doctype html>\n',
+                        '<html lang="en"><head><meta charset="utf-8">\n',
+                        '<meta name="viewport" '
+                        'content="width=device-width,initial-scale=1">\n',
+                        '</head>\n<body>', '</body></html>'):
+            self.assertIn(wrapper, stripped,
+                          f"standalone render no longer contains {wrapper!r}; "
+                          "the fragment is stripping something else")
+            stripped = stripped.replace(wrapper, "", 1)
+        self.assertEqual(stripped, fragment,
+                         "the fragment differs from the sheet by more than its "
+                         "wrapper - two renders of one page have diverged")
+
+    def test_the_fragment_carries_no_document_wrapper(self):
+        # A host supplies its own shell, so a stray <body> would nest inside it.
+        from dial import render
+        fragment = render(route(load_ring(), "run Publish"), standalone=False)
+        for tag in ("<!doctype", "<html", "<head>", "<body>", "</body>",
+                    "</html>"):
+            self.assertNotIn(tag, fragment.lower(),
+                             f"fragment still carries {tag!r}")
+        # <header class="masthead"> must survive - it is content, not wrapper.
+        self.assertIn('<header class="masthead">', fragment)
+
+    def test_the_committed_sheet_is_what_the_default_renders(self):
+        # The drift this catches is real and went unnoticed for six commits: the
+        # bezel and the crown were reassigned in le-conseil.md and the sheet
+        # kept engraving the old owners, because nothing re-rendered it and
+        # nothing compared it. Regenerate with `python3 rouage/dial.py` after
+        # any doctrine change; that command now reproduces this file exactly.
+        from dial import OUT, SPECIMEN, render
+        if not OUT.exists():                    # pragma: no cover
+            self.skipTest(f"{OUT} not present")
+        self.assertEqual(
+            OUT.read_text(encoding="utf-8"),
+            render(route(load_ring(), SPECIMEN)),
+            f"{OUT.name} no longer matches what doctrine renders - "
+            "regenerate it with: python3 rouage/dial.py --publish")
+
+
 class InvariantsUnderComposition(unittest.TestCase):
     """Properties that must hold for every combination of inputs.
 
