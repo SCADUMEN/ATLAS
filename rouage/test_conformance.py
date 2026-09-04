@@ -25,7 +25,7 @@ import unittest
 from pathlib import Path
 
 import emit
-from rouage import load_ring, route
+from rouage import load_ring, load_routes, resolve_step, route
 
 HERE = Path(__file__).resolve().parent
 NODE = shutil.which("node")
@@ -150,13 +150,19 @@ class TheTwoTrainsAgree(unittest.TestCase):
         # take_route(). They get a behavioural test instead, below, which is
         # the stronger check anyway.
         src = (HERE / "train.js").read_text(encoding="utf-8")
+        # One further documented exception: le_sas()'s held-note is compared
+        # verbatim against rouage.py's, which happens to write an activation
+        # phrase as doctrine prose ("...did not pass Le Sas") rather than as
+        # gate vocabulary the engine reads to route on. Stripped before the
+        # scan, so it cannot mask an actual stale copy appearing anywhere else.
+        scan_src = src.replace("untiered - did not pass Le Sas", "")
         d = emit.doctrine(self.ring)
         vocabulary = (
             [m["name"] for m in d["members"]]
             + [p for m in d["members"] for p in m["phrases"]]
             + list(d["routes"]) + list(d["precedence"])
         )
-        leaked = sorted({v for v in vocabulary if v.lower() in src.lower()})
+        leaked = sorted({v for v in vocabulary if v.lower() in scan_src.lower()})
         self.assertEqual(leaked, [],
                          f"train.js contains doctrine vocabulary: {leaked}")
 
@@ -371,6 +377,115 @@ class TheTwoTrainsAgreeOnTheBarrelsHalf(unittest.TestCase):
             any(x["reason"].startswith("proposed:") and x["state"] == "active"
                 for x in p["positions"]),
             "no proposal was admitted in the admission case")
+
+
+# --------------------------------------------------------------------------
+# Stage 8 - RELEASE. Le Sas's Tiered condition, the third place the trains
+# can disagree. Until this matrix existed, train.js had no tiering mechanic
+# at all - a browser visitor could never see the escapement hold anyone,
+# unlike the CLI's --tier and the committed sheet's specimen 8.
+# --------------------------------------------------------------------------
+
+def tier_cases(ring):
+    """Every branch of le_sas()/leSas(), as data both engines can be handed.
+
+    The standing witness and the crown are picked by property, matching
+    roles(). The tiered member is read off the Publish route's own sequence
+    rather than written down, so a doctrine rename cannot leave a stale name
+    here either - the same discipline roles() keeps for the barrel matrix.
+    """
+    standing = next(m for m in ring.members if m.standing)
+    crown = next(m for m in ring.members if m.position == "crown")
+    first = resolve_step(ring, load_routes()["Publish"][0])
+
+    def case(name, tiered, utterance="run Publish", armed=None):
+        return dict(name=name, utterance=utterance, armed=armed, tiered=tiered)
+
+    return [
+        case("no tiering supplied - transparent, holds no one", None),
+        case("tiering supplied empty - holds every admitted field operator", []),
+        case(f"only {first.name} tiered - route cut short, others held",
+             [first.name]),
+        case("standing witness is exempt from tiering", [],
+             utterance="a quiet turn with nothing in it"),
+        case("the crown is exempt from tiering", [], utterance="archive first"),
+    ]
+
+
+def js_tier_traces(cases) -> list[dict]:
+    script = f"""
+import {{ route }} from {json.dumps(str(HERE / 'train.js'))};
+const D = {emit.as_json()};
+const cases = {json.dumps(cases, ensure_ascii=False)};
+console.log(JSON.stringify(cases.map((c) => route(D, c.utterance, c.armed, null, {{
+  tiered: c.tiered,
+}}))));
+"""
+    out = subprocess.run([NODE, "--input-type=module", "-e", script],
+                         capture_output=True, text=True, cwd=HERE)
+    if out.returncode:
+        raise AssertionError(out.stderr[:2000])
+    return json.loads(out.stdout)
+
+
+@unittest.skipUnless(NODE, "node not available")
+class TheTwoTrainsAgreeOnLeSas(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.ring = load_ring()
+        cls.cases = tier_cases(cls.ring)
+        cls.js = js_tier_traces(cls.cases)
+
+    def _py(self, c):
+        return route(self.ring, c["utterance"], c["armed"],
+                     tiered=c["tiered"]).to_dict()
+
+    def test_positions_states_and_notes_match(self):
+        for c, j in zip(self.cases, self.js):
+            p = self._py(c)
+            self.assertEqual(
+                [(x["position"], x["state"], x["note"]) for x in p["positions"]],
+                [(x["position"], x["state"], x["note"]) for x in j["positions"]],
+                c["name"])
+
+    def test_the_untiered_fault_reads_identically(self):
+        for c, j in zip(self.cases, self.js):
+            self.assertEqual(self._py(c)["failures"], j["failures"], c["name"])
+
+    def test_route_readings_match(self):
+        # settle_route_end() re-resolves after le_sas() holds someone, so a
+        # divergence here is the split hand landing somewhere the council
+        # never actually stopped.
+        for c, j in zip(self.cases, self.js):
+            p = self._py(c)
+            self.assertEqual(p["route_end"], j["routeEnd"], c["name"])
+            self.assertEqual(p["route_aimed"], j["routeAimed"], c["name"])
+
+    def test_a_tiering_supplied_empty_can_actually_hold_someone(self):
+        # Stated separately, same reason as the barrel matrix's positive
+        # case: two engines can agree perfectly by both holding no one.
+        c = next(c for c in self.cases if "route cut short" in c["name"])
+        p = self._py(c)
+        self.assertTrue(
+            any(x["note"] == "untiered - did not pass Le Sas"
+                for x in p["positions"]),
+            "no one was held as untiered in the positive case")
+
+    def test_the_standing_witness_and_the_crown_are_never_held(self):
+        # The two exemptions le_sas() carries, checked positively - an
+        # "agree" test could pass on both engines wrongly holding the same
+        # exempt member.
+        for label in ("standing witness", "crown"):
+            c = next(c for c in self.cases if label in c["name"])
+            p = self._py(c)
+            self.assertTrue(
+                any(x["state"] == "active" for x in p["positions"]),
+                f"{c['name']}: exemption did not hold in Python")
+            j = self.js[self.cases.index(c)]
+            self.assertTrue(
+                any(x["state"] == "active" for x in j["positions"]),
+                f"{c['name']}: exemption did not hold in JS")
 
 
 if __name__ == "__main__":

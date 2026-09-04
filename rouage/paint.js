@@ -167,9 +167,25 @@ function readout(t) {
 
 const utt = document.getElementById("utt");
 const arm = document.getElementById("arm");
-const run = () => paint(route(D, utt.value, arm.checked ? "Le Fripon" : null));
+const tier = document.getElementById("tier");
+// Comma-separated names, exactly like repeating --tier on the CLI. An empty
+// field is `null` - no tiering supplied - not `[]` - tiering supplied and
+// nothing qualified. Those hold nothing and everything, respectively, and
+// collapsing them would be the page inventing a finding leSas() refuses to.
+const tiered = () => {
+  const v = tier.value.trim();
+  return v ? v.split(",").map((s) => s.trim()).filter(Boolean) : null;
+};
+const run = () => paint(route(D, utt.value, arm.checked ? "Le Fripon" : null,
+                              null, { tiered: tiered() }));
 utt.addEventListener("input", run);
 arm.addEventListener("change", run);
+tier.addEventListener("input", run);
 document.querySelectorAll(".chip").forEach((c) =>
-  c.addEventListener("click", () => { utt.value = c.dataset.eg; run(); utt.focus(); }));
+  c.addEventListener("click", () => {
+    utt.value = c.dataset.eg;
+    tier.value = c.dataset.tier || "";
+    run();
+    utt.focus();
+  }));
 run();

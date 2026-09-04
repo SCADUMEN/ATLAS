@@ -190,13 +190,17 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
   <div class="console">
     <input type="text" id="utt" autocomplete="off" spellcheck="false"
            placeholder="run Publish" aria-label="Utterance">
+    <input type="text" id="tier" autocomplete="off" spellcheck="false"
+           placeholder="tiered: (none)" aria-label="Tiered members">
     <label><input type="checkbox" id="arm"> Arm Le Fripon</label>
   </div>
   <p class="hint">The train matches <b>named invocation only</b>. A route needs
   its verb &#8212; <b>run Publish</b>, not &#8220;publish&#8221;. Describing a
   situation fires nothing: that half of every gate is the barrel's, and the
-  barrel is a person or a model, never this page.</p>
-  <div class="console"><button class="chip" data-eg="run Publish">run Publish</button><button class="chip" data-eg="what happened here">what happened here</button><button class="chip" data-eg="red team my backups">red team my backups</button><button class="chip" data-eg="run Harden">run Harden</button><button class="chip" data-eg="rename this file">rename this file</button><button class="chip" data-eg="run Publish, security check">run Publish, security check</button></div>
+  barrel is a person or a model, never this page. <b>Tiered</b> names who Le
+  Sceptique tiered this turn, comma-separated &#8212; anyone else admitted
+  holds at Le Sas. Empty leaves Le Sas transparent.</p>
+  <div class="console"><button class="chip" data-eg="run Publish">run Publish</button><button class="chip" data-eg="what happened here">what happened here</button><button class="chip" data-eg="red team my backups">red team my backups</button><button class="chip" data-eg="run Harden">run Harden</button><button class="chip" data-eg="rename this file">rename this file</button><button class="chip" data-eg="run Publish, security check">run Publish, security check</button><button class="chip" data-eg="run Publish" data-tier="Le Curateur">run Publish &#183; tier Le Curateur</button></div>
 
   <div class="live">
     <figure><div class="plate"><svg viewBox="0 0 820 762" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif">
@@ -623,6 +627,34 @@ function settleRouteEnd(trace, cands) {
   trace.routeEnd = null;
 }
 
+// Stage 8 - RELEASE. The escapement's Tiered condition: assigning a tier is
+// a person's job, not the train's; checking one exists is, exactly like a
+// proposal's citation or a verdict.
+//
+// `tiered` names the members whose output has been tiered. Anything admitted
+// and absent from that list is held: "untiered material does not pass."
+//
+// `null` means no tiering was supplied and the train cannot know, so it holds
+// nothing and claims nothing. An empty array means tiering was supplied and
+// nothing qualified, which holds everything admitted. Treating "not told" as
+// either of those would be the train inventing a finding.
+function leSas(trace, cands, tiered) {
+  if (tiered === null || tiered === undefined) return;
+  const ok = new Set(tiered.map(fold));
+  for (const c of cands) {
+    if (c.state !== "active" || c.m.standing || c.m.position === "crown") continue;
+    if (!ok.has(fold(c.m.name))) {
+      c.state = "held";
+      c.note = "untiered - did not pass Le Sas";
+    }
+  }
+  const untiered = cands.filter((c) => c.note === "untiered - did not pass Le Sas");
+  if (untiered.length) {
+    trace.failures.push(
+      `untiered: ${untiered.length} admitted member(s) carried no tier and were held`);
+  }
+}
+
 // Python's repr(), for the failure strings. The two engines are compared field
 // by field, so a rejection reported here must read exactly as rouage.py writes
 // it - including the quoting, which Python chooses by content.
@@ -756,6 +788,7 @@ function route(D, utterance, armed = null, capAuthorized = null, opts = {}) {
   trace.stages.push("METER");
   cands = meter(D, cands, trace);
   trace.stages.push("LOAD", "COLLECT->barrel", "TIER->01");
+  leSas(trace, cands, opts.tiered === undefined ? null : opts.tiered);
   settleRouteEnd(trace, cands);
   trace.stages.push("RELEASE->sas", "DISTRIBUTE", "RECORD->crown");
 
@@ -937,11 +970,27 @@ function readout(t) {
 
 const utt = document.getElementById("utt");
 const arm = document.getElementById("arm");
-const run = () => paint(route(D, utt.value, arm.checked ? "Le Fripon" : null));
+const tier = document.getElementById("tier");
+// Comma-separated names, exactly like repeating --tier on the CLI. An empty
+// field is `null` - no tiering supplied - not `[]` - tiering supplied and
+// nothing qualified. Those hold nothing and everything, respectively, and
+// collapsing them would be the page inventing a finding leSas() refuses to.
+const tiered = () => {
+  const v = tier.value.trim();
+  return v ? v.split(",").map((s) => s.trim()).filter(Boolean) : null;
+};
+const run = () => paint(route(D, utt.value, arm.checked ? "Le Fripon" : null,
+                              null, { tiered: tiered() }));
 utt.addEventListener("input", run);
 arm.addEventListener("change", run);
+tier.addEventListener("input", run);
 document.querySelectorAll(".chip").forEach((c) =>
-  c.addEventListener("click", () => { utt.value = c.dataset.eg; run(); utt.focus(); }));
+  c.addEventListener("click", () => {
+    utt.value = c.dataset.eg;
+    tier.value = c.dataset.tier || "";
+    run();
+    utt.focus();
+  }));
 run();
 
 </script>

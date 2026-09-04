@@ -30,8 +30,9 @@ from pathlib import Path
 
 import emit
 from rouage import load_ring, route
-from test_conformance import (ARMED, UTTERANCES, js_proposal_traces, js_traces,
-                              proposal_cases, roles, verifier_for)
+from test_conformance import (ARMED, UTTERANCES, js_proposal_traces,
+                              js_tier_traces, js_traces, proposal_cases,
+                              roles, tier_cases, verifier_for)
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
@@ -122,6 +123,30 @@ def barrel_half(ring):
     return cases, rows, disagreements
 
 
+def tier_half(ring):
+    """Every branch of the escapement's Tiered condition, both engines."""
+    cases = tier_cases(ring)
+    js = js_tier_traces(cases)
+    rows, disagreements = [], []
+    for c, j in zip(cases, js):
+        p = route(ring, c["utterance"], c["armed"], tiered=c["tiered"]).to_dict()
+        same = (
+            [(x["position"], x["state"], x["note"]) for x in p["positions"]]
+            == [(x["position"], x["state"], x["note"]) for x in j["positions"]]
+            and p["failures"] == j["failures"]
+        )
+        if not same:
+            disagreements.append(c["name"])
+        held = [x for x in p["positions"]
+                if x["note"] == "untiered - did not pass Le Sas"]
+        outcome = f"{len(held)} held untiered" if held else "no one held"
+        detail = p["failures"][0] if p["failures"] else "—"
+        if len(detail) > 96:
+            detail = detail[:93] + "..."
+        rows.append((c["name"], outcome, detail, "agree" if same else "DIVERGE"))
+    return cases, rows, disagreements
+
+
 def render() -> str:
     if not shutil.which("node"):
         raise SystemExit(
@@ -131,6 +156,7 @@ def render() -> str:
     ring = load_ring()
     lit_cases, lit_bad = literal_half(ring)
     bar_cases, rows, bar_bad = barrel_half(ring)
+    tier_cases_, tier_rows, tier_bad = tier_half(ring)
     sealed, prohibited, plain = roles(ring)
 
     node_version = subprocess.run(["node", "--version"], capture_output=True,
@@ -246,6 +272,36 @@ def render() -> str:
         "directly. And because two engines can agree perfectly by both doing "
         "nothing, `test_a_proposal_can_actually_convene_someone` checks the "
         "positive case on its own.")
+    add("")
+    add("## The escapement's Tiered condition — stage 8, RELEASE")
+    add("")
+    add("The first of the escapement's four admission conditions. Checking "
+        "that a tier exists is the train's; assigning one is a person's job "
+        "and stays outside it — the same split as a proposal's citation. "
+        "`tiered` names which admitted members carried one; anything "
+        "admitted and absent from that list holds. `None` (no tiering "
+        "supplied) is not the same as an empty list (tiering supplied, "
+        "nothing qualified) — the first is transparent, the second holds "
+        "everyone admitted.")
+    add("")
+    add("Until this record existed, `train.js` had no tiering mechanic at "
+        "all: a browser visitor could never see this condition hold anyone, "
+        "unlike the CLI's `--tier` and the committed sheet's own specimen. "
+        "The standing witness and the crown are exempt for the reasons the "
+        "Python implementation gives — holding either would make an "
+        "incomplete tiering block the very things that must never wait on "
+        "it.")
+    add("")
+    add("| Case | Outcome | Detail | Engines |")
+    add("|---|---|---|---|")
+    for name, outcome, detail, verdict in tier_rows:
+        add(f"| {name} | {outcome} | {detail} | {verdict} |")
+    add("")
+    if tier_bad:
+        add("**DIVERGENCE:** " + "; ".join(tier_bad))
+    else:
+        add(f"**All {len(tier_cases_)} agree** — positions, states, notes "
+            "and the untiered fault string.")
     add("")
     add("## What this does not claim")
     add("")

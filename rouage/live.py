@@ -62,6 +62,8 @@ def page() -> str:
                 "run Harden", "rename this file", "run Publish, security check"]
     chips = "".join(f'<button class="chip" data-eg="{e}">{e}</button>'
                     for e in examples)
+    chips += ('<button class="chip" data-eg="run Publish" '
+              'data-tier="Le Curateur">run Publish &#183; tier Le Curateur</button>')
 
     return f"""<title>Le Cadran &#183; Live</title>
 <style>{CSS}{APP_CSS}</style>
@@ -78,12 +80,16 @@ def page() -> str:
   <div class="console">
     <input type="text" id="utt" autocomplete="off" spellcheck="false"
            placeholder="run Publish" aria-label="Utterance">
+    <input type="text" id="tier" autocomplete="off" spellcheck="false"
+           placeholder="tiered: (none)" aria-label="Tiered members">
     <label><input type="checkbox" id="arm"> Arm Le Fripon</label>
   </div>
   <p class="hint">The train matches <b>named invocation only</b>. A route needs
   its verb &#8212; <b>run Publish</b>, not &#8220;publish&#8221;. Describing a
   situation fires nothing: that half of every gate is the barrel's, and the
-  barrel is a person or a model, never this page.</p>
+  barrel is a person or a model, never this page. <b>Tiered</b> names who Le
+  Sceptique tiered this turn, comma-separated &#8212; anyone else admitted
+  holds at Le Sas. Empty leaves Le Sas transparent.</p>
   <div class="console">{chips}</div>
 
   <div class="live">

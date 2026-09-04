@@ -129,6 +129,34 @@ function settleRouteEnd(trace, cands) {
   trace.routeEnd = null;
 }
 
+// Stage 8 - RELEASE. The escapement's Tiered condition: assigning a tier is
+// a person's job, not the train's; checking one exists is, exactly like a
+// proposal's citation or a verdict.
+//
+// `tiered` names the members whose output has been tiered. Anything admitted
+// and absent from that list is held: "untiered material does not pass."
+//
+// `null` means no tiering was supplied and the train cannot know, so it holds
+// nothing and claims nothing. An empty array means tiering was supplied and
+// nothing qualified, which holds everything admitted. Treating "not told" as
+// either of those would be the train inventing a finding.
+function leSas(trace, cands, tiered) {
+  if (tiered === null || tiered === undefined) return;
+  const ok = new Set(tiered.map(fold));
+  for (const c of cands) {
+    if (c.state !== "active" || c.m.standing || c.m.position === "crown") continue;
+    if (!ok.has(fold(c.m.name))) {
+      c.state = "held";
+      c.note = "untiered - did not pass Le Sas";
+    }
+  }
+  const untiered = cands.filter((c) => c.note === "untiered - did not pass Le Sas");
+  if (untiered.length) {
+    trace.failures.push(
+      `untiered: ${untiered.length} admitted member(s) carried no tier and were held`);
+  }
+}
+
 // Python's repr(), for the failure strings. The two engines are compared field
 // by field, so a rejection reported here must read exactly as rouage.py writes
 // it - including the quoting, which Python chooses by content.
@@ -262,6 +290,7 @@ export function route(D, utterance, armed = null, capAuthorized = null, opts = {
   trace.stages.push("METER");
   cands = meter(D, cands, trace);
   trace.stages.push("LOAD", "COLLECT->barrel", "TIER->01");
+  leSas(trace, cands, opts.tiered === undefined ? null : opts.tiered);
   settleRouteEnd(trace, cands);
   trace.stages.push("RELEASE->sas", "DISTRIBUTE", "RECORD->crown");
 
