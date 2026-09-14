@@ -167,7 +167,10 @@ def main(argv):
 
     if "--oneline" in argv:
         if prestige:
-            line = f"ATLAS — Grand Complication +{prestige} ({xp} XP)"
+            # The Level stays in the banner past the line. The Arrival rite fills
+            # "Level <N>" from this line, and prestige only happens at Level 100,
+            # so dropping it left the rite with no number to read.
+            line = f"ATLAS — Level {level} · Grand Complication +{prestige} ({xp}/{xp100} XP)"
         else:
             # Level 100 is printed here, not skipped: crossing XP100 without a
             # module wholly past it is design-complete, not prestige. The XP

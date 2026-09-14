@@ -114,6 +114,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | le-rouage-complete | Le Rouage completed (barrel wired) | system | S | built | rouage/CONFORMANCE.md |
 | le-boitier-built | Le Boîtier — physical instrument | system | S | planned | hardware/le-boitier-build.md |
 | barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | built | adapters/barillet/README.md |
+| archive-verification | Archive verification in practice | knowledge | B | built | modules/archive-verification.md |
 
 ---
 
@@ -174,7 +175,8 @@ XP required, by level:
 | 95 | 11,733 | the ledger integrity guard — built |
 | 97 | 12,239 | + the barrel adapter (A) — built |
 | 100 | 13,000 | design-complete instrument |
-| — | 13,400 | current build — Le Rouage completed (S) — built |
+| — | 13,400 | Le Rouage completed (S) — built |
+| — | 13,650 | current build — archive verification (B) — Grand Complication +1 |
 
 To level ATLAS: build a module, list it in the ledger as `built` with a real path, and rerun `level/level.py`. Core-system work (finishing Le Rouage, building the case) and knowledge modules both count. That is the whole loop — preserve, build, score, preserve.
 

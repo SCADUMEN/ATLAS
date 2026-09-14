@@ -187,6 +187,13 @@ class Prestige(unittest.TestCase):
         self.assertIn("Grand Complication +2", line)
         self.assertEqual(int(re.search(r"\((\d+)", line).group(1)), 13500)
 
+    def test_prestige_banner_keeps_the_level(self):
+        # The Arrival rite reads "Level <N>" out of this banner. Past the line
+        # the level is 100 by definition, and it must still be printed.
+        line = self.banner(self.mods(*([1000] * 13), 250))
+        self.assertIn("Level 100 · Grand Complication +1", line)
+        self.assertIn("(13250/13000 XP)", line)
+
     def test_live_ledger_agrees_with_the_readout(self):
         r = g.compute()
         self.assertEqual(r["prestige"], g.prestige_for(r["counted"], r["xp100"]))
