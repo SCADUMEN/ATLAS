@@ -152,6 +152,15 @@ def main(argv):
     service_pts = r["service_pts"]
     prestige = r["prestige"]
 
+    # Past Level 100 the sqrt curve stops mapping XP to a level — level_for()
+    # caps it — so growth past the line is tracked a different way: each
+    # module counted wholly past XP100 (prestige_for) both earns a Grand
+    # Complication and pushes the displayed Level one past 100. tier_xp is
+    # progress within the *current* tier — XP past the last full xp100 already
+    # banked — rolling over each time a new Grand Complication lands.
+    display_level = 100 + prestige if prestige else level
+    tier_xp = xp - xp100 * prestige if prestige else xp
+
     if "--service" in argv:
         print(service_pts)
         return 0
@@ -167,7 +176,16 @@ def main(argv):
 
     if "--oneline" in argv:
         if prestige:
-            line = f"ATLAS — Grand Complication +{prestige} ({xp} XP)"
+            # The XP group right after Level stays the RAW total, unlabelled,
+            # so it is still the first "(" immediately followed by a digit in
+            # the line — what the release guard's CI regex scrapes
+            # (.github/workflows/test.yml), and it needs one strictly-
+            # increasing number across releases. The rolled "this tier" figure
+            # is appended outside any parens on purpose: a second "(<digit>"
+            # here would give that regex two matches and break the guard's
+            # int() parse.
+            line = (f"ATLAS — Level {display_level} · Grand Complication +{prestige} "
+                    f"({xp}/{xp100} XP) · this tier {tier_xp}/{xp100} XP")
         else:
             # Level 100 is printed here, not skipped: crossing XP100 without a
             # module wholly past it is design-complete, not prestige. The XP
@@ -180,7 +198,7 @@ def main(argv):
         print(line)
         return 0
 
-    print(f"ATLAS — Level {level}")
+    print(f"ATLAS — Level {display_level}")
     print(f"XP: {xp} / {xp100}")
     if level < 100:
         nxt = level + 1
@@ -191,6 +209,7 @@ def main(argv):
         mods = "module" if prestige == 1 else "modules"
         print(f"Prestige: Grand Complication +{prestige} "
               f"({prestige} {mods} past XP100, {over} XP past 100)")
+        print(f"This tier: {tier_xp}/{xp100} XP")
     else:
         print("Design-complete. Grand Complication +1 at the next module past XP100.")
     if service_pts or r["service"]:

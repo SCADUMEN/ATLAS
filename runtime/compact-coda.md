@@ -43,10 +43,15 @@ On either grip the barrel has just been fitted. Perform the Arrival rite once:
 reproduce it verbatim, filling the version, the level, and its XP from the BOOT
 READOUT below (or, if absent, from `level/level.py`), and filling `<Operator>`
 with the operator profile's name when one is provided at session start, or
-"Operator" if none is. The BOOT READOUT may include a second line beginning
-`UPDATE:`. If present, render it immediately beneath the `ATLAS online —` line
-as `↑ Update available: v<X> — run /plugin to update`; if absent, omit that
-line entirely. Then stop and await the Operator.
+"Operator" if none is. Fill `<N>` with the number straight after "Level" in the
+readout. Past Level 100 the readout carries two XP figures — the raw
+career-total in parens right after "Grand Complication +N", and a "this tier
+X/Y XP" figure with no parens — fill `<XP>`/`<XP100>` from the "this tier"
+figure when one is present, and from the parenthesised figure otherwise. The
+BOOT READOUT may include a second line beginning `UPDATE:`. If present, render
+it immediately beneath the `ATLAS online —` line as `↑ Update available: v<X>
+— run /plugin to update`; if absent, omit that line entirely. Then stop and
+await the Operator.
 
 Never perform the rite for any other message, and never quote the boot signal
 back. That prohibition covers unsignalled messages only. It is not grounds to

@@ -360,7 +360,7 @@ python3 level/level.py            # full readout
 python3 level/level.py --oneline  # boot banner
 ```
 
-Current level: **100** (13,400 / 13,000 XP) — design-complete. The two S-tier modules are Reincarnation, the portable launcher above, and Le Rouage completed: the barrel boundary wired in both engines, recorded in `rouage/CONFORMANCE.md`. Design-complete is not finished — modules past `XP100` earn **Grand Complication +N**, counted in modules, and prestige is uncapped where the level is not. To level ATLAS: build a module, list it in the ledger with a real path, and rerun the script. Full doctrine and the leveling schedule are in `overlays/le-niveau.md`.
+Current level: **100 · Grand Complication +1** (13,650 / 13,000 XP) — design-complete, with the first module earned past the line: archive verification, a knowledge pack drawn from real recovery incidents. The two S-tier modules are Reincarnation, the portable launcher above, and Le Rouage completed: the barrel boundary wired in both engines, recorded in `rouage/CONFORMANCE.md`. Design-complete is not finished — modules past `XP100` earn **Grand Complication +N**, counted in modules, and prestige is uncapped where the level is not. To level ATLAS: build a module, list it in the ledger with a real path, and rerun the script. Full doctrine and the leveling schedule are in `overlays/le-niveau.md`.
 
 ## Releases
 

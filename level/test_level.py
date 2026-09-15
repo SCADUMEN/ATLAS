@@ -187,6 +187,24 @@ class Prestige(unittest.TestCase):
         self.assertIn("Grand Complication +2", line)
         self.assertEqual(int(re.search(r"\((\d+)", line).group(1)), 13500)
 
+    def test_prestige_banner_rolls_the_level_and_tier_xp(self):
+        # The Arrival rite reads "Level <N>" out of this banner. Past the line
+        # the displayed Level is 100 + prestige, and the raw XP total stays in
+        # the parenthesised group (CI needs it); the rolled tier progress is
+        # appended outside any parens.
+        line = self.banner(self.mods(*([1000] * 13), 250))
+        self.assertIn("Level 101 · Grand Complication +1", line)
+        self.assertIn("(13250/13000 XP)", line)
+        self.assertIn("this tier 250/13000 XP", line)
+
+    def test_oneline_has_exactly_one_ci_scrapable_number(self):
+        # .github/workflows/test.yml scrapes base XP with grep -oE '\(([0-9]+)'
+        # and feeds every matched line to int(). A second "(<digit>" match —
+        # e.g. from the rolled tier figure — would give it two lines and break
+        # that parse, so this must never happen once prestige is nonzero.
+        line = self.banner(self.mods(*([1000] * 13), 250))
+        self.assertEqual(len(re.findall(r"\((\d+)", line)), 1)
+
     def test_live_ledger_agrees_with_the_readout(self):
         r = g.compute()
         self.assertEqual(r["prestige"], g.prestige_for(r["counted"], r["xp100"]))

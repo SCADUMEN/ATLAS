@@ -8,6 +8,35 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-14
+
+### Added
+- **`modules/archive-verification.md`** — a knowledge module for Le Sauvegarder,
+  drawn entirely from verification failures that actually happened, not from
+  general advice. Size and mtime passed 1.72 MiB of zero-fill as in sync; a
+  sidecar parser that tripped on CRLF and spaces would have reported a good
+  archive as missing; `cp -i`/`rm -i` aliases and LibreSSL's digest format each
+  reported success while doing the wrong thing; mounting an ext4 recovery
+  source would have replayed its journal onto it; and device nodes, UUIDs and
+  model names each failed as identifiers. Each section states the incident,
+  then what the next pass carries forward. Specific volume names, UUIDs and
+  paths are left out, since the repository is public.
+
+### Fixed
+- **The prestige banner dropped the Level.** Once a module landed past `XP100`,
+  `--oneline` printed `ATLAS — Grand Complication +N (xp XP)` with no `Level`
+  in it. The Arrival rite fills `Level <N>` from that line, so the first
+  module ever earned past the line would have left the rite with nothing to
+  read. This was unreachable until this release, and `runtime/test_runtime.py`
+  caught it the moment the ledger crossed. The banner now reads
+  `Level 100 · Grand Complication +N (xp/XP100 XP)`, with the XP still the
+  first parenthesised integer that `test.yml` scrapes. No service row: as in
+  1.8.4, `level/level.py` is not a module in the ledger.
+
+### Changed
+- Ledger gains `archive-verification` (B, built). **First module past
+  `XP100`: Level 100 → Level 100 · Grand Complication +1** (13,400 → 13,650 XP).
+
 ## [1.9.0] - 2026-08-31
 
 ### Added
