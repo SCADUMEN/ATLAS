@@ -8,6 +8,21 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-09-16
+
+### Added
+- **`hardware/le-bati.md`** — the rack. `hardware/le-boitier.md` ends by saying
+  the case does not run the council and the barrel lives on a host machine
+  elsewhere; this specifies elsewhere. The informal 10" mini-rack standard
+  (1U at 44.45 mm, rails at 236.525 mm, ~210 mm design width), what fits at
+  what cost in U for 1L mini PCs, SBCs, mini-ITX and disks, and the four
+  things a printer must not make. Depth is named as the real constraint —
+  a 183 mm mini PC in a ~200 mm cabinet fits until the power lead goes in.
+  PLA is ruled out on service temperature: it does not snap, it creeps, and
+  a shelf that sags a millimetre a month never prompts an inspection. Every
+  cabinet-specific figure is marked for verification by caliper, with one
+  1U blank panel as the cheap part that validates the rest.
+
 ## [1.10.0] - 2026-09-14
 
 ### Added

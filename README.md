@@ -24,6 +24,7 @@ Council:
 - `rouage/` - the train in code. Python, stdlib only, 24 tests.
 - `overlays/le-protocol-de-trois.md` - Le Protocole des Trois Témoins, the three-witness judgment protocol.
 - `hardware/le-boitier.md` - the case. Enclosure and control specification for the physical instrument.
+- `hardware/le-bati.md` - the rack. The 10" mini-rack frame the host machines live in: what fits, what to print, and what a printer must not make.
 - `subroutines/` - twelve operating modes, one file each.
 
 Overlays and templates:
