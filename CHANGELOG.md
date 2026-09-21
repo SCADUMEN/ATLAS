@@ -8,6 +8,75 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-09-21
+
+### Added
+- **`site/build.py`, `site/verify.py`** — the documentation site is now built
+  as HTML. `deploy-pages.yml` staged the Markdown sources verbatim next to a
+  `.nojekyll` marker, so GitHub Pages served every document as
+  `text/markdown` — confirmed live, `README.md` returned
+  `Content-Type: text/markdown; charset=utf-8`. Search engines do not index
+  that type. The only indexable page on the site was the workflow's inline
+  `index.html`, 1,090 bytes and roughly sixty words; the other 18 KB of
+  README and fourteen further documents were invisible. `robots.txt` and
+  `sitemap.xml` both returned 404. Each published source now renders to a
+  real page carrying a title, meta description, canonical URL, Open Graph
+  tags and JSON-LD, and the build emits the sitemap and robots.txt with it.
+  `verify.py` checks the artifact afterwards and fails the deploy on a
+  sitemap URL with no page behind it, a noindex page listed for indexing, or
+  a page missing its title, description or canonical.
+- **Site-wide navigation, emitted into every page.** The published sources
+  contain no hyperlinks at all — every `.md` reference in them sits inside
+  backticks and renders as `<code>`. Ten of the fifteen documents were
+  therefore reachable only by guessing a URL. Each page now carries the full
+  index, putting every document one hop from every other.
+- **`site/test_build.py`** — 18 tests over the crawler contract: the index
+  policy, sitemap and `noindex` agreement, description length, and the
+  navigation link graph. Runs on the stdlib-only test surface; `build.py`
+  imports `markdown` lazily so the Pages build dependency stays in the Pages
+  job.
+
+### Changed
+- **The index policy is explicit and tested.** `profiles/matthew.md` and
+  `rapport/AGENTS.md` are served exactly as before — same URLs, still linked
+  from every page — but carry `noindex, follow` and are withheld from the
+  sitemap. A personal collaboration profile naming a real person, and the
+  voice-and-cadence layer, are public material; neither is reference anyone
+  is searching for. `test_personal_material_is_not_indexed` pins the pair so
+  the call cannot regress unnoticed.
+- **`deploy-pages.yml`** takes its base URL from `actions/configure-pages`
+  rather than a hardcoded host, checks out full history so sitemap
+  `<lastmod>` can come from each file's last commit rather than the runner's
+  clock, and reads an optional `GOOGLE_SITE_VERIFICATION` repository
+  variable to emit the Search Console meta tag.
+- **Legacy raw-Markdown paths are still served.** Before this change the
+  workflow copied the sources verbatim, so `/ATLAS/README.md` and its
+  siblings were the only addresses the site ever had. They are still
+  published at those paths, so nothing that links to them breaks, but
+  `robots.txt` now carries `Disallow: /*.md$` and every rendered page
+  declares itself canonical — the HTML is the only copy a crawler fetches.
+- Ledger gains `doc-site` (system, B, built). **Second module past `XP100`:
+  Level 101 · Grand Complication +1 → Level 102 · Grand Complication +2**
+  (13,650 → 13,900 XP).
+
+### Fixed
+- **The prestige banner printed a negative tier figure at `+2`.** `tier_xp`
+  in `level/level.py` was `xp - xp100 * prestige`, left over from when
+  prestige was `round((xp - xp100) / 1000)` and each Grand Complication stood
+  for a banked block of XP. Prestige has counted *modules* wholly past the
+  line since 1.10.0, and a module is worth 50–1000 XP rather than `xp100`, so
+  multiplying `xp100` by a module count subtracts XP that was never earned.
+  At `+1` both forms agree — `1 * xp100 == xp100` — which is exactly why it
+  survived: the ledger had never reached `+2`. Adding `doc-site` took it
+  there, and `--oneline` printed
+  `Level 102 · Grand Complication +2 (13900/13000 XP) · this tier -12100/13000 XP`.
+  The rule is now `xp - xp100`: progress past design-complete. Same class of
+  latent defect as 1.10.0's dropped Level — a banner branch that only the
+  first ledger to reach it can expose. Two regression tests cover it: one
+  pinning the `+2` banner, one sweeping `+1` through `+11` for a
+  non-negative tier figure. Both fail against the old rule.
+
+
 ## [1.10.0] - 2026-09-14
 
 ### Added
