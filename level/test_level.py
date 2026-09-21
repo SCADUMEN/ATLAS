@@ -197,6 +197,27 @@ class Prestige(unittest.TestCase):
         self.assertIn("(13250/13000 XP)", line)
         self.assertIn("this tier 250/13000 XP", line)
 
+    def test_tier_xp_stays_positive_past_the_second_complication(self):
+        # The +1 case above passes under either form of the tier_xp rule,
+        # because 1 * xp100 == xp100. +2 is the first case that separates
+        # them. The old rule (xp - xp100 * prestige) treated each Grand
+        # Complication as a banked xp100, but prestige counts MODULES past
+        # the line and a module is worth 50-1000 XP -- so at +2 it subtracted
+        # 26,000 from 13,900 and printed `this tier -12100/13000 XP`.
+        line = self.banner(self.mods(*([1000] * 13), 250, 650))
+        self.assertIn("Level 102 · Grand Complication +2", line)
+        self.assertIn("(13900/13000 XP)", line)
+        self.assertIn("this tier 900/13000 XP", line)
+
+    def test_tier_xp_is_never_negative_at_any_prestige(self):
+        # Sweep well past the line: no reachable ledger should print a
+        # negative tier figure at any Grand Complication count.
+        for extra in range(1, 12):
+            c = self.mods(*([1000] * 13), *([250] * extra))
+            line = self.banner(c)
+            tier = int(re.search(r"this tier (-?\d+)/", line).group(1))
+            self.assertGreaterEqual(tier, 0, f"negative tier at +{extra}: {line}")
+
     def test_oneline_has_exactly_one_ci_scrapable_number(self):
         # .github/workflows/test.yml scrapes base XP with grep -oE '\(([0-9]+)'
         # and feeds every matched line to int(). A second "(<digit>" match —

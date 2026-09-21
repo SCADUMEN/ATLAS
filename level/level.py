@@ -156,10 +156,18 @@ def main(argv):
     # caps it — so growth past the line is tracked a different way: each
     # module counted wholly past XP100 (prestige_for) both earns a Grand
     # Complication and pushes the displayed Level one past 100. tier_xp is
-    # progress within the *current* tier — XP past the last full xp100 already
-    # banked — rolling over each time a new Grand Complication lands.
+    # progress past design-complete: the XP earned beyond xp100.
+    #
+    # It is NOT `xp - xp100 * prestige`. That was the old model, from when
+    # prestige was round((xp - xp100) / 1000) and each Grand Complication
+    # really did stand for a banked block of XP. prestige now counts *modules*
+    # wholly past the line, and a module is worth 50-1000 XP, not xp100, so
+    # multiplying xp100 by a module count subtracts XP that was never earned.
+    # At +1 the two forms agree by coincidence (1 * xp100 == xp100), which is
+    # why this survived: the ledger had never reached +2. The first time it
+    # did, the banner printed `this tier -12100/13000 XP`.
     display_level = 100 + prestige if prestige else level
-    tier_xp = xp - xp100 * prestige if prestige else xp
+    tier_xp = xp - xp100 if prestige else xp
 
     if "--service" in argv:
         print(service_pts)

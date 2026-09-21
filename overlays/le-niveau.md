@@ -115,6 +115,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | le-boitier-built | Le Boîtier — physical instrument | system | S | planned | hardware/le-boitier-build.md |
 | barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | built | adapters/barillet/README.md |
 | archive-verification | Archive verification in practice | knowledge | B | built | modules/archive-verification.md |
+| doc-site | Indexable documentation site — build, verify, crawler contract | system | B | built | site/build.py |
 
 ---
 
@@ -176,7 +177,8 @@ XP required, by level:
 | 97 | 12,239 | + the barrel adapter (A) — built |
 | 100 | 13,000 | design-complete instrument |
 | — | 13,400 | Le Rouage completed (S) — built |
-| — | 13,650 | current build — archive verification (B) — Grand Complication +1 |
+| — | 13,650 | archive verification (B) — Grand Complication +1 |
+| — | 13,900 | current build — the indexable documentation site (B) — Grand Complication +2 |
 
 To level ATLAS: build a module, list it in the ledger as `built` with a real path, and rerun `level/level.py`. Core-system work (finishing Le Rouage, building the case) and knowledge modules both count. That is the whole loop — preserve, build, score, preserve.
 

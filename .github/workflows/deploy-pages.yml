@@ -22,50 +22,55 @@ jobs:
 
     steps:
       - name: Checkout
+        # site/build.py reads each published file's last commit date with
+        # `git log -1` to fill sitemap <lastmod>, so the history must be
+        # present. A shallow checkout would silently fall back to file mtime,
+        # which on a fresh runner is the checkout time — every page would
+        # claim it changed today, on every deploy.
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Stage documentation site
-        run: |
-          mkdir -p _site
-          cp README.md AGENTS.md ATLAS.md _site/
-          cp -R overlays profiles rapport templates _site/
-          cat > _site/index.html <<'HTML'
-          <!doctype html>
-          <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>ATLAS</title>
-            <meta name="description" content="Reusable ATLAS operating instructions and templates.">
-          </head>
-          <body>
-            <main>
-              <h1>ATLAS</h1>
-              <p>Reusable operating instructions and templates for technical recovery, archive work, project planning, and calm execution.</p>
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-              <h2>Core</h2>
-              <ul>
-                <li><a href="README.md">README</a></li>
-                <li><a href="AGENTS.md">Repository instructions</a></li>
-                <li><a href="ATLAS.md">Core operating layer</a></li>
-                <li><a href="rapport/AGENTS.md">Rapport layer</a></li>
-              </ul>
-
-              <h2>Reusable Material</h2>
-              <ul>
-                <li><a href="overlays/forgotten-industries.md">Forgotten Industries overlay</a></li>
-                <li><a href="profiles/matthew.md">Matthew profile</a></li>
-                <li><a href="templates/repo-AGENTS.md">Repository AGENTS template</a></li>
-                <li><a href="templates/project-overlay.md">Project overlay template</a></li>
-              </ul>
-            </main>
-          </body>
-          </html>
-          HTML
-          touch _site/.nojekyll
+      - name: Install build dependencies
+        # Pinned, and scoped to this job only. The test surface stays
+        # stdlib-only: build.py imports markdown lazily so site/test_build.py
+        # runs without it.
+        run: python3 -m pip install --disable-pip-version-check 'markdown==3.7'
 
       - name: Configure Pages
+        # Runs before the build so the canonical URLs, sitemap and robots.txt
+        # are written against the real deployment origin rather than a
+        # hardcoded guess.
+        id: pages
         uses: actions/configure-pages@v5
+
+      - name: Build site
+        env:
+          # A Search Console verification token is public by design — it ships
+          # in the page source — so a repository variable is the right home
+          # for it. Unset is fine; the meta tag is simply omitted.
+          GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
+        run: |
+          python3 site/build.py \
+            --out _site \
+            --base-url "${{ steps.pages.outputs.base_url }}" \
+            --repo-url "${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Verify crawler contract
+        # Checks the built artifact, not the generator (site/test_build.py
+        # covers that). Fails the deploy rather than shipping a site Google
+        # cannot read: a sitemap URL with no page behind it, a noindex page
+        # listed for indexing, or a page missing its title, description or
+        # canonical.
+        run: |
+          python3 site/verify.py \
+            --out _site \
+            --base-url "${{ steps.pages.outputs.base_url }}"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -36,6 +36,12 @@ jobs:
       - name: Le Niveau
         run: python3 -m unittest discover level -v
 
+      - name: Documentation site
+        # The crawler contract: index policy, sitemap/noindex agreement, and
+        # the navigation link graph. Runs on stdlib Python — build.py imports
+        # markdown lazily, so the Pages build dependency is not needed here.
+        run: python3 -m unittest discover site -v
+
       - name: Diagnostic pulse
         # Verifies determinism, doctrine stripping, and that the three
         # generated surfaces still match their sources. A generated file that
