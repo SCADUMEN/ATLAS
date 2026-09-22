@@ -23,6 +23,80 @@ running record of what the instrument does in practice, not just in spec.
 
 ## Log
 
+### 2026-09-15 — [behavior] Operator flagged Arrival panel misalignment; text checked out byte-exact
+
+- **Context:** `/atlas` fired the Arrival rite normally. Operator's next
+  message: "we broke the arrival rite ascii alignment."
+- **Observation:** Diffed the rendered panel against `runtime/compact-coda.md`
+  lines 66–89 codepoint-by-codepoint. Every row in the source is exactly 64
+  codepoints; the rendered output matched the source line-for-line with no
+  divergence. The text was not corrupted — this is not a repeat of the
+  2026-08-28 "dropped panel" or 2026-08-27 "re-fires" failure modes. The most
+  likely cause is outside the text entirely: `┌─│└` (box-drawing) and
+  `█▓▒░` (block-shade) are Unicode East-Asian-Width "Ambiguous" characters,
+  and some terminal/font combinations render them one column wider than the
+  ASCII characters sharing the same row, which would visually stagger the
+  right border even though the underlying string is aligned.
+- **Relevance to build:** The 2026-08-28 entry's proposed durable fix —
+  "emit the masthead from outside the model" — was never built (no `bin/`
+  helper or hook prints the panel; confirmed by listing `bin/` and `hooks/`).
+  That fix targets model-fidelity drift, which is not what happened here. If
+  ambiguous-width rendering is the real cause, the fix is different: either
+  swap the ambiguous glyphs for unambiguous-width equivalents, or accept
+  that alignment is terminal-dependent and out of the repo's control. Not
+  yet confirmed which terminal/font the operator was using; worth asking
+  before changing the glyph set.
+- **Update:** Operator confirmed the drift is specifically the right border,
+  and the terminal is iTerm2. Cross-checked block/shade-glyph density against
+  the earlier codepoint table above: rows 6–9 (the mountain's widest band)
+  carry 19–21 `█▓▒░` characters each, while the silhouette rows (14–21) and
+  the text rows carry zero — and those are exactly the rows that would and
+  wouldn't drift if ambiguous-width glyphs render double-width. iTerm2 ships
+  a per-profile setting, Preferences → Profiles → Text → "Treat
+  ambiguous-width characters as double width," that does precisely this to
+  both box-drawing (`┌─│└`) and block-shade (`█▓▒░`) ranges. If enabled, rows
+  with more block/shade glyphs would push their right `│` further right than
+  ASCII-only rows, matching the report. Client-side setting, not a repo fix;
+  unconfirmed whether the operator has it toggled on, but it is the leading
+  candidate and worth checking before touching the glyph set in the repo.
+- **Update 2:** Ambiguous-width setting confirmed off. Operator's profile
+  font is Monaco. Revised diagnosis: Monaco predates broad Unicode coverage
+  and most likely lacks native glyphs for the block-shade range (`█▓▒░`,
+  U+2580–259F), forcing iTerm2 to substitute a fallback font for just those
+  characters. A substituted glyph's metrics don't always match the primary
+  font's cell width exactly, which would explain the drift being confined to
+  the mountain rows (dense in block-shade characters) while the pure-ASCII
+  silhouette and text rows render cleanly. Recommended fix given to operator:
+  switch the profile font to Menlo or SF Mono, both of which carry native
+  box-drawing and block-element coverage. Not yet confirmed whether the
+  operator made the switch or whether it resolved the drift.
+- **Update 3:** Operator asked about Space Mono; its cmap (checked from the
+  upstream TTF with fontTools) has 0/128 Box Drawing and 0/32 Block Elements
+  glyphs, so it was ruled out. Operator then set PT Mono, whose cmap carries
+  every panel glyph (`┌─│└┐┘█▓▒░`) at the same 600-unit advance as ASCII.
+  Re-fired the rite: the drift persisted, reported as "the 4th row up" and
+  possibly one other row, off "a few spaces." This falsifies missing-glyph
+  fallback as the sole cause. Remaining candidates, unverified: Claude Code's
+  own renderer computing display width for these characters differently than
+  the terminal does, or something specific to the reported rows. Awaiting a
+  screenshot or pasted copy to identify exact rows and offset.
+- **Resolution (confirmed by operator screenshot):** Offsets measured against
+  glyph width: row 17 is 2 columns left (two `\/` escapes). Row 21 is 5 columns
+  left: 1 for the `\_` escape, plus 4 underscores lost when CommonMark paired the
+  leading `___` with the trailing `__` as strong emphasis. All other rows are
+  aligned. The rows reported are 21 (4th up from the bottom
+  border: `___|  |   \___`) and 17 (`\/  o  \/`). They are the only
+  rows where `\` comes right before ASCII punctuation. The model emitted the
+  panel as bare markdown instead of inside the ```` ```text ```` fence the rite
+  specifies, so CommonMark read `\_` and `\/` as escapes and dropped the
+  backslashes. Row 21 lost 1 column and row 17 lost 2, which pulled their right
+  border left. All other `\` are followed by a space and are not escapes. The
+  font theory was wrong throughout, and no font change was needed. This is a
+  fourth failure mode of the rite: the panel was rendered, but not verbatim.
+  Fixes: emit the panel fenced, and have the rite prose name the fence
+  explicitly. The durable fix is still emitting the masthead from outside the
+  model.
+
 ### 2026-09-01 — [workspace] The published sheet had drifted, and neither input was recorded
 
 - **Context:** Republishing the Le Cadran artifact from `rouage/cadran.html`.
