@@ -27,6 +27,18 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Node
+        # Pinned to the exact version rouage/CONFORMANCE.md records. The record
+        # names the Node that ran the browser engine, and the conformance test
+        # compares it byte for byte, so an unpinned runner breaks it whenever
+        # the image ships a new patch - ubuntu24/20260927.320 moved 22.23.2 to
+        # 22.23.3 and turned main red with both engines still agreeing.
+        # Bumping Node is a commit: change this pin, rerun
+        # python3 rouage/conformance.py under the new version, commit both.
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.2"
+
       - name: Runtime assembly and plugin surfaces
         run: python3 -m unittest discover runtime -v
 
