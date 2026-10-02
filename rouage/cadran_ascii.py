@@ -254,6 +254,7 @@ def main() -> None:
     verdicts = [tuple(v.split(":", 1)) for v in take("--verdict") if ":" in v]
     cap = (take("--cap") or [None])[0]
 
+    show_face = flag("--face")
     force_color = flag("--color")
     no_color = flag("--no-color")
     # Off unless asked, or unless stdout is a terminal and the environment has
@@ -268,7 +269,13 @@ def main() -> None:
                   verdicts=verdicts or None,
                   tiered=tiers or None,
                   authorize_cap=int(cap) if cap else None)
-    print(dial_ascii(trace, color=color))
+    if show_face:
+        # Imported here, not at the top: cadran_face imports this module for
+        # its glyphs, and the table must not depend on the face to load.
+        from cadran_face import face
+        print(face(trace, color=color))
+    else:
+        print(dial_ascii(trace, color=color))
 
 
 if __name__ == "__main__":

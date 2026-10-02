@@ -8,6 +8,27 @@ Release, and publishes the movement's Level.
 
 ## [Unreleased]
 
+### Added
+- **`rouage/cadran_face.py`** — Le Cadran drawn as a face in the terminal: a
+  round bezel in character cells, the twelve seats on the chapter ring, the
+  crown at three o'clock, and the hour, minute and split hands pointing where
+  the trace says. `cadran_ascii.py --face` prints it; the table stays the
+  default. It borrows `premiere_lueur.py`'s cell aspect and `dwidth()`, so the
+  circle is round and the frame square, and `cadran_ascii.py`'s glyphs and
+  colours, so a state reads the same on both character surfaces. Bound by the
+  Honesty Constraint like every Cadran surface: the plate prints every
+  numeral, the trace alone lights them, and what the train does not drive is
+  named UNDRIVEN. Hands are plain ASCII diagonals with a `•` tip, chosen by
+  the Operator from four rendered candidates. 13 guards in
+  `test_cadran_face.py` derive their expectations from `route()` rather than
+  a stored picture, including that no cell of a hand can be read as a state
+  marker and that colour strips back to the plain face exactly.
+- **`/atlas:le-cadran`** — a plugin skill that runs `cadran_ascii.py` on the
+  Operator's utterance and reproduces the output verbatim. It never draws the
+  dial itself: a panel the model composed is a state the router did not
+  produce. `disable-model-invocation: true`, so `--arm "Le Fripon"` can only
+  ever arrive from the Operator's own command line.
+
 ## [1.11.0] - 2026-09-21
 
 ### Added
