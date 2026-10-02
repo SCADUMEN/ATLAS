@@ -29,6 +29,15 @@ Release, and publishes the movement's Level.
   produce. `disable-model-invocation: true`, so `--arm "Le Fripon"` can only
   ever arrive from the Operator's own command line.
 
+### Fixed
+- **CI pins Node to the version `rouage/CONFORMANCE.md` records.** The test
+  workflow ran whatever Node `ubuntu-latest` shipped. Runner image
+  `ubuntu24/20260927.320` moved it from 22.23.2 to 22.23.3, and because the
+  conformance record names the Node that ran the browser engine and is
+  compared byte for byte, `main` went red with both engines still agreeing.
+  `actions/setup-node` now pins `22.23.2`; bumping Node is a commit that
+  changes the pin and regenerates the record together.
+
 ## [1.11.0] - 2026-09-21
 
 ### Added
