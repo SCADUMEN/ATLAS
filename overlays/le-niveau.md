@@ -116,6 +116,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | barrel-adapter | Barrel adapter / fitted-barrel automation | system | A | built | adapters/barillet/README.md |
 | archive-verification | Archive verification in practice | knowledge | B | built | modules/archive-verification.md |
 | doc-site | Indexable documentation site — build, verify, crawler contract | system | B | built | site/build.py |
+| cadran-face | Le Cadran — the watch face in the terminal | system | B | built | rouage/cadran_face.py |
 
 ---
 
