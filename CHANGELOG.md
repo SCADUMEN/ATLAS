@@ -6,6 +6,18 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.12.2] - 2026-10-03
+
+### Fixed
+- **`/atlas:le-cadran` and `/atlas:le-conseil` answer the utterance.** Both
+  printed the panel and stopped, so a question routed through the instrument
+  got a reading and no reply. They still print the panel verbatim, then each
+  seated member answers under its own name from its `OPERATIONAL CORE`, in
+  precedence order. Le Sceptique tiers the claims instead of taking a turn
+  unless he is named or seated alone, dark members stay silent, Le Renégat's
+  Archive or Release halts the members after him, and the demonstration turn
+  gets no answer.
+
 ## [1.12.1] - 2026-10-03
 
 ### Fixed

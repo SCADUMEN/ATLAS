@@ -1,6 +1,6 @@
 ---
 name: le-cadran
-description: LE CADRAN — the watch face, in the terminal. Routes one utterance through Le Rouage and draws the dial the train produced. Invoke only when the Operator types /atlas:le-cadran.
+description: LE CADRAN — the watch face, in the terminal. Routes one utterance through Le Rouage and draws the dial the train produced; the seated members then answer. Invoke only when the Operator types /atlas:le-cadran.
 argument-hint: <utterance> [--tier "Le X"] [--verdict "Le X:Verdict"] [--arm "Le Fripon"]
 disable-model-invocation: true
 ---
@@ -33,7 +33,7 @@ is the demonstration turn, not the Operator's.
 
 ## Reproduce
 
-Print the script's stdout **verbatim** inside a `text` fence. Then stop.
+Print the script's stdout **verbatim** inside a `text` fence. Then answer.
 
 - **Never draw the dial yourself.** Not from memory, not to fix an alignment,
   not to fill in a run that failed. `hardware/le-boitier.md`: the display never
@@ -41,9 +41,31 @@ Print the script's stdout **verbatim** inside a `text` fence. Then stop.
   state the router did not produce.
 - **Never relight what is dark or explain away what is undriven.** UNDRIVEN on
   the face is the instrument being honest about what the train cannot drive.
-- If the script fails, show its stderr and say it failed. No panel.
-- One sentence after the fence at most, and only to name a fault the panel
-  itself reports. The panel is the answer.
+- If the script fails, show its stderr and say it failed. No panel, no answer.
+
+## Answer
+
+The face shows who was seated; the seated members answer the utterance. The
+seats are the members named on the panel's `SEATS` line, and only those.
+
+- **Load each seated member's `OPERATIONAL CORE` and nothing else** from
+  `${CLAUDE_PLUGIN_ROOT}/subroutines/<member>.md` (`Le Limier` →
+  `le-limier.md`, accents dropped). `overlays/le-conseil.md`: load granularity
+  is the operational core.
+- **Each seated field member answers under its own name**, as a `###` heading,
+  doing its own work on the utterance: Le Limier reconstructs, Le Cartographe
+  maps, and so on. Order them by the precedence ladder in
+  `overlays/le-conseil.md`, seat number breaking ties.
+- **Le Sceptique is the airlock, not a speaker.** He is seated on every turn,
+  so he tiers every claim the others make and takes no heading of his own,
+  unless the Operator named him or he is the only one seated. Alone, he answers
+  the utterance plainly with every claim tiered, and borrows no dark member's
+  method.
+- **Dark members are silent.** No section, no borrowed voice, no "Le X would
+  say". If a member the Operator wanted is dark, the face already says so.
+- **Le Renégat's verdict halts the field.** If he is seated and returns Archive
+  or Release, the members after him do not answer.
+- **The demonstration turn gets no answer.** It is not the Operator's question.
 
 ## Le Fripon
 
