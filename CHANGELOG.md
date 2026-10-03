@@ -6,6 +6,21 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.12.1] - 2026-10-03
+
+### Fixed
+- **The boot readout names an install that lags the source.** With
+  `ATLAS_REPO` set, the `/atlas` readout reads its version from the source
+  checkout, and the update check compares that checkout, not what Claude Code
+  is running, against the published tags. A source at `atlas--v1.12.0` over an
+  installed 1.11.0 therefore read as current, and `/atlas:le-cadran` was
+  missing with nothing on the crown to say why. The `level` script now reads
+  the installed version from `~/.claude/plugins/installed_plugins.json` and
+  `level/latest.py --lag` prints `LAG: installed v<I> lags source v<S>` when
+  the install trails; the rite renders it beneath the `UPDATE:` line.
+  `--lag` reads no stdin and the script feeds it `</dev/null`, so an older
+  readout tree cannot hang the crown on it. 6 guards in `test_latest.py`.
+
 ## [1.12.0] - 2026-10-03
 
 ### Added

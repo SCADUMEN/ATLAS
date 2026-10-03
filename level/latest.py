@@ -59,7 +59,30 @@ def update_line(current, tags_text):
     return f"UPDATE: v{latest[0]}.{latest[1]}.{latest[2]} available — run /plugin to update"
 
 
+def lag_line(installed, source):
+    """The notice to print if the installed plugin trails the readout's tree.
+
+    The readout reads its version from ATLAS_REPO when it is set, which is the
+    source checkout - and the update check then compares that checkout, not
+    what Claude Code is running, against the published tags. A source already
+    at the newest tag over a stale install reads as current. This names the
+    gap. Silence when either version is unknown or the install has caught up.
+    """
+    inst, src = parse_version(installed), parse_version(source)
+    if inst is None or src is None or inst >= src:
+        return None
+    return (f"LAG: installed v{inst[0]}.{inst[1]}.{inst[2]} lags "
+            f"source v{src[0]}.{src[1]}.{src[2]} — run /plugin to update")
+
+
 def main(argv, stdin):
+    # --lag INSTALLED SOURCE: compare two known versions; reads no stdin.
+    if len(argv) > 1 and argv[1] == "--lag":
+        line = lag_line(argv[2] if len(argv) > 2 else "",
+                        argv[3] if len(argv) > 3 else "")
+        if line:
+            print(line)
+        return 0
     current = argv[1] if len(argv) > 1 else ""
     line = update_line(current, stdin.read())
     if line:

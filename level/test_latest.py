@@ -48,6 +48,41 @@ class UpdateLine(unittest.TestCase):
         self.assertIsNone(l.update_line("", refs("9.9.9")))
 
 
+class LagLine(unittest.TestCase):
+    def test_install_behind_source(self):
+        # The case that hid: source 1.12.0 at the newest tag, install 1.11.0.
+        self.assertEqual(
+            l.lag_line("1.11.0", "1.12.0"),
+            "LAG: installed v1.11.0 lags source v1.12.0 — run /plugin to update")
+
+    def test_caught_up_is_silent(self):
+        self.assertIsNone(l.lag_line("1.12.0", "1.12.0"))
+
+    def test_install_ahead_is_silent(self):
+        self.assertIsNone(l.lag_line("1.12.0", "1.11.0"))
+
+    def test_numeric_not_lexical(self):
+        self.assertIsNotNone(l.lag_line("1.9.0", "1.10.0"))
+
+    def test_unknown_either_side_is_silent(self):
+        self.assertIsNone(l.lag_line("", "1.12.0"))
+        self.assertIsNone(l.lag_line("1.11.0", ""))
+
+    def test_cli_reads_no_stdin(self):
+        # An older readout would hang on stdin; --lag must never read it.
+        import io
+        out = io.StringIO()
+
+        class Exploding:
+            def read(self):
+                raise AssertionError("--lag read stdin")
+
+        from contextlib import redirect_stdout
+        with redirect_stdout(out):
+            l.main(["latest.py", "--lag", "1.11.0", "1.12.0"], Exploding())
+        self.assertIn("LAG: installed v1.11.0", out.getvalue())
+
+
 class Parsing(unittest.TestCase):
     def test_parse_version_forms(self):
         for text in ("1.2.0", "v1.2.0", "atlas--v1.2.0", "refs/tags/atlas--v1.2.0"):
