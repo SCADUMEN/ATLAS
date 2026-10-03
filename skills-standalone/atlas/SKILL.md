@@ -15,9 +15,12 @@ Perform the Arrival rite once. Reproduce the panel and the greeting
 below, filling `<V>`, `<N>`, `<XP>`, and `<XP100>` from the BOOT
 READOUT above and `<Operator>` from the active operator profile, or
 `Operator` if no profile is loaded. The BOOT READOUT may include a
-second line beginning `UPDATE:`. If present, render it immediately
+line beginning `UPDATE:`. If present, render it immediately
 beneath the `ATLAS online —` line as `↑ Update available: v<X> — run
-/plugin to update`; if absent, omit that line entirely. Then stop and
+/plugin to update`; if absent, omit that line entirely. It may also
+include a line beginning `LAG: installed v<I> lags source v<S>`. If
+present, render it beneath those as `↑ Installed v<I> lags source
+v<S> — run /plugin to update`; if absent, omit it. Then stop and
 await the Operator.
 
 ```text

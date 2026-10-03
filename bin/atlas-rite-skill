@@ -106,6 +106,21 @@ if best:
 PY
 }
 
+# What Claude Code is actually running, from its own install record — not the
+# newest cache directory, which can outlive an upgrade. With ATLAS_REPO set the
+# readout reads the source checkout, and a source at the newest tag over a stale
+# install would otherwise report as current. Silence on any failure.
+installed_version() {
+  python3 - "$HOME/.claude/plugins/installed_plugins.json" <<'PY' 2>/dev/null
+import json, sys
+data = json.load(open(sys.argv[1]))
+for key, entries in data.get('plugins', data).items():
+    if key.split('@')[0] == 'atlas' and entries:
+        print(entries[0].get('version', ''))
+        break
+PY
+}
+
 for dir in \
   ${ATLAS_REPO:+"$ATLAS_REPO"} \
   $(newest_cached) \
@@ -121,6 +136,12 @@ do
       printf '%s · v%s\n' "$line" "$ver"
     else
       printf '%s\n' "$line"
+    fi
+    # </dev/null: a readout tree older than --lag would take it for a version
+    # and wait on stdin, and the crown has nothing behind it to time that out.
+    if [ -n "$ver" ] && [ -f "$dir/level/latest.py" ]; then
+      python3 "$dir/level/latest.py" --lag "$(installed_version)" "$ver" \
+        </dev/null 2>/dev/null || true
     fi
     # Update check — network, bounded, silent. Reachable only when the crown is
     # wound, so the cost never touches an ordinary session. Any failure (offline,
@@ -185,9 +206,12 @@ LEVELSH
   printf 'below, filling `<V>`, `<N>`, `<XP>`, and `<XP100>` from the BOOT\n'
   printf 'READOUT above and `<Operator>` from the active operator profile, or\n'
   printf '`Operator` if no profile is loaded. The BOOT READOUT may include a\n'
-  printf 'second line beginning `UPDATE:`. If present, render it immediately\n'
+  printf 'line beginning `UPDATE:`. If present, render it immediately\n'
   printf 'beneath the `ATLAS online —` line as `↑ Update available: v<X> — run\n'
-  printf '/plugin to update`; if absent, omit that line entirely. Then stop and\n'
+  printf '/plugin to update`; if absent, omit that line entirely. It may also\n'
+  printf 'include a line beginning `LAG: installed v<I> lags source v<S>`. If\n'
+  printf 'present, render it beneath those as `↑ Installed v<I> lags source\n'
+  printf 'v<S> — run /plugin to update`; if absent, omit it. Then stop and\n'
   printf 'await the Operator.\n\n'
   printf '```text\n'
   cat "$RITE"
