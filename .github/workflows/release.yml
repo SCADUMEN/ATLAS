@@ -32,6 +32,15 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Node
+        # Same pin as test.yml, for the same reason: this job reruns the
+        # conformance suite, and rouage/CONFORMANCE.md names the exact Node
+        # that ran the browser engine. #51 pinned Test but not Release, so
+        # main stayed red here. Bump both pins together with the record.
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.2"
+
       - name: Suites and diagnostic
         run: |
           python3 -m unittest discover runtime -v

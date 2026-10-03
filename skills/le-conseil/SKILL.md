@@ -1,14 +1,15 @@
 ---
-name: le-cadran
-description: LE CADRAN — the watch face, in the terminal. Routes one utterance through Le Rouage and draws the dial the train produced. Invoke only when the Operator types /atlas:le-cadran.
+name: le-conseil
+description: LE CONSEIL — the council as a table, in the terminal. Routes one utterance through Le Rouage and prints every member's state as the train left it. Invoke only when the Operator types /atlas:le-conseil.
 argument-hint: <utterance> [--tier "Le X"] [--verdict "Le X:Verdict"] [--arm "Le Fripon"]
 disable-model-invocation: true
 ---
 
-# /atlas:le-cadran
+# /atlas:le-conseil
 
-Hand-written, not generated. Le Cadran is a display, not a council member, so it
-has no subroutine source and `bin/atlas-skills` does not manage this file.
+Hand-written, not generated. This is a display of the council, not a member
+of it, so it has no subroutine source and `bin/atlas-skills` does not manage
+this file.
 
 ## Run
 
@@ -16,16 +17,15 @@ Run exactly this, passing the Operator's arguments through as separate shell
 words. Quote the utterance as one argument; pass any flags after it unchanged.
 
 ```sh
-python3 "${CLAUDE_PLUGIN_ROOT}/rouage/cadran_ascii.py" <utterance> --face [flags]
+python3 "${CLAUDE_PLUGIN_ROOT}/rouage/cadran_ascii.py" <utterance> [flags]
 ```
 
 The arguments were: `$ARGUMENTS`
 
-Pass `--face` exactly once: add it, or keep the Operator's if they typed it.
-A second copy is not consumed as a flag and would be routed as utterance.
-Le Cadran is the dial itself (`rouage/cadran_face.py`). The table of the same
-trace belongs to `/atlas:le-conseil`: the face is the object, the table is the
-record.
+Never pass `--face`; drop it if the Operator typed it. Le Conseil is the
+record: the table of all thirteen members, the hands, the route and the
+registers. The dial drawn from the same trace belongs to `/atlas:le-cadran`:
+the face is the object, the table is the record.
 
 With no arguments, run it with no utterance. The script then routes its own
 built-in demonstration turn, and the panel's INPUT line names it. Say that it
@@ -35,7 +35,7 @@ is the demonstration turn, not the Operator's.
 
 Print the script's stdout **verbatim** inside a `text` fence. Then stop.
 
-- **Never draw the dial yourself.** Not from memory, not to fix an alignment,
+- **Never compose the table yourself.** Not from memory, not to fix an alignment,
   not to fill in a run that failed. `hardware/le-boitier.md`: the display never
   shows a state the router did not produce. A panel the model composed is a
   state the router did not produce.

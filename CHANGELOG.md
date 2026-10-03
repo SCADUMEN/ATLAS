@@ -6,7 +6,7 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
-## [Unreleased]
+## [1.12.0] - 2026-10-03
 
 ### Added
 - **`rouage/cadran_face.py`** — Le Cadran drawn as a face in the terminal: a
@@ -23,11 +23,21 @@ Release, and publishes the movement's Level.
   `test_cadran_face.py` derive their expectations from `route()` rather than
   a stored picture, including that no cell of a hand can be read as a state
   marker and that colour strips back to the plain face exactly.
-- **`/atlas:le-cadran`** — a plugin skill that runs `cadran_ascii.py` on the
-  Operator's utterance and reproduces the output verbatim. It never draws the
-  dial itself: a panel the model composed is a state the router did not
-  produce. `disable-model-invocation: true`, so `--arm "Le Fripon"` can only
-  ever arrive from the Operator's own command line.
+- **`/atlas:le-cadran`** — a plugin skill that runs `cadran_ascii.py --face`
+  on the Operator's utterance and reproduces the output verbatim. Le Cadran is
+  the watch face, so the skill always draws the dial; the Operator does not
+  type `--face`. It never draws the dial itself: a panel the model composed is
+  a state the router did not produce. `disable-model-invocation: true`, so
+  `--arm "Le Fripon"` can only ever arrive from the Operator's own command
+  line.
+- **`/atlas:le-conseil`** — the same run without `--face`: the table of all
+  thirteen members, the hands, the route and the registers. The face is the
+  object, the table is the record, and each now has its own command. The
+  script itself is unchanged and still prints the table by default.
+- **Ledger row `cadran-face`** (system, B, `rouage/cadran_face.py`). The
+  face is the first Cadran surface that draws the instrument rather than
+  tabulating it. XP 13900 → 14150, Level 103 · Grand Complication +3, which
+  is what lets this minor release clear `release_guard.py`.
 
 ### Fixed
 - **CI pins Node to the version `rouage/CONFORMANCE.md` records.** The test
@@ -37,6 +47,9 @@ Release, and publishes the movement's Level.
   compared byte for byte, `main` went red with both engines still agreeing.
   `actions/setup-node` now pins `22.23.2`; bumping Node is a commit that
   changes the pin and regenerates the record together.
+- **The Release workflow carries the same pin.** It reruns the conformance
+  suite on its own runner setup, and the first fix pinned only `test.yml`, so
+  `main` stayed red on Release for both merges. Bump both pins together.
 
 ## [1.11.0] - 2026-09-21
 
