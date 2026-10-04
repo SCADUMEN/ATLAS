@@ -22,6 +22,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/rouage/cadran_ascii.py" <utterance> [flags]
 
 The arguments were: `$ARGUMENTS`
 
+**`--color` is for a terminal, not this reply.** It prints ANSI escape codes,
+and a `text` fence shows them as literal `[38;5;136m` noise. If the Operator
+typed `--color`, leave it off the run here, so the panel comes out plain. After
+the answer, give one line they can run themselves to see it in color:
+`! python3 "${CLAUDE_PLUGIN_ROOT}/rouage/cadran_ascii.py" "<utterance>" [flags]`,
+with their utterance and every flag they typed, `--color` included.
+
 Never pass `--face`; drop it if the Operator typed it. Le Conseil is the
 record: the table of all thirteen members, the hands, the route and the
 registers. The dial drawn from the same trace belongs to `/atlas:le-cadran`:

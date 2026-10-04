@@ -6,6 +6,16 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.12.3] - 2026-10-03
+
+### Fixed
+- **`--color` no longer garbles the panel in a reply.** `/atlas:le-cadran`
+  and `/atlas:le-conseil` passed `--color` straight through, and the ANSI
+  escape codes it prints showed as literal `[38;5;136m` text inside the
+  reply's `text` fence. Both skills now leave `--color` off the run they
+  reproduce, then give the Operator a `! python3 …` line that renders the
+  colored panel in their own terminal.
+
 ## [1.12.2] - 2026-10-03
 
 ### Fixed
