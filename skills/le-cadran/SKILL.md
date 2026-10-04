@@ -21,6 +21,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/rouage/cadran_ascii.py" <utterance> --face [flags
 
 The arguments were: `$ARGUMENTS`
 
+**`--color` is for a terminal, not this reply.** It prints ANSI escape codes,
+and a `text` fence shows them as literal `[38;5;136m` noise. If the Operator
+typed `--color`, leave it off the run here, so the panel comes out plain. After
+the answer, give one line they can run themselves to see it in color:
+`! python3 "${CLAUDE_PLUGIN_ROOT}/rouage/cadran_ascii.py" "<utterance>" --face [flags]`,
+with their utterance and every flag they typed, `--color` included.
+
 Pass `--face` exactly once: add it, or keep the Operator's if they typed it.
 A second copy is not consumed as a flag and would be routed as utterance.
 Le Cadran is the dial itself (`rouage/cadran_face.py`). The table of the same
