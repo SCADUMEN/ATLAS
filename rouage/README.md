@@ -117,6 +117,32 @@ What is still missing is the barrel itself: nothing in this repo reads an
 artifact for meaning and produces the `(member, citation)` pairs to hand in.
 `admit_proposals()` is the mechanism a barrel would call; it is not the barrel.
 
+## The Train In A Live Session
+
+Until 1.13.0 the train ran for the dial pages and the tests and nowhere else. In
+a conversation, which member convened was the barrel reading skill descriptions
+and cooperating. `bin/atlas-route` is the `UserPromptSubmit` hook that closes
+that: every prompt is routed through `route()`, recorded through
+`record_winding()` — the crown's log, which had a mechanism and no caller — and,
+when the train did more than keep Le Sceptique's standing watch, drawn.
+
+The two surfaces stay two. The face goes out as the hook's `systemMessage`, so
+Claude Code shows the Operator the dial the router drew, and the model never
+transcribes it. The model gets the seats in precedence order and where each
+core lives; held members reach it as a count, never by name, because the model
+writes the prose and `le-sas.md` keeps them out of it. `/atlas` always draws the
+dial — winding the crown shows the train it set going — and `/atlas:le-cadran`
+and `/atlas:le-conseil` are left alone, since they draw their own.
+
+It is the named half only. The automatic half of every gate is still the
+barrel's, and still unbuilt as a mechanism.
+
+The log is `~/.claude/atlas/windings.jsonl`, one entry per routed prompt,
+silent turns included: a gate that should have fired and did not is only
+visible if the misses are kept too. It holds the prompt text, so it lives
+beside the operator profile and the session transcripts, under the Claude
+config home, never in a repository.
+
 ## What The Build Found In The Doctrine
 
 Two things a reader would not catch:

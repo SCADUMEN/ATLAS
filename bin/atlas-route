@@ -1,0 +1,21 @@
+#!/bin/sh
+# atlas-route — the UserPromptSubmit hook. Winds the train once per prompt.
+#
+# Routes the Operator's prompt through Le Rouage, records the winding in the
+# crown's log, and draws Le Cadran's face whenever the train did more than keep
+# Le Sceptique's standing watch. `/atlas` always draws it: winding the crown
+# shows the train it set going. The logic is rouage/hook.py; this only finds it.
+#
+# A prompt hook must never stop a prompt. Exit 2 would block it, so nothing
+# here can return 2: every failure ends in silence or in a message on the dial.
+#
+#   ATLAS_NO_ROUTE=1       the hook does nothing
+#   ATLAS_NO_WINDING=1     route and draw, but keep no log
+#   ATLAS_WINDING_LOG=...  log here instead of ~/.claude/atlas/windings.jsonl
+CDPATH=''
+HERE=$(cd -P "$(dirname "$0")" && pwd) || exit 0
+
+# -I keeps the Operator's project out of the import path: the hook runs with
+# their working directory, and nothing there should be able to shadow a module.
+# hook.py puts its own directory on the path explicitly.
+python3 -I "$HERE/../rouage/hook.py" 2>/dev/null || true
