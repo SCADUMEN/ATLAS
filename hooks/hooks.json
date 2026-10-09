@@ -9,6 +9,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/atlas-route\"",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

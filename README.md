@@ -40,7 +40,7 @@ Plugin surface (generated — edit the sources, then regenerate):
 - `agents/atlas.md` - the compact core, inline. Built by `bin/atlas-context --mode agent`.
 - `skills/` - the thirteen council members (cores only, built by `bin/atlas-skills`), plus the hand-authored `git-cleanup` utility skill.
 - `skills-standalone/atlas/` - the `/atlas` rite. Built by `bin/atlas-rite-skill`.
-- `hooks/hooks.json` - loads a project continuity capsule at session start.
+- `hooks/hooks.json` - loads a project continuity capsule at session start, and routes every prompt through Le Rouage.
 
 Scripts and examples:
 
@@ -48,6 +48,7 @@ Scripts and examples:
 - `bin/atlas-skills`, `bin/atlas-rite-skill` - generate the plugin's skills.
 - `bin/atlas-continuity` - initializes and checks an untracked project continuity capsule.
 - `bin/atlas-session-start` - the SessionStart hook. Emits the capsule as context.
+- `bin/atlas-route` - the UserPromptSubmit hook. Routes each prompt through the train, records the winding, and draws Le Cadran when the train convenes, seals, holds, or faults; `/atlas` always draws it. `ATLAS_NO_ROUTE=1` turns it off.
 - `bin/atlas-doctor` - verifies assembly, fingerprints, privacy boundaries, and doctrine stripping.
 - `bin/atlas-clones` - reports which clone the `/atlas` symlink resolves to, and flags any clone holding work that exists nowhere else. Matches on origin or on shared root commit, so a clone left pointing at a pre-rename URL is still recognized.
 - `adapters/` - handoff instructions for Codex and file-less agents.

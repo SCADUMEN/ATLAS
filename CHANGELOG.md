@@ -6,6 +6,27 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.13.0] - 2026-10-09
+
+### Added
+- **The train runs in live sessions, and Le Cadran is drawn by it.**
+  `bin/atlas-route` is a new `UserPromptSubmit` hook. Every prompt is routed
+  through Le Rouage and recorded in the crown's log
+  (`~/.claude/atlas/windings.jsonl`). Until now `record_winding()` existed
+  but nothing ever called it. When the train convenes, seals, holds or
+  records a failure, the hook draws the face as its `systemMessage`, so the
+  Operator sees the dial the router produced and the model never redraws
+  it. The model gets the seats in precedence order. Held members reach it
+  as a count, never by name, because `le-sas.md` keeps them out of the
+  prose. `/atlas` always draws the dial, since winding the crown shows the
+  train it set going. `/atlas:le-cadran` and `/atlas:le-conseil` are left
+  alone because they draw their own. A fault never blocks a prompt: it
+  shows on the dial's channel and no dial is drawn. `ATLAS_NO_ROUTE=1` turns
+  the hook off, and `ATLAS_NO_WINDING=1` keeps routing but stops the log.
+  19 guards are in `rouage/test_hook.py`. Ledger: `live-train`, system, A.
+- **"release the hound" convenes Le Limier.** The phrase is added to his
+  named gate in `subroutines/le-limier.md`, and the plural fires it too.
+
 ## [1.12.3] - 2026-10-03
 
 ### Fixed
