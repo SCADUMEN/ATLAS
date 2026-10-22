@@ -43,7 +43,7 @@ if str(HERE) not in sys.path:
 from rouage import REPO, Trace, fold, load_ring, record_winding, route  # noqa: E402
 
 # The rite's own command. `/atlas` with or without words after it winds the
-# crown, and a wound crown always shows the train it set going.
+# crown. The train still routes its words, but no dial is drawn over the rite.
 RITE = "/atlas"
 
 # Skills that already draw the dial for the utterance they were given. Drawing
@@ -103,9 +103,13 @@ def context_for(trace: Trace, wound: bool) -> str:
         "literally. It read nothing for meaning: the automatic half of each "
         "gate is still yours to weigh.",
         "",
-        "Le Cadran has already been drawn for the Operator by the hook. Do not "
-        "redraw it, transcribe it, or compose one.",
     ]
+    if wound:
+        lines.append("Le Cadran is not drawn for the Arrival rite. Do not "
+                     "compose one.")
+    else:
+        lines.append("Le Cadran has already been drawn for the Operator by the "
+                     "hook. Do not redraw it, transcribe it, or compose one.")
     if wound:
         lines += ["", "This prompt winds the crown. The Arrival rite governs "
                   "the reply; the seats below are what the train set going."]
@@ -186,9 +190,12 @@ def respond(prompt: str, env: dict[str, str], when: str) -> dict | None:
         except OSError as exc:
             unrecorded = f"winding not recorded: {exc}"
 
+    # The rite has its own panel, First Light; the dial stays off it. The
+    # seats still reach the barrel, so `/atlas release the hound` convenes.
     shown = wound or speaks(trace)
+    drawn = shown and not wound
     messages = []
-    if shown:
+    if drawn:
         try:
             messages.append(dial_for(trace))
         except Exception as exc:

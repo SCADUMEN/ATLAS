@@ -130,9 +130,10 @@ The two surfaces stay two. The face goes out as the hook's `systemMessage`, so
 Claude Code shows the Operator the dial the router drew, and the model never
 transcribes it. The model gets the seats in precedence order and where each
 core lives; held members reach it as a count, never by name, because the model
-writes the prose and `le-sas.md` keeps them out of it. `/atlas` always draws the
-dial — winding the crown shows the train it set going — and `/atlas:le-cadran`
-and `/atlas:le-conseil` are left alone, since they draw their own.
+writes the prose and `le-sas.md` keeps them out of it. `/atlas` routes its words
+and seats the barrel, but draws no dial — the rite has its own panel — and
+`/atlas:le-cadran` and `/atlas:le-conseil` are left alone, since they draw their
+own.
 
 It is the named half only. The automatic half of every gate is still the
 barrel's, and still unbuilt as a mechanism.

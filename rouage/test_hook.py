@@ -76,21 +76,28 @@ class Silence(unittest.TestCase):
 
 class TheCrown(unittest.TestCase):
 
-    def test_winding_the_crown_always_draws_the_dial(self):
-        # /atlas with nothing convened still shows the train it set going.
+    def test_winding_the_crown_draws_no_dial(self):
+        # The rite has its own panel. The barrel still hears the crown.
         payload = hook.respond("/atlas lets get some xp", NO_LOG, WHEN)
-        self.assertIn("LE CADRAN", payload["systemMessage"])
-        self.assertIn('INPUT  "lets get some xp"', payload["systemMessage"])
+        self.assertNotIn("systemMessage", payload)
         self.assertIn("winds the crown", context(payload))
+        self.assertIn("not drawn for the Arrival rite", context(payload))
+        self.assertNotIn("already been drawn", context(payload))
 
     def test_the_rite_routes_its_arguments_not_its_command(self):
         payload = hook.respond("/atlas release the hound", NO_LOG, WHEN)
         self.assertIn("- Le Limier (08)", context(payload))
-        self.assertNotIn("/atlas", payload["systemMessage"].split("INPUT")[1])
+        self.assertNotIn("systemMessage", payload)
 
-    def test_bare_rite_draws_too(self):
-        self.assertIn("LE CADRAN",
-                      hook.respond("/atlas", NO_LOG, WHEN)["systemMessage"])
+    def test_bare_rite_draws_nothing_either(self):
+        payload = hook.respond("/atlas", NO_LOG, WHEN)
+        self.assertNotIn("systemMessage", payload)
+        self.assertIn("winds the crown", context(payload))
+
+    def test_outside_the_rite_the_dial_is_still_drawn(self):
+        payload = hook.respond("release the hound", NO_LOG, WHEN)
+        self.assertIn("LE CADRAN", payload["systemMessage"])
+        self.assertIn("already been drawn", context(payload))
 
 
 class TwoSurfaces(unittest.TestCase):

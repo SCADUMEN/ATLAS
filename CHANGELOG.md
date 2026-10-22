@@ -6,6 +6,18 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.13.1] - 2026-10-21
+
+### Changed
+- **The Arrival rite no longer draws Le Cadran.** Until now `/atlas` always
+  put the dial on the turn, stacked against the rite's own First Light panel.
+  The face is not finished, and the rite does not need it. `/atlas` still
+  routes its words and records the winding, and the barrel still gets its
+  seats, so `/atlas release the hound` still convenes Le Limier. Nothing is
+  sent on the dial's channel, and the barrel is told that no dial was drawn
+  rather than told one already was. Ordinary prompts draw the dial as before.
+  `rouage/test_hook.py` pins both halves.
+
 ## [1.13.0] - 2026-10-09
 
 ### Added
