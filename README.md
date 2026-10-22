@@ -48,7 +48,7 @@ Scripts and examples:
 - `bin/atlas-skills`, `bin/atlas-rite-skill` - generate the plugin's skills.
 - `bin/atlas-continuity` - initializes and checks an untracked project continuity capsule.
 - `bin/atlas-session-start` - the SessionStart hook. Emits the capsule as context.
-- `bin/atlas-route` - the UserPromptSubmit hook. Routes each prompt through the train, records the winding, and draws Le Cadran when the train convenes, seals, holds, or faults; `/atlas` always draws it. `ATLAS_NO_ROUTE=1` turns it off.
+- `bin/atlas-route` - the UserPromptSubmit hook. Routes each prompt through the train, records the winding, and draws Le Cadran when the train convenes, seals, holds, or faults; `/atlas` routes its words but draws no dial. `ATLAS_NO_ROUTE=1` turns it off.
 - `bin/atlas-doctor` - verifies assembly, fingerprints, privacy boundaries, and doctrine stripping.
 - `bin/atlas-clones` - reports which clone the `/atlas` symlink resolves to, and flags any clone holding work that exists nowhere else. Matches on origin or on shared root commit, so a clone left pointing at a pre-rename URL is still recognized.
 - `adapters/` - handoff instructions for Codex and file-less agents.
