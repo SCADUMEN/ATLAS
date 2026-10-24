@@ -6,6 +6,40 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.14.0] - 2026-10-24
+
+### Changed
+- **Attributed admission replaces Cited for every member but Le Fripon.**
+  L'Opérateur, 2026-10-24: *"it should not need to be exact."* A proposal's
+  citation is now the barrel's reason in its own words. Both engines score it
+  against the member's bullets and prohibitions by word overlap (whole-percent
+  integers, so they agree to the digit), write the nearest bullet into the
+  candidate's note, and refuse only the inverted gate: a reason scoring at
+  least 30% against a prohibition and higher than against any activation. The
+  threshold and filler words are doctrine, in `le-rouage.md`'s new Citation
+  Match; the strict list is a new standing rule in `le-conseil.md`, and names
+  only Le Fripon, who keeps Cited exactly. Word overlap cannot judge whether a
+  situation fits a condition (real paraphrases score 0–22%), so it is used to
+  decide nothing else.
+- **"Do not invoke" sentences are prohibitions.** Seven members wrote their
+  negative gate as one sentence in Activation rather than a "Do Not Fire On"
+  list; `parse_activation()` now collects both forms, so the inverted gate
+  sees them.
+- **The prompt hook no longer draws the dial.** At prompt time only the named
+  half of each gate is visible. `bin/atlas-route` still routes, records and
+  seats the barrel, and now tells it how to propose a member.
+
+### Added
+- **Le Cadran is drawn after the turn, from what convened.**
+  `bin/atlas-settle` is a new `Stop` hook. It reads the turn's prompt and the
+  council skills the barrel invoked after it out of the transcript, treats
+  each call as a proposal (the skill names the member, `args` are the
+  reason), and draws one face, named and automatic together. Silent when
+  nobody convened; the rite and the displays stay untouched. A turn with
+  proposals gets a `"kind": "settle"` entry in the windings log.
+  `rouage/test_settle.py` pins it.
+- The compact runtime states the proposal contract on every turn.
+
 ## [1.13.2] - 2026-10-24
 
 ### Fixed

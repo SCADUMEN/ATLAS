@@ -199,9 +199,9 @@ class TheCap(unittest.TestCase):
 class ProposalAdmission(unittest.TestCase):
     """admit_proposals(): the barrel proposes, the train disposes.
 
-    Policy is Cited - le-rouage.md: a proposal is admitted only if its
-    citation is a verbatim line among the bullets in that member's own
-    Activation section.
+    Policy is Attributed - le-rouage.md: a proposal is admitted on the
+    barrel's reason in its own words, with the bullet it sits nearest
+    recorded beside it. Strict members (Le Fripon) are still held to Cited.
     """
 
     @classmethod
@@ -219,16 +219,28 @@ class ProposalAdmission(unittest.TestCase):
         self.assertEqual(limier[0].state, "active")
         self.assertTrue(limier[0].reason.startswith("proposed:"))
 
-    def test_non_verbatim_citation_is_rejected_and_reported(self):
+    def test_non_verbatim_citation_is_attributed_not_refused(self):
+        # Decided (L'Operateur, 2026-10-24): "it should not need to be exact."
         trace = route(
             self.ring, "no phrase here",
-            proposals=[("Le Limier", "something that sounds close but isn't "
-                                      "the actual bullet text")],
+            proposals=[("Le Limier", "the board failed and nobody has "
+                                      "established the sequence")],
+        )
+        limier = [c for c in trace.candidates if c.member.name == "Le Limier"]
+        self.assertEqual(len(limier), 1)
+        self.assertEqual(limier[0].state, "active")
+        self.assertTrue(limier[0].note.startswith("nearest "))
+        self.assertIn("failure sequence", limier[0].note)
+        self.assertEqual(trace.failures, [])
+
+    def test_a_strict_members_paraphrase_is_still_refused(self):
+        trace = route(
+            self.ring, "no phrase here", armed="Le Fripon",
+            proposals=[("Le Fripon", "the recovery plan was never run")],
         )
         self.assertFalse(
-            [c for c in trace.candidates if c.member.name == "Le Limier"]
-        )
-        self.assertTrue(any("Le Limier" in f and "not found verbatim" in f
+            [c for c in trace.candidates if c.member.name == "Le Fripon"])
+        self.assertTrue(any("Le Fripon" in f and "not found verbatim" in f
                              for f in trace.failures))
 
     def test_unknown_member_is_rejected_and_reported(self):
@@ -357,10 +369,13 @@ class EvidenceNarrowsTheGap(unittest.TestCase):
 
     def test_evidence_does_not_rescue_a_bad_citation(self):
         # Order matters: the gate is checked before the premise. Good evidence
-        # must never buy admission for a condition that is not in doctrine.
+        # must never buy a strict member admission on a condition that is not
+        # in doctrine.
+        strict = next(m for m in self.ring.members
+                      if fold(m.name) in self.ring.strict)
         t = self._trace()
         got = admit_proposals(
-            self.ring, t, [(self.member.name, "invented condition", "abc123")],
+            self.ring, t, [(strict.name, "invented condition", "abc123")],
             verify=lambda ref: True)
         self.assertEqual(got, [])
         self.assertTrue(any("verbatim" in f for f in t.failures))
@@ -600,8 +615,9 @@ class TheNegativeGate(unittest.TestCase):
         # different faults and the trace has to tell them apart.
         inverted = Trace(utterance="")
         admit_proposals(self.ring, inverted, [(self.member.name, self.guard)])
+        # The typo failure only exists for a strict member now.
         typo = Trace(utterance="")
-        admit_proposals(self.ring, typo, [(self.member.name, "not in any list")])
+        admit_proposals(self.ring, typo, [("Le Fripon", "not in any list")])
 
         self.assertEqual(len(inverted.failures), 1)
         self.assertEqual(len(typo.failures), 1)
@@ -1116,15 +1132,17 @@ class TheBarrelBoundaryIsWhereItSays(unittest.TestCase):
         self.assertEqual(admitted[0].member.name, "Le Limier")
         self.assertEqual(t.failures, [])
 
-    def test_and_a_paraphrase_of_that_same_condition_is_refused(self):
-        # Which is what keeps the seam honest: the barrel may not soften a
-        # condition to make a situation fit it.
+    def test_and_a_paraphrase_of_that_same_condition_is_attributed(self):
+        # Under Attributed the barrel may say it in its own words. What keeps
+        # the seam honest now is the record: the bullet the reason sits
+        # nearest is written beside it, so the two can be compared.
         t = Trace(utterance="")
         admitted = admit_proposals(
             self.ring, t,
             [("Le Limier", "an artifact was modified and nobody knows why")])
-        self.assertEqual(admitted, [])
-        self.assertTrue(any("verbatim" in f for f in t.failures))
+        self.assertEqual(len(admitted), 1)
+        self.assertIn(self.bullet, admitted[0].note)
+        self.assertEqual(t.failures, [])
 
     def test_no_member_fires_on_a_plain_description_of_its_own_condition(self):
         # Generalised across the whole ring: every member's first bullet, fed

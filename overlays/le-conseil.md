@@ -160,10 +160,11 @@ Le Sceptique is not counted against the cap — he is always on. The cap is enfo
 4. **Le Renégat** — before effort is committed at scale. Scope is cheapest to cut early.
 5. **All others** — by relevance.
 
-Two standing rules override ordering:
+Three standing rules override ordering:
 
 - **Le Fripon never self-activates.** He requires explicit authorization from the crown for each engagement.
 - **Le Renégat's verdict of Archive or Release halts the field operators** until L'Opérateur accepts or overrides it.
+- **Strict admission: Le Fripon.** A strict member convenes on the barrel's proposal only when its citation is a verbatim line of its own gate. Every other member is admitted on the barrel's reason in its own words, and the trace records which of its bullets that reason sits nearest. Decided by L'Opérateur, 2026-10-24: "it should not need to be exact."
 
 ---
 

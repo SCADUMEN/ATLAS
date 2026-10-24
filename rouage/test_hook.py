@@ -3,8 +3,9 @@
     python3 -m unittest discover rouage -v
 
 Every case pins one promise the hook makes to a live session: the train decides
-who convenes, the router draws the dial, held members stay out of the barrel's
-prose, and no failure of any kind stops the Operator's prompt.
+who convenes, the barrel is told how to propose the rest, held members stay out
+of the barrel's prose, and no failure of any kind stops the Operator's prompt.
+The dial is drawn after the turn; test_settle.py covers it.
 """
 
 from __future__ import annotations
@@ -40,8 +41,7 @@ class Gates(unittest.TestCase):
     def assert_limier(self, prompt: str):
         payload = hook.respond(prompt, NO_LOG, WHEN)
         self.assertIsNotNone(payload, prompt)
-        self.assertIn("08●", payload["systemMessage"])
-        self.assertIn("● 08 Le Limier", payload["systemMessage"])
+        self.assertNotIn("systemMessage", payload)
         self.assertIn("- Le Limier (08)", context(payload))
         self.assertIn("skill `atlas:le-limier`", context(payload))
 
@@ -94,10 +94,16 @@ class TheCrown(unittest.TestCase):
         self.assertNotIn("systemMessage", payload)
         self.assertIn("winds the crown", context(payload))
 
-    def test_outside_the_rite_the_dial_is_still_drawn(self):
+    def test_outside_the_rite_the_dial_is_left_to_the_settle_hook(self):
         payload = hook.respond("release the hound", NO_LOG, WHEN)
-        self.assertIn("LE CADRAN", payload["systemMessage"])
-        self.assertIn("already been drawn", context(payload))
+        self.assertNotIn("systemMessage", payload)
+        self.assertIn("drawn for the Operator after your reply",
+                      context(payload))
+
+    def test_the_barrel_is_told_how_to_propose(self):
+        ctx = context(hook.respond("release the hound", NO_LOG, WHEN))
+        self.assertIn("with `args` set to the reason", ctx)
+        self.assertIn("Le Fripon alone must quote his gate verbatim", ctx)
 
 
 class TwoSurfaces(unittest.TestCase):
@@ -127,9 +133,6 @@ class TwoSurfaces(unittest.TestCase):
         ctx = context(hook.respond("release the hound", NO_LOG, WHEN))
         self.assertIn("Do not redraw it", ctx)
 
-    def test_the_dial_carries_no_escape_codes(self):
-        msg = hook.respond("release the hound", NO_LOG, WHEN)["systemMessage"]
-        self.assertNotIn("\x1b[", msg)
 
 
 class Faults(unittest.TestCase):
@@ -194,7 +197,7 @@ class Entrypoint(unittest.TestCase):
         payload = json.loads(done.stdout)
         self.assertEqual(payload["hookSpecificOutput"]["hookEventName"],
                          "UserPromptSubmit")
-        self.assertIn("Le Limier", payload["systemMessage"])
+        self.assertIn("Le Limier", context(payload))
 
     def test_garbage_on_stdin_is_a_silent_clean_exit(self):
         for stdin in ("", "not json", "[1, 2]", '{"prompt": 7}'):

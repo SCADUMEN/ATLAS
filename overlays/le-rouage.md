@@ -5,7 +5,7 @@
 **Function:** Carries force from the barrel to the escapement, and distributes the regulated result to the registers and the hands.
 **Class:** Component. Not a member, not a mode, not a voice.
 **Position:** Both sides of Le Sas. Before it, the train delivers. After it, the motion works distribute.
-**Status:** **Built.** The deterministic train runs in `rouage/`, in both engines, and the barrel boundary is wired: `rouage/barillet.py` is the seam, `train.js` admits proposals under the same Cited policy as `rouage.py`, and `rouage/CONFORMANCE.md` is the generated record that the two agree on every branch of it. The barrel itself is still the model - that is what a barrel is, and it is not something this repository can build.
+**Status:** **Built.** The deterministic train runs in `rouage/`, in both engines, and the barrel boundary is wired: `rouage/barillet.py` is the seam, `train.js` admits proposals under the same Attributed policy as `rouage.py`, and `rouage/CONFORMANCE.md` is the generated record that the two agree on every branch of it. The barrel itself is still the model - that is what a barrel is, and it is not something this repository can build.
 
 Le Rouage is the linkage. Every part of Le Conseil connects to every other part through it, and nothing reaches Le Sas except by way of the train.
 
@@ -25,9 +25,9 @@ Every activation block turns out to have two halves. The quoted invocation phras
 
 So the built train handles named invocation, precedence, metering, the seal, and the trace. The automatic half necessarily runs in the barrel, and the honest arrangement is that **the barrel proposes and the train disposes**: a proposal still passes through ordering, the cap, and the Fripon seal, all enforced in code the barrel cannot reach around. That is what keeps *the train decides nothing* true even though something upstream of it did.
 
-The admission policy for those proposals was L'Opérateur's call, and it is decided: **Cited**. A proposal is admitted only if its citation is a verbatim line among the bullets in that member's own Activation section - the same text `parse_activation()` already pulls from the doctrine at load time, so there is no second copy to drift. A citation that doesn't match is a rejected proposal, recorded to the trace as a discrimination failure in the gates, the same category as full-ring and over-cap. `admit_proposals()` in `rouage/rouage.py` is that mechanism; `route()` takes an optional `proposals` argument that feeds it. What reads the artifact for meaning is still the barrel, and always will be: producing `(member, citation)` pairs *is* the semantic half, and a train that could do it would not be a train. What was missing was never that reader - it was the seam it hands across.
+The admission policy for those proposals is L'Opérateur's call. It was **Cited** from 2026-08-16: a proposal was admitted only if its citation was a verbatim line among the bullets in that member's own Activation section. In the field that policy and the skill descriptions together let nothing through - 109 windings, no member past Le Sceptique - and on 2026-10-24 it was replaced by **Attributed**: *"it should not need to be exact."* The barrel gives its reason in its own words. The train scores that reason against the member's bullets and its prohibitions by word overlap (see Citation Match below) and records the nearest bullet beside it; it does not refuse a proposal for being loosely worded. It refuses an unknown member, a sealed member the crown has not armed, and a reason that sits closer to one of the member's prohibitions than to any of its activations - the inverted gate. The members named under **Strict admission** in `le-conseil.md` keep Cited unchanged: today that is Le Fripon alone. `admit_proposals()` in `rouage/rouage.py` is that mechanism; `route()` takes an optional `proposals` argument that feeds it. What reads the artifact for meaning is still the barrel, and always will be: producing `(member, citation)` pairs *is* the semantic half, and a train that could do it would not be a train. What was missing was never that reader - it was the seam it hands across.
 
-That seam is `rouage/barillet.py`. `brief()` is what the train hands out at COLLECT: the utterance and the citation menu, positives only, so a barrel required to quote verbatim can see exactly what it is quoting. `read_proposals()` is what it accepts back, and it validates **shape only** - a malformed item costs that item and is recorded, never the turn. Whether a citation is real stays `admit_proposals()`' decision, because that rejection belongs in the trace where a barrel repeatedly citing text that is not there remains visible. Filtering it out at the seam would tidy the audit surface by deleting the signal.
+That seam is `rouage/barillet.py`. `brief()` is what the train hands out at COLLECT: the utterance and the citation menu, positives only, so a barrel can see what each member's gate looks for - and, for a strict member, exactly what it must quote. `read_proposals()` is what it accepts back, and it validates **shape only** - a malformed item costs that item and is recorded, never the turn. Whether a citation is real stays `admit_proposals()`' decision, because that rejection belongs in the trace where a barrel repeatedly citing text that is not there remains visible. Filtering it out at the seam would tidy the audit surface by deleting the signal.
 
 The seam is deliberately thin in one further way: it does not re-run the train to enrich the brief. Stage logic in that file would be a third implementation of the thing the conformance test exists to hold at two.
 
@@ -79,13 +79,13 @@ The barrel is the model, not a module. `overlays/le-barillet.md` is explicit: it
 A proposal is `(member, citation, evidence)`:
 
 - **member** — the full name, as the roster writes it. Folded, so accents are forgiving.
-- **citation** — a bullet from that member's own Activation section, **verbatim**. Not a paraphrase and not a summary. `citations(ring)` returns the exact menu, because requiring a quote while making the barrel reproduce it from memory is not a fair check — it is a trap.
+- **citation** — the reason this member changes the answer, in the barrel's own words. Quoting a bullet is welcome and scores highest; it is not required, except for a strict member, whose citation must be a verbatim line of its gate. `citations(ring)` returns the bullets as the menu of what to look for. In a live session the citation is the `args` of the member's skill call: invoking `atlas:le-limier` with the reason *is* the proposal.
 - **evidence** — optional. An object id for the artifact the citation is about. `git add` then `git write-tree` addresses the staged state without a commit; `git hash-object -w` addresses one file. The `-w` writes it, and an unwritten object is not evidence.
 
 What the barrel must not do:
 
-- **Propose a member whose bullet did not fire.** The citation check catches an invented condition, never an invented fact. That asymmetry is the barrel's to honour; the train cannot see it.
-- **Paraphrase to make a bullet fit.** A citation that has been adjusted to match the situation is the situation being adjusted to match the citation.
+- **Propose a member whose condition is not present.** The train can catch an inverted gate, never an invented fact. That asymmetry is the barrel's to honour; the train cannot see it.
+- **Dress the situation to fit a bullet.** Describe what is actually there. The nearest bullet is recorded beside the reason so the two can be compared later, and a reason bent toward a bullet defeats the comparison.
 - **Propose to reach a number.** Two to four is a default, not a target, and a member appears only when it changes the answer.
 
 What the barrel cannot do, by construction: unseal Le Fripon, exceed the cap, reorder precedence, or reach the dial. All four are enforced downstream in code it cannot reach around, which is what keeps *the train decides nothing* true even though something upstream did.
@@ -126,8 +126,18 @@ The train's ratios are fixed, declared, and inspectable. They are not tuned per 
 | Precedence | Sauvegarder → Vigile → Sceptique → Renégat → relevance | `le-conseil.md` |
 | Load granularity | `OPERATIONAL CORE` only | `le-conseil.md` |
 | Halting verdicts | Renégat: Archive, Release | field operators stand down |
+| Citation match | word overlap; inverted-gate test only | this file, below |
+| Strict admission | Le Fripon | `le-conseil.md` |
 
 A change to any ratio is a change to this file and to `le-conseil.md`, committed. Never an in-flight adjustment.
+
+### Citation Match
+
+Under Attributed admission the train scores a proposal's citation against each of the member's bullets and each of its prohibitions. Both texts are folded, split into words, and stripped of the filler words below; the score is the Dice overlap of what remains, as a whole percentage, `200 × shared ÷ (words in citation + words in bullet)`, rounded down. That is integer arithmetic on purpose, so the Python train and the browser train cannot round a tie differently.
+
+The score is a record, not a judgement. Real paraphrases of a gate score low - *"about to wipe the usb stick"* shares almost no words with *"a source file, artifact, component, image, note, or record is at risk"* - because whether a situation fits a condition is meaning, and meaning is the barrel's. The score is used for exactly one decision: a proposal whose nearest prohibition scores at least **30%** and higher than its nearest activation is the inverted gate, and is refused.
+
+Filler words: `a` `an` `the` `of` `to` `in` `on` `for` `or` `and` `is` `are` `be` `being` `been` `was` `were` `it` `its` `this` `that` `these` `those` `with` `by` `as` `at` `from` `has` `have` `had` `into` `than` `then` `when` `while` `not` `do` `does` `did` `invoke` `no` `nor` `but` `so` `if` `any` `some` `something` `someone`
 
 ---
 

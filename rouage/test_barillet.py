@@ -20,6 +20,7 @@ import unittest
 from pathlib import Path
 
 import barillet
+import rouage
 import conformance
 from rouage import load_ring
 
@@ -36,8 +37,9 @@ class TheBrief(unittest.TestCase):
         cls.b = barillet.brief(cls.ring, "what happened here")
 
     def test_it_offers_the_activation_bullets_verbatim(self):
-        # The barrel is required to cite verbatim, which is only fair if it can
-        # see exactly what it is quoting.
+        # A strict member must cite verbatim, which is only fair if the barrel
+        # can see exactly what it is quoting; for the rest it is the menu of
+        # what each gate looks for.
         for m in self.ring.members:
             if m.bullets:
                 self.assertEqual(self.b["citations"][m.name], list(m.bullets))
@@ -151,7 +153,11 @@ class TheWiredTurn(unittest.TestCase):
         self.assertIn(self.plain.position, trace.to_dict()["admitted"])
 
     def test_malformed_items_land_in_failures_beside_the_trains_own(self):
-        payload = json.dumps([{"member": self.plain.name, "citation": "nope"},
+        # A strict member's paraphrase: the only citation the train still
+        # refuses for its wording, now that Attributed admits the rest.
+        strict = next(m for m in self.ring.members
+                      if rouage.fold(m.name) in self.ring.strict)
+        payload = json.dumps([{"member": strict.name, "citation": "nope"},
                               {"member": "X", "citation": "y", "extra": 1}])
         trace = barillet.turn(self.ring, "a quiet turn", payload)
         joined = " ".join(trace.failures)

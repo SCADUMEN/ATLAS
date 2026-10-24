@@ -165,7 +165,7 @@ def render() -> str:
     branches = {
         "unknown member": "unknown member",
         "cited a prohibition": "prohibition offered as grounds",
-        "cited text not found": "citation not verbatim",
+        "cited text not found": "strict member's citation not verbatim",
         "does not resolve": "evidence that does not resolve",
         "supplied no evidence": "evidence required, none given",
     }
@@ -231,11 +231,16 @@ def render() -> str:
     add("The stage the train cannot perform. A prose activation bullet — "
         "*\"an artifact shows modification whose cause is unknown\"* — is not "
         "matchable without reading for meaning, and the train is forbidden "
-        "that reading. So the barrel proposes and the train disposes: a "
-        "proposal is admitted only if its citation is **verbatim** one of that "
-        "member's own Activation bullets, which is still a literal string "
-        "match. Whatever read the artifact and decided the bullet applied was "
-        "the barrel, upstream.")
+        "that reading. So the barrel proposes and the train disposes. Under "
+        "**Attributed** admission (L'Opérateur, 2026-10-24) a proposal's "
+        "citation is the barrel's reason in its own words; the train scores it "
+        "against the member's bullets and prohibitions by word overlap — whole-"
+        "percent integer arithmetic, so the two engines cannot round apart — "
+        "records the nearest bullet, and refuses only the inverted gate: a "
+        "reason nearer a prohibition than any activation. A **strict** member "
+        "is still admitted only on a verbatim line of its own gate. Whatever "
+        "read the artifact and decided the condition applied was the barrel, "
+        "upstream.")
     add("")
     add("Until this record existed, `train.js` implemented the literal half "
         "only. `emit.py` had shipped `bullets` and `prohibitions` to the "
@@ -305,9 +310,11 @@ def render() -> str:
     add("")
     add("## What this does not claim")
     add("")
-    add("- **Not that a citation is true.** A verbatim citation proves the "
-        "gate is real. It cannot prove the premise was: the barrel can quote a "
-        "bullet perfectly with nothing having been modified at all. Evidence "
+    add("- **Not that a citation is true, or that it fits.** A citation's "
+        "score says how many words it shares with a bullet, not whether the "
+        "situation meets the condition. Nor can it prove the premise: the "
+        "barrel can quote a bullet perfectly with nothing having been modified "
+        "at all. Evidence "
         "narrows that gap — an object id the train resolves without reading it "
         "— and narrowing is not closing. It catches fabrication, not "
         "misattribution.")

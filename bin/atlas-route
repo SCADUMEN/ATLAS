@@ -2,9 +2,9 @@
 # atlas-route — the UserPromptSubmit hook. Winds the train once per prompt.
 #
 # Routes the Operator's prompt through Le Rouage, records the winding in the
-# crown's log, and draws Le Cadran's face whenever the train did more than keep
-# Le Sceptique's standing watch. `/atlas` routes its words but draws no dial:
-# the rite has its own panel. The logic is rouage/hook.py; this only finds it.
+# crown's log, and hands the barrel its seats. It draws no dial: at prompt time
+# only the named half of each gate is visible, so Le Cadran is drawn after the
+# turn by bin/atlas-settle. The logic is rouage/hook.py; this only finds it.
 #
 # A prompt hook must never stop a prompt. Exit 2 would block it, so nothing
 # here can return 2: every failure ends in silence or in a message on the dial.

@@ -245,10 +245,19 @@ def proposal_cases(ring):
              [[plain.name, "  " + plain.bullets[0] + "  "]]),
         case("unknown member",
              [["Le Fantome", plain.bullets[0]]]),
-        case("citation not found in the activation section",
+        case("a reason in the barrel's own words is attributed, not refused",
              [[plain.name, "because it felt right"]]),
+        case("a reworded bullet is admitted beside the bullet it sits nearest",
+             [[plain.name, " ".join(reversed(plain.bullets[0].split()))]]),
+        case("an empty reason is admitted uncited",
+             [[plain.name, ""]]),
+        case("a strict member's paraphrase is refused",
+             [[sealed.name, " ".join(reversed(sealed.bullets[0].split()))]],
+             armed=sealed.name),
         case("a prohibition offered as grounds - the inverted gate",
              [[prohibited.name, prohibited.prohibitions[0]]]),
+        case("a reason nearer a prohibition than any activation - inverted",
+             [[prohibited.name, prohibited.prohibitions[0] + " again"]]),
         case("already convened literally, so not duplicated",
              [[plain.name, plain.bullets[0]]], utterance=convening),
         case("sealed member proposed without authorization",
@@ -351,6 +360,24 @@ class TheTwoTrainsAgreeOnTheBarrelsHalf(unittest.TestCase):
     def test_the_precedence_ordering_matches(self):
         for c, j in zip(self.cases, self.js):
             self.assertEqual(self._py(c)["admitted"], j["admitted"], c["name"])
+
+    def test_the_attributed_branches_are_exercised(self):
+        # Attributed admits where Cited refused, so most of its branches are
+        # notes on admitted positions rather than failures, and the failure
+        # census below cannot see them. The inverted gate reached by overlap
+        # is a failure, but reads like the quoted one until its score suffix.
+        notes, inverted = set(), False
+        for c in self.cases:
+            t = self._py(c)
+            for p in t["positions"]:
+                note = p.get("note") or ""
+                for kind in ("nearest ", "uncited", "no bullet shares a word"):
+                    if note.startswith(kind):
+                        notes.add(kind)
+            inverted |= any("% to " in f for f in t["failures"])
+        self.assertEqual(notes, {"nearest ", "uncited",
+                                 "no bullet shares a word"})
+        self.assertTrue(inverted)
 
     def test_the_matrix_actually_exercises_every_branch(self):
         # A matrix that silently stopped covering a branch would keep passing.

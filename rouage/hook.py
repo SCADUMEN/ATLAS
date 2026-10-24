@@ -7,19 +7,20 @@ Until this existed the train ran only for the dial pages and the tests. In a
 real conversation, which member convened was the barrel reading skill
 descriptions and cooperating - the exact arrangement barillet.py calls "works,
 and is not a mechanism". This module is the caller the train was waiting for:
-every prompt the Operator submits is routed through route(), recorded through
-record_winding(), and - when the train has something to show - drawn as
-Le Cadran's face.
+every prompt the Operator submits is routed through route() and recorded
+through record_winding().
 
-Two surfaces leave here, and they are the two the Trace docstring separates:
+It no longer draws the dial (1.14.0). At prompt time the train can see only
+the named half of each gate, so a face drawn here could never show a member the
+barrel convened on the automatic half. Le Cadran is drawn by settle.py, the Stop
+hook, from what actually convened. What leaves here:
 
-  - systemMessage is the dial. Claude Code shows it to the Operator directly,
-    so the face is drawn by the router and never transcribed by the model.
-    hardware/le-boitier.md: the display never shows a state the router did not
-    produce. A dial the model redrew would be one.
   - additionalContext is what the barrel needs: the seats, in precedence order,
-    and where each one's core lives. Held members are counted, never named -
-    le-sas.md keeps them out of the prose, and the barrel writes the prose.
+    where each one's core lives, and how to propose a member the train cannot
+    see. Held members are counted, never named - le-sas.md keeps them out of
+    the prose, and the barrel writes the prose.
+  - systemMessage only to report on itself: a train fault, or a winding that
+    could not be recorded.
 
 The hook never blocks a prompt. Every failure ends in exit 0; a fault in the
 train is reported on the dial's channel instead of drawing a dial the train did
@@ -108,8 +109,13 @@ def context_for(trace: Trace, wound: bool) -> str:
         lines.append("Le Cadran is not drawn for the Arrival rite. Do not "
                      "compose one.")
     else:
-        lines.append("Le Cadran has already been drawn for the Operator by the "
-                     "hook. Do not redraw it, transcribe it, or compose one.")
+        lines.append("Le Cadran is drawn for the Operator after your reply, "
+                     "from the members that actually convened. Do not redraw "
+                     "it, transcribe it, or compose one.")
+    lines += ["", "To convene a member on the automatic half of its gate, "
+              "invoke its skill (`atlas:le-<name>`) with `args` set to the "
+              "reason in your own words. That call is the proposal; Le Fripon "
+              "alone must quote his gate verbatim and be armed."]
     if wound:
         lines += ["", "This prompt winds the crown. The Arrival rite governs "
                   "the reply; the seats below are what the train set going."]
@@ -190,19 +196,10 @@ def respond(prompt: str, env: dict[str, str], when: str) -> dict | None:
         except OSError as exc:
             unrecorded = f"winding not recorded: {exc}"
 
-    # The rite has its own panel, First Light; the dial stays off it. The
-    # seats still reach the barrel, so `/atlas release the hound` convenes.
+    # The seats reach the barrel whenever the train spoke, and on the rite, so
+    # `/atlas release the hound` convenes. The face is settle.py's.
     shown = wound or speaks(trace)
-    drawn = shown and not wound
-    messages = []
-    if drawn:
-        try:
-            messages.append(dial_for(trace))
-        except Exception as exc:
-            messages.append(f"Le Cadran — the face faulted: "
-                            f"{type(exc).__name__}: {exc}")
-    if unrecorded:
-        messages.append(unrecorded)
+    messages = [unrecorded] if unrecorded else []
 
     payload: dict = {}
     if messages:

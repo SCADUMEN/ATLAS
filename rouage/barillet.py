@@ -10,7 +10,7 @@ not matchable without reading for meaning. The train is forbidden that reading.
 So the barrel proposes and the train disposes.
 
 `route()` has accepted `proposals` for some time and `admit_proposals()` has
-enforced the Cited policy against them. What did not exist was the seam: a
+enforced the admission policy against them (Cited, then Attributed). What did not exist was the seam: a
 defined thing the train hands out at COLLECT, and a defined thing it accepts
 back. Until it existed, the automatic half of every gate was a model reading
 markdown and cooperating - which works, and is not a mechanism.
