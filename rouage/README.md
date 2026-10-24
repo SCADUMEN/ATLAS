@@ -104,18 +104,27 @@ Fripon seal downstream. "The train decides nothing" survives, because everything
 that constrains the outcome is enforced in code the barrel cannot reach around.
 
 `admit_proposals()` is the boundary, and the admission policy — L'Opérateur's
-call, the trust boundary of the whole instrument — is **decided: Cited**. A
-proposal is admitted only if its citation is a verbatim line among the bullets
-`parse_activation()` already extracted from that member's Activation section at
-load time. Anything else is a rejected proposal: it never reaches `order()` or
-`meter()`, and the rejection itself lands in `trace.failures` as a discrimination
-failure, the same category as full-ring and over-cap. `route()` takes an
-optional `proposals` argument that feeds straight into it — the two rejected
-options (Permissive, Strict) are still in the docstring as a record of why not.
+call, the trust boundary of the whole instrument — is **Attributed**, decided
+2026-10-24. It replaced **Cited** (2026-08-16), which admitted a proposal only on
+a verbatim bullet. In the field Cited ran as Strict: 109 windings, nobody
+admitted past Le Sceptique, and the one live proposal on record gave its reason
+as a task description. Under Attributed the barrel's reason is admitted in its
+own words; the train scores it against the member's bullets and prohibitions by
+word overlap (whole-percent integers, so both engines agree to the digit),
+writes the nearest bullet into the candidate's note, and refuses only the
+inverted gate — a reason nearer a prohibition than any activation, at or over
+the threshold in `le-rouage.md`'s Citation Match. Members under **Strict
+admission** in `le-conseil.md` (Le Fripon) keep Cited exactly.
 
-What is still missing is the barrel itself: nothing in this repo reads an
-artifact for meaning and produces the `(member, citation)` pairs to hand in.
-`admit_proposals()` is the mechanism a barrel would call; it is not the barrel.
+A refused proposal never reaches `order()` or `meter()`; it lands in
+`trace.failures` as a discrimination failure, the same category as full-ring
+and over-cap. The other options (Permissive, Cited, Strict) stay in the
+docstring as a record of why not.
+
+The barrel is the model. In a live session its proposal is the skill call
+itself: invoking `atlas:le-limier` with the reason as `args` is the
+`(member, citation)` pair, and `bin/atlas-settle` reads it back out of the
+transcript at the end of the turn.
 
 ## The Train In A Live Session
 
@@ -126,8 +135,8 @@ that: every prompt is routed through `route()`, recorded through
 `record_winding()` — the crown's log, which had a mechanism and no caller — and,
 when the train did more than keep Le Sceptique's standing watch, drawn.
 
-The two surfaces stay two. The face goes out as the hook's `systemMessage`, so
-Claude Code shows the Operator the dial the router drew, and the model never
+The two surfaces stay two. The face goes out as a hook's `systemMessage`, so
+Claude Code shows the Operator the dial the train drew, and the model never
 transcribes it. The model gets the seats in precedence order and where each
 core lives; held members reach it as a count, never by name, because the model
 writes the prose and `le-sas.md` keeps them out of it. `/atlas` routes its words
@@ -135,12 +144,21 @@ and seats the barrel, but draws no dial — the rite has its own panel — and
 `/atlas:le-cadran` and `/atlas:le-conseil` are left alone, since they draw their
 own.
 
-It is the named half only. The automatic half of every gate is still the
-barrel's, and still unbuilt as a mechanism.
+It is the named half only, and in the field that was the whole problem: 109
+windings, nobody admitted past Le Sceptique. 1.14.0 moves the face to the end of
+the turn. `bin/atlas-settle` is the `Stop` hook: it finds the turn's prompt in
+the transcript, takes every council skill the barrel invoked after it as a
+proposal — the skill names the member, its `args` are the reason — routes the
+prompt again with them, and draws one face of what actually convened, named and
+automatic together. The prompt hook now only routes, records, and seats the
+barrel, and tells it how to propose. The rite and the two displays are still
+left alone.
 
 The log is `~/.claude/atlas/windings.jsonl`, one entry per routed prompt,
 silent turns included: a gate that should have fired and did not is only
-visible if the misses are kept too. It holds the prompt text, so it lives
+visible if the misses are kept too. A turn in which the barrel proposed gets a
+second entry, `"kind": "settle"`, carrying the proposals and what the train
+admitted from them. It holds the prompt text, so it lives
 beside the operator profile and the session transcripts, under the Claude
 config home, never in a repository.
 

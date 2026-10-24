@@ -118,6 +118,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | doc-site | Indexable documentation site — build, verify, crawler contract | system | B | built | site/build.py |
 | cadran-face | Le Cadran — the watch face in the terminal | system | B | built | rouage/cadran_face.py |
 | live-train | Live train — every prompt routed, Le Cadran drawn by the router | system | A | built | bin/atlas-route |
+| settle-dial | Settle — the turn read back, Attributed admission, Le Cadran drawn from what convened | system | B | built | bin/atlas-settle |
 
 ---
 

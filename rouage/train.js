@@ -179,6 +179,31 @@ function pyRepr(s) {
   return q + out + q;
 }
 
+// Citation match, mirroring words()/overlap()/nearest() in rouage.py. The
+// filler words and the threshold arrive in D from le-rouage.md. Integer
+// arithmetic, floored, so neither engine can round a tie the other way.
+function words(D, text) {
+  const filler = new Set(D.filler || []);
+  return new Set((fold(text).match(/[a-z0-9]+/g) || []).filter((w) => !filler.has(w)));
+}
+
+function overlap(a, b) {
+  if (!a.size || !b.size) return 0;
+  let shared = 0;
+  for (const w of a) if (b.has(w)) shared += 1;
+  return Math.floor((200 * shared) / (a.size + b.size));
+}
+
+function nearest(D, citation, lines) {
+  const cited = words(D, citation);
+  let best = "", score = 0;
+  for (const line of lines) {
+    const s = overlap(cited, words(D, line));
+    if (s > score) { best = line; score = s; }
+  }
+  return [best, score];
+}
+
 // Stage 6 - COLLECT. The barrel's half, admitted into the train.
 //
 // This is the one stage whose input the train cannot derive: something read an
@@ -188,7 +213,7 @@ function pyRepr(s) {
 // browser may do it at all. Reading the bullets FOR meaning would be
 // interpreting, and this file is forbidden that.
 //
-// Mirrors admit_proposals() in rouage.py, policy (b) Cited. Every rejection
+// Mirrors admit_proposals() in rouage.py, policy (d) Attributed. Every rejection
 // string is duplicated from there deliberately: the conformance test compares
 // them verbatim, so a divergence is a test failure rather than a dial that
 // quietly disagrees with the council.
@@ -221,11 +246,28 @@ function admitProposals(D, trace, proposals, cands, resolvable, requireEvidence)
       continue;
     }
 
-    if (!(m.bullets || []).includes(cited)) {
-      trace.failures.push(
-        `rejected proposal: ${m.name} cited text not found ` +
-        `verbatim in its Activation section: ${pyRepr(citation)}`);
-      continue;
+    // Attributed, except for the strict list: see admit_proposals().
+    let attribution = "";
+    if ((D.strict || []).includes(folded)) {
+      if (!(m.bullets || []).includes(cited)) {
+        trace.failures.push(
+          `rejected proposal: ${m.name} cited text not found ` +
+          `verbatim in its Activation section: ${pyRepr(citation)}`);
+        continue;
+      }
+    } else if (!cited) {
+      attribution = "uncited";
+    } else if (!(m.bullets || []).includes(cited)) {
+      const [near, score] = nearest(D, cited, m.bullets || []);
+      const [guard, against] = nearest(D, cited, m.prohibitions || []);
+      if (against >= D.threshold && against > score) {
+        trace.failures.push(
+          `rejected proposal: ${m.name} cited a prohibition, ` +
+          `not an activation - its gate names this as a reason to ` +
+          `stay dark: ${pyRepr(citation)} (${against}% to ${pyRepr(guard)})`);
+        continue;
+      }
+      attribution = near ? `nearest ${score}%: ${near}` : "no bullet shares a word";
     }
 
     // A citation proves the gate is real; it cannot prove the premise was.
@@ -249,6 +291,7 @@ function admitProposals(D, trace, proposals, cands, resolvable, requireEvidence)
       continue;
     }
 
+    note = [attribution, note].filter(Boolean).join("; ");
     seen.add(folded);
     if (m.sealed && fold(trace.armed || "") !== folded) {
       const unauth = "proposed without authorization";

@@ -74,6 +74,7 @@ ROUTE_ROW = re.compile(r"^\|\s*\*\*([^*|]+)\*\*\s*\|\s*([^|]+?)\s*\|", re.M)
 
 REPO = Path(__file__).resolve().parent.parent
 CONSEIL = REPO / "overlays" / "le-conseil.md"
+ROUAGE = REPO / "overlays" / "le-rouage.md"
 
 CORE_HEADING = "## OPERATIONAL CORE"
 DOCTRINE_HEADING = "## DOCTRINE"
@@ -92,6 +93,26 @@ DOCTRINE_HEADING = "## DOCTRINE"
 # doctrine declares its own structure instead of the parser inferring it.
 NEGATIVE_SECTION = re.compile(
     r"^###\s+Do Not Fire On\s*$(.*?)(?=^###\s|\Z)", re.M | re.S | re.I)
+
+# The other form a negative gate takes: one sentence inside the Activation
+# section, "Do not invoke for linear tasks or single-component work." Seven
+# members wrote theirs that way. Under Cited it did not matter that the parser
+# missed them - nothing loosely worded got through anyway. Under Attributed it
+# does: the inverted-gate test needs both forms, or a proposal whose reason is
+# a member's own "do not" sentence is admitted as grounds. First sentence only;
+# what follows it is the doctrine explaining itself.
+DO_NOT_INVOKE = re.compile(r"^(Do not invoke\b[^\n]*?\.)(?=\s|$)", re.M)
+
+# Attributed admission (le-conseil.md, Strict admission; le-rouage.md,
+# Citation Match). The strict list, the threshold and the filler words are
+# doctrine, parsed like the cap - none of them is written down here.
+STRICT_PHRASE = re.compile(r"\*\*Strict admission:\s*([^*]+?)\.\*\*")
+STRICT_SPLIT = re.compile(r",\s*(?:and\s+)?|\s+and\s+")
+MATCH_SECTION = re.compile(
+    r"^###\s+Citation Match\s*$(.*?)(?=^##\s|^###\s|\Z)", re.M | re.S)
+MATCH_THRESHOLD = re.compile(r"\*\*(\d+)%\*\*")
+FILLER_LINE = re.compile(r"^Filler words:(.*)$", re.M)
+WORD = re.compile(r"[a-z0-9]+")
 
 
 # --------------------------------------------------------------------------
@@ -204,6 +225,9 @@ class Ring:
     members: tuple[Member, ...]
     precedence: tuple[str, ...]   # member names, most irreversible first
     cap: int
+    strict: tuple[str, ...]       # folded names still held to Cited
+    threshold: int                # inverted-gate overlap, whole percent
+    filler: frozenset[str]        # words citation match ignores
 
     def by_name(self, name: str) -> Member | None:
         for m in self.members:
@@ -295,11 +319,26 @@ def parse_activation(
 
     negative = NEGATIVE_SECTION.search(body)
     prohibitions = bullet_lines(negative.group(1)) if negative else ()
+    prohibitions += tuple(DO_NOT_INVOKE.findall(section))
 
     return phrases, standing, sealed, bullets, prohibitions
 
 
-def load_ring(conseil: Path = CONSEIL) -> Ring:
+def load_citation_match(rouage_md: Path = ROUAGE) -> tuple[int, frozenset[str]]:
+    """The inverted-gate threshold and the filler words, from le-rouage.md."""
+    section = MATCH_SECTION.search(rouage_md.read_text(encoding="utf-8"))
+    if section is None:
+        raise ValueError("le-rouage.md: Citation Match section not found")
+    threshold = MATCH_THRESHOLD.search(section.group(1))
+    filler = FILLER_LINE.search(section.group(1))
+    if threshold is None or filler is None:
+        raise ValueError("le-rouage.md: Citation Match needs a **N%** "
+                         "threshold and a 'Filler words:' line")
+    words = frozenset(re.findall(r"`([^`]+)`", filler.group(1)))
+    return int(threshold.group(1)), words
+
+
+def load_ring(conseil: Path = CONSEIL, rouage_md: Path = ROUAGE) -> Ring:
     """Parse the manifest and every gate block. This is the archive state."""
     text = conseil.read_text(encoding="utf-8")
 
@@ -328,7 +367,18 @@ def load_ring(conseil: Path = CONSEIL) -> Ring:
         raise ValueError("le-conseil.md: panel cap not found")
     cap = NUMBER_WORDS[cap_match.group(2).casefold()]
 
-    return Ring(tuple(members), precedence, cap)
+    strict_match = STRICT_PHRASE.search(text)
+    if strict_match is None:
+        raise ValueError("le-conseil.md: strict admission rule not found")
+    names = {fold(m.name) for m in members}
+    strict = tuple(fold(n) for n in STRICT_SPLIT.split(strict_match.group(1)))
+    unknown = [n for n in strict if n not in names]
+    if unknown:
+        raise ValueError(f"le-conseil.md: strict admission names no member: "
+                         f"{unknown}")
+
+    threshold, filler = load_citation_match(rouage_md)
+    return Ring(tuple(members), precedence, cap, strict, threshold, filler)
 
 
 def load_routes(conseil: Path = CONSEIL) -> dict[str, tuple[str, ...]]:
@@ -711,7 +761,9 @@ def roue_a_colonnes(
     )
 
 
-def record_winding(trace: Trace, log: Path, when: str) -> None:
+def record_winding(trace: Trace, log: Path, when: str,
+                   kind: str | None = None,
+                   proposals: list[Proposal] | None = None) -> None:
     """Stages 1 and 10 - WIND and RECORD. Le Sauvegarder's log.
 
     `hardware/le-boitier.md` demoted this from mechanism to procedure when the
@@ -746,6 +798,13 @@ def record_winding(trace: Trace, log: Path, when: str) -> None:
         "notices": trace.notices,
         "failures": trace.failures,
     }
+    # A settle entry (bin/atlas-settle, the Stop hook) is the same turn read
+    # again after the barrel acted, so it says so and carries what the barrel
+    # proposed. The prompt-time entry is unchanged, keys and all.
+    if kind is not None:
+        entry["kind"] = kind
+    if proposals is not None:
+        entry["proposals"] = [list(p) for p in proposals]
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -905,13 +964,45 @@ def route(
 # The barrel boundary
 # --------------------------------------------------------------------------
 
-def citations(ring: Ring) -> dict[str, tuple[str, ...]]:
-    """The menu of quotable bullets, per member.
+def words(ring: Ring, text: str) -> frozenset[str]:
+    """Folded words, filler removed - the unit citation match counts in."""
+    return frozenset(w for w in WORD.findall(fold(text))
+                     if w not in ring.filler)
 
-    admit_proposals() requires a citation verbatim, which is only a fair
-    requirement if the barrel can see exactly what it is quoting. Without this
-    a session has to reproduce a doctrine line from memory and any drift - a
-    changed dash, a trimmed clause - is a rejection it cannot diagnose.
+
+def overlap(a: frozenset[str], b: frozenset[str]) -> int:
+    """Dice overlap as a whole percent, rounded down. Integer arithmetic, so
+    the browser train cannot round a tie the other way."""
+    if not a or not b:
+        return 0
+    return (200 * len(a & b)) // (len(a) + len(b))
+
+
+def nearest(ring: Ring, citation: str,
+            lines: tuple[str, ...]) -> tuple[str, int]:
+    """The line a citation shares most words with, and the score.
+
+    First in doctrine order on a tie; ("", 0) when nothing shares a word.
+    This counts words. Whether the situation fits the line is meaning, and
+    stays the barrel's.
+    """
+    cited = words(ring, citation)
+    best, score = "", 0
+    for line in lines:
+        s = overlap(cited, words(ring, line))
+        if s > score:
+            best, score = line, s
+    return best, score
+
+
+def citations(ring: Ring) -> dict[str, tuple[str, ...]]:
+    """The menu of activation bullets, per member.
+
+    For a strict member admit_proposals() still requires a citation
+    verbatim, which is only fair if the barrel can see exactly what it is
+    quoting. For everyone else the menu is what each gate looks for: a reason
+    that quotes it scores highest, and one in the barrel's own words is
+    admitted beside the bullet it sits nearest.
 
     The train still reads nothing for meaning. This hands over the same
     strings parse_activation() already extracted, and the barrel decides which
@@ -947,35 +1038,36 @@ def admit_proposals(
     keeps "the train decides nothing" true even though something upstream did.
 
     `proposals` is a list of (member_name, citation) where citation is the
-    activation bullet the barrel claims fired.
+    barrel's reason the member changes the answer.
 
-    Decided (L'Opérateur, 2026-08-16): **Cited**. Of the three options this
-    docstring used to carry -
+    Decided (L'Opérateur, 2026-10-24): **Attributed**, superseding Cited
+    (2026-08-16) for every member not named under Strict admission. The
+    options this docstring has carried -
 
       (a) Permissive  - admit any proposal; the cap and seal are the only
                         defence. Risks theatre.
       (b) Cited       - reject any proposal whose citation is not a verbatim
-                        line in that member's Activation section. Auditable
-                        and still a string match, so the train stays
-                        deterministic.
+                        line in that member's Activation section.
       (c) Strict      - admit nothing automatically. Maximum honesty, but
                         eleven of thirteen gates go permanently dark.
+      (d) Attributed  - admit the barrel's reason in its own words, record
+                        the bullet it sits nearest, refuse the inverted gate.
 
-    - (b) is what is built. A proposal is admitted only if `citation`,
-    stripped, equals one of `member.bullets` exactly: the same prose lines
-    parse_activation() already pulled out of the doctrine at load time, so
-    there is no second copy of the gate text to drift from the file. This
-    is still a literal match, just against a different field than
-    evaluate() checks, so "the train decides nothing" survives - whatever
-    read the artifact for meaning and decided the bullet applied was the
-    barrel, upstream of here.
+    (b) was built first, and in the field it ran as (c): with skill
+    descriptions that carried only the named half, 109 windings admitted
+    nobody past Le Sceptique, and the one live proposal on record gave its
+    reason as a task description - which (b) rejects. (d) is what is built
+    now. It is still deterministic: the score is word overlap
+    (`nearest()`), whole-percent integer arithmetic both engines compute
+    identically, and it decides one thing only - a reason scoring higher
+    against a prohibition than against any activation, at or over the
+    threshold, is the inverted gate and is refused. A loosely worded reason
+    is not refused; its nearest bullet and score go in the candidate's
+    note, so how loose the barrel runs is visible in the trace.
 
-    A citation that does not match verbatim is a rejected proposal, not a
-    held candidate: it never reaches order() or meter(), because the cap
-    and the seal are for things that actually convened. The rejection is
-    recorded to trace.failures instead - a barrel that keeps citing text
-    that is not there is itself a discrimination failure in the gates, the
-    same category evaluate() already reports as full-ring and over-cap.
+    Strict members keep (b) exactly, including its failure string. A
+    rejected proposal is never a held candidate: it does not reach order()
+    or meter(), because the cap and the seal are for things that convened.
 
     A member already present in trace.candidates (named, or standing) is
     skipped rather than duplicated - one convened member should occupy one
@@ -1025,12 +1117,34 @@ def admit_proposals(
             )
             continue
 
-        if cited not in member.bullets:
-            trace.failures.append(
-                f"rejected proposal: {member.name} cited text not found "
-                f"verbatim in its Activation section: {citation!r}"
-            )
-            continue
+        attribution = ""
+        if folded_name in ring.strict:
+            # Cited, unchanged: a strict member's gate is quoted or it is shut.
+            if cited not in member.bullets:
+                trace.failures.append(
+                    f"rejected proposal: {member.name} cited text not found "
+                    f"verbatim in its Activation section: {citation!r}"
+                )
+                continue
+        elif not cited:
+            attribution = "uncited"
+        elif cited not in member.bullets:
+            near, score = nearest(ring, cited, member.bullets)
+            guard, against = nearest(ring, cited, member.prohibitions)
+            if against >= ring.threshold and against > score:
+                # The inverted gate again, reached by overlap rather than by
+                # quotation: the reason reads more like this member's "do not"
+                # than like any of its conditions. Same failure, same dark
+                # position, and the guard it sat nearest is named so the
+                # decision can be checked by hand.
+                trace.failures.append(
+                    f"rejected proposal: {member.name} cited a prohibition, "
+                    f"not an activation - its gate names this as a reason to "
+                    f"stay dark: {citation!r} ({against}% to {guard!r})"
+                )
+                continue
+            attribution = (f"nearest {score}%: {near}" if near
+                           else "no bullet shares a word")
 
         # A citation proves the gate is real. It cannot prove the premise was.
         # The barrel can quote Le Limier's bullet perfectly with nothing having
@@ -1065,6 +1179,7 @@ def admit_proposals(
             )
             continue
 
+        note = "; ".join(part for part in (attribution, note) if part)
         seen.add(folded_name)
         if member.sealed and fold(trace.armed or "") != folded_name:
             unauth = "proposed without authorization"
