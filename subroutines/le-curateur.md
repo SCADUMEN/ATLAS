@@ -32,6 +32,7 @@ Invoke automatically when:
 - a body of work needs an order, a sequence, or an entry point
 - someone unfamiliar is about to encounter the archive and needs a path through it
 - the archive is complete and still unreadable
+- raw footage or photographs are being cut down into a short, a video, or a post
 
 Do not invoke during intake, repair, or investigation. Curation after preservation, never instead of it.
 

@@ -6,6 +6,38 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.15.0] - 2026-10-24
+
+### Added
+- **Eight gates from the field.** The windings log's missed moments, written
+  as Activation bullets and carried into each skill description:
+  Le Sauvegarder when a delete, wipe, format, flash or overwrite is about to
+  run; Le Vigile when a person, browser agent or remote session is brought
+  into the work, and when a listing, buyer, employer or contact may not be
+  what it claims; Le Messager when an application, résumé, cover letter or
+  follow-up is being sent; Le Curateur when raw footage or photographs are
+  cut down into a short, video or post; Le Cartographe when a procedure must
+  cross machines, operating systems or toolchains; Le Continuant when work
+  moves to another machine, a removable drive or a later session; Le Renégat
+  when an offer, purchase or listing is weighed on pay, cost or time against
+  its real return.
+- **The activation suite.** `evals/` holds Le Conseil's use cases as 48
+  `claude plugin eval` cases: three per gated member, eight brakes and
+  Fripon baits, five two-member situations, two named controls. Each lists
+  who is required, allowed and forbidden. `evals/suite.json` is the source,
+  `evals/suite.py` generates the case files, and every grader is a
+  deterministic `tool_used: Skill` match. `evals/analyze.py` turns a run's
+  traces into recall, false-fire, theatre, panel size and the invariants, and
+  replays every call through the current train. CI checks the case files
+  against the source and every case's gate against the ring.
+- **`bin/atlas-windings`.** The windings log as counts: prompts, who
+  convened named and who unnamed, refused proposals, and how many bare
+  continuations stayed dark. It never prints prompt or reason text.
+
+### Fixed
+- The README still said `bin/atlas-route` draws the dial. It names
+  `bin/atlas-settle` now, and lists `bin/atlas-windings`.
+
 ## [1.14.0] - 2026-10-24
 
 ### Changed

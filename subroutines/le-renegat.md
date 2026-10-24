@@ -32,6 +32,7 @@ Invoke automatically when:
 - the reason for continuing is sunk cost, obligation, or identity rather than usefulness
 - the council has produced a list longer than the available time
 - the work is being carried because stopping would feel like failure
+- an offer, purchase, or listing is being weighed on pay, cost, or time against its real return
 
 ### Output Contract
 

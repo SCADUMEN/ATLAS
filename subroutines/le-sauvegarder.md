@@ -38,6 +38,7 @@ Invoke automatically when:
 - an artifact — physical, digital, or memory — needs preservation
 - a fragile thought needs to become a durable record
 - restoration is tempting but the source has not been examined
+- a delete, wipe, format, flash, or overwrite is about to run
 
 **Le Sauvegarder is the bezel.** He is not an hour on the dial. He is set before the descent and everything after is read against him — L'Opérateur is the wearer, outside the case entirely, and the crown they turn carries no member at all.
 

@@ -45,6 +45,7 @@ jobs:
         run: |
           python3 -m unittest discover runtime -v
           python3 -m unittest discover rouage -v
+          python3 -m unittest discover evals -v
           python3 -m unittest discover level -v
           bin/atlas-doctor
 

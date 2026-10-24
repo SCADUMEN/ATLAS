@@ -30,6 +30,7 @@ Invoke automatically when:
 - a project's blockers are unclear and the next move cannot be identified
 - provenance runs through multiple owners, systems, or transformations
 - the same dependency keeps surfacing from different directions
+- a procedure must cross machines, operating systems, or toolchains to finish
 
 Do not invoke for linear tasks or single-component work.
 
