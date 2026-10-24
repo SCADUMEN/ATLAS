@@ -58,6 +58,46 @@ activation_line() {
   ' "$1" | sed 's/\*\*//g; s/`//g' | cut -c1-320
 }
 
+# The automatic half of the gate: the "Invoke automatically when:" bullets,
+# verbatim, joined on one line. Until 1.13.2 the description carried only the
+# named half, and a description that says "when the Operator names X" is read
+# by the harness as "only when". The train cannot match these bullets without
+# reading for meaning; the barrel can, and the description is where it reads.
+# The bullets say what to look for. They are kept verbatim so the description
+# cannot drift from the doctrine, not because a proposal has to quote them.
+automatic_gates() {
+  awk '
+    /^## OPERATIONAL CORE/ { core = 1; next }
+    /^## DOCTRINE/ { exit }
+    core && /^Invoke automatically when:/ { auto = 1; next }
+    auto && /^- / { sub(/^- /, ""); out = out (out ? "; " : "") $0; next }
+    auto && /^[[:space:]]*$/ { next }
+    auto { exit }
+    END { print out }
+  ' "$1" | sed 's/\*\*//g; s/`//g'
+}
+
+# The brake, so the automatic half arrives with it rather than as an open
+# invitation. Two forms exist in the doctrine: the first sentence of a
+# "Do not invoke ..." line, or a "### Do Not Fire On" list (Le Rédempteur's),
+# which is folded the same way the activation bullets are.
+exclusion() {
+  awk '
+    /^## OPERATIONAL CORE/ { core = 1; next }
+    /^## DOCTRINE/ { exit }
+    core && /^Do not invoke/ { sub(/^Do not invoke /, ""); sub(/\. .*$/, ""); sub(/\.$/, ""); print; exit }
+    core && /^### Do Not Fire On/ { list = 1; next }
+    list && /^- / { sub(/^- /, ""); out = out (out ? "; " : "") $0; next }
+    list && /^[[:space:]]*$/ { next }
+    list { exit }
+    END { if (out) print "on " out }
+  ' "$1" | sed 's/\*\*//g; s/`//g'
+}
+
+# The skill-description ceiling the harness enforces. Past it the description
+# is truncated, and the bullets cut are the gates that silently stop firing.
+DESCRIPTION_MAX=1024
+
 while IFS= read -r file || [ -n "$file" ]; do
   case $file in ''|'#'*) continue ;; esac
   [ -f "$REPO/$file" ] || {
@@ -73,13 +113,30 @@ while IFS= read -r file || [ -n "$file" ]; do
     exit 1
   }
 
+  description="$title — $trigger"
+  # A sealed member never self-activates, so it gets no automatic half even
+  # if one is ever written for it.
+  if ! sealed_member "$name"; then
+    auto=$(automatic_gates "$REPO/$file")
+    [ -z "$auto" ] || description="$description Also convene, unnamed, when $auto."
+    brake=$(exclusion "$REPO/$file")
+    [ -z "$brake" ] || description="$description Not $brake."
+  fi
+  [ "${#description}" -le "$DESCRIPTION_MAX" ] || {
+    echo "atlas-skills: $name description is ${#description} chars," \
+      "over $DESCRIPTION_MAX; trim its Activation bullets" >&2
+    exit 1
+  }
+
   target=$REPO/skills/$name/SKILL.md
   built=$(mktemp "${TMPDIR:-/tmp}/atlas-skill.XXXXXX") || exit 1
 
   {
     printf -- '---\n'
     printf 'name: %s\n' "$name"
-    printf 'description: %s — %s\n' "$title" "$trigger"
+    # Single-quoted YAML: a bullet like "leaving the archive: a post" is a
+    # mapping key in a plain scalar. The only escape is '' for '.
+    printf "description: '%s'\n" "$(printf '%s' "$description" | sed "s/'/''/g")"
     if sealed_member "$name"; then
       printf 'disable-model-invocation: true\n'
     fi
