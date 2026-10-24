@@ -6,6 +6,23 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.13.2] - 2026-10-24
+
+### Fixed
+- **The council skills carry the automatic half of their gates.** Every
+  generated description carried only the named half — "Invoke when the
+  Operator names X" — which the harness reads as *only* when named. The
+  "Invoke automatically when" bullets never reached the one surface the
+  barrel reads to decide, so in practice the instrument ran the Strict policy
+  `admit_proposals()` rejected: 109 windings from 10-13 to 10-24, none
+  admitting anyone past Le Sceptique. `bin/atlas-skills` now appends the
+  bullets verbatim, so the description cannot drift from the doctrine, and
+  the brake: the first sentence of each "Do not invoke" line, or Le
+  Rédempteur's "Do Not Fire On" list. Le Fripon, being sealed, gets neither. Descriptions are single-quoted YAML, since a bullet
+  like "leaving the archive: a post" is not a valid plain scalar, and the
+  generator refuses any description past the harness's 1024-character
+  ceiling rather than let the tail bullets be truncated silently.
+
 ## [1.13.1] - 2026-10-21
 
 ### Changed

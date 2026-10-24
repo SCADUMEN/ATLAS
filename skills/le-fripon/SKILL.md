@@ -1,6 +1,6 @@
 ---
 name: le-fripon
-description: LE FRIPON — Invoke only when the Operator names "Le Fripon", "L'Intrus", "red team", or explicitly asks for his own defenses to be tested.
+description: 'LE FRIPON — Invoke only when the Operator names "Le Fripon", "L''Intrus", "red team", or explicitly asks for his own defenses to be tested.'
 disable-model-invocation: true
 ---
 
