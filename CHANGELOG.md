@@ -21,6 +21,14 @@ Release, and publishes the movement's Level.
   the face's spine rows, and field notes for #50–#59, all rendered by the
   real renderers rather than restated.
 
+### Fixed
+- **Le Cadran · Live shows typed markup instead of parsing it.** The readout
+  is set with `innerHTML`, and the utterance, a proposal's reason, and the
+  notices and faults that carry tier names were written into it unescaped,
+  so text typed into the page could inject HTML (self-XSS; flagged by CodeQL
+  `js/xss-through-dom` when the page was published to forgotten-industries.net).
+  `paint.js` now escapes every trace value it writes there.
+
 ## [1.15.1] - 2026-10-25
 
 ### Fixed
