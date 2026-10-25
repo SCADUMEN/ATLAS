@@ -116,6 +116,18 @@ class TheAnalysis(unittest.TestCase):
         self.assertEqual(arm["runs"], 0)
         self.assertEqual(arm["missingTraces"], 1)
 
+    def test_an_errored_run_is_dropped_not_counted_as_silence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            trace = Path(tmp) / "trace.jsonl"
+            trace.write_text("", encoding="utf-8")
+            agg = Path(tmp) / "aggregate.json"
+            agg.write_text(json.dumps({"suite": {"plugins": [{"version": "0"}]}, "cases": [
+                {"name": "multi-wipe-and-sell", "arms": {"with": [
+                    {"tracePath": str(trace), "error": "exit 1: session limit"},
+                    {"tracePath": str(trace), "error": None}]}}]}), encoding="utf-8")
+            runs = analyze.extract("T", agg)["runs"]
+        self.assertEqual([r["calls"] for r in runs], [None, []])
+
     def test_a_reason_read_as_a_prohibition_is_scored_as_inverted(self):
         arm = self.score([("brake-messager-bench-log", 0, [[
             "le-messager", "working notes and bench logs for the internal record"]])])
