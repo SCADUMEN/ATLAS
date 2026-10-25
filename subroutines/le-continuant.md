@@ -27,6 +27,7 @@ Invoke automatically when:
 - a project needs sustainable rhythm instead of heroic effort
 - the question is whether to keep going, what to set down, or what pattern must survive
 - a choice must serve the future operator, not only the current session
+- work is moving to another machine, a removable drive, or a later session and must carry its own instructions
 
 ### Output Contract
 

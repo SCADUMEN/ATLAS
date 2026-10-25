@@ -1,0 +1,449 @@
+{
+  "about": "Le Conseil's activation suite: every member's gate as an executable case. The source of truth for evals/activation/*/case.yaml (written by evals/suite.py) and for the expectations evals/analyze.py scores against. Prompts are written in the Operator's terse register and paraphrase situations from the field; none is copied from a winding log.",
+  "defaults": {
+    "max_turns": 6,
+    "timeout_seconds": 300,
+    "allowed_tools": ["Read", "Glob", "Grep", "Skill"],
+    "runs": 3
+  },
+  "cases": [
+    {
+      "name": "sauvegarder-field-clear-recovery",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "clear out those RECOVERY folders on the external, like 170 gigs. i need the room",
+      "gate": "a delete, wipe, format, flash, or overwrite is about to run",
+      "required": ["le-sauvegarder"],
+      "allowed": ["le-taxonomiste", "le-renegat", "le-continuant", "le-limier"]
+    },
+    {
+      "name": "sauvegarder-bullet-dd-over-stick",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "going to dd the new image straight onto the usb stick. the one with last night's memtest logs on it",
+      "gate": "a delete, wipe, format, flash, or overwrite is about to run",
+      "required": ["le-sauvegarder"],
+      "allowed": ["le-limier", "le-taxonomiste"]
+    },
+    {
+      "name": "sauvegarder-bullet-repair-before-image",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "old hard drive clicks a little but mounts. want to run a full chkdsk /r on it right now and get it working again",
+      "gate": "restoration is tempting but the source has not been examined",
+      "required": ["le-sauvegarder"],
+      "allowed": ["le-limier", "le-redempteur"]
+    },
+    {
+      "name": "vigile-field-browser-agent",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "can you drive my browser and fill out the job portal for me? i'll stay logged into my google account the whole time",
+      "gate": "a person, a browser agent, or a remote session is being brought into the work",
+      "required": ["le-vigile"],
+      "allowed": ["le-messager"]
+    },
+    {
+      "name": "vigile-bullet-key-in-config",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "here's the key so you can wire it up: sk_test_EXAMPLE0000. just drop it in config.js and push",
+      "gate": "credentials, tokens, keys, or passwords appear in a file, a note, or a conversation",
+      "required": ["le-vigile"],
+      "allowed": ["le-sauvegarder", "le-forgeron"]
+    },
+    {
+      "name": "vigile-bullet-buyer-ship-first",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "guy on marketplace says he'll pay 50 over asking for the gpu if i ship first, he'll mail a cashier's check. sounds good?",
+      "gate": "a listing, buyer, employer, or contact may not be what it claims",
+      "required": ["le-vigile"],
+      "allowed": ["le-renegat", "le-messager", "le-limier"]
+    },
+    {
+      "name": "messager-field-cover-letter",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "need a cover letter for the program coordinator posting. three paragraphs, pull from what you know of my work",
+      "gate": "an application, résumé, cover letter, or follow-up is being sent",
+      "required": ["le-messager"],
+      "allowed": ["le-curateur", "le-vigile"]
+    },
+    {
+      "name": "messager-bullet-explain-to-landlord",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "landlord asked why the server closet pulls so much power. help me explain it to her without the jargon",
+      "gate": "a technical result must be explained to someone without the context",
+      "required": ["le-messager"],
+      "allowed": []
+    },
+    {
+      "name": "messager-bullet-uncertain-revision",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "write the forum reply: board might be a rev 1.2, going off the silkscreen, not certain",
+      "gate": "an uncertain finding is being communicated and the uncertainty must survive",
+      "required": ["le-messager"],
+      "allowed": ["le-limier", "le-taxonomiste"]
+    },
+    {
+      "name": "curateur-field-pick-clips",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "got about 40 clips from the bench build. help me pick which ones make a 45 second short",
+      "gate": "raw footage or photographs are being cut down into a short, a video, or a post",
+      "required": ["le-curateur"],
+      "allowed": ["le-messager", "le-vigile"]
+    },
+    {
+      "name": "curateur-bullet-which-story",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "the case restoration photos could go in the restoration log, the watercooling history page, or the garage dig writeup. which story do they belong to?",
+      "gate": "the same artifact could belong to several stories and one must be chosen",
+      "required": ["le-curateur"],
+      "allowed": ["le-taxonomiste", "le-messager"]
+    },
+    {
+      "name": "curateur-bullet-entry-point",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "12 restoration logs on the site and no order to them. someone new lands there, where should they start?",
+      "gate": "a body of work needs an order, a sequence, or an entry point",
+      "required": ["le-curateur"],
+      "allowed": ["le-messager", "le-taxonomiste", "le-cartographe"]
+    },
+    {
+      "name": "cartographe-field-flash-across-machines",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "fastboot hangs on the mac. plan: windows vm for the driver, through the usb 2 hub, flash the bootloader from there. does that hold up?",
+      "gate": "a procedure must cross machines, operating systems, or toolchains to finish",
+      "required": ["le-cartographe"],
+      "allowed": ["le-sauvegarder", "le-limier", "le-redempteur", "le-forgeron"]
+    },
+    {
+      "name": "cartographe-bullet-block-compat",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "will the waterblock off my 980 fit a 1080 ti if i swap the backplate? same pcb?",
+      "gate": "compatibility between parts, revisions, standards, or formats is in question",
+      "required": ["le-cartographe"],
+      "allowed": ["le-limier", "le-forgeron"]
+    },
+    {
+      "name": "cartographe-bullet-loop-order",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "new loop: two rads, a d5, the res, cpu and gpu blocks, quick disconnects. what order do i plumb it",
+      "gate": "a build, repair, or project has more than three interacting parts",
+      "required": ["le-cartographe"],
+      "allowed": ["le-forgeron"]
+    },
+    {
+      "name": "continuant-field-scripts-to-stick",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "put the cleanup scripts on the thumb drive so i can run them on the other pc tomorrow",
+      "gate": "work is moving to another machine, a removable drive, or a later session and must carry its own instructions",
+      "required": ["le-continuant"],
+      "allowed": ["le-sauvegarder", "le-forgeron", "le-vigile"]
+    },
+    {
+      "name": "continuant-bullet-keep-going",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "nine hours in. still want to get all three drives imaged tonight, not stopping",
+      "gate": "the question is whether to keep going, what to set down, or what pattern must survive",
+      "required": ["le-continuant"],
+      "allowed": ["le-renegat", "le-sauvegarder"]
+    },
+    {
+      "name": "continuant-bullet-index-architecture",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "should the archive index stay one big markdown file or move to sqlite before it hits 10k entries",
+      "gate": "a decision affects future structure, naming, architecture, maintenance, or continuity",
+      "required": ["le-continuant"],
+      "allowed": ["le-cartographe", "le-renegat", "le-forgeron", "le-taxonomiste"]
+    },
+    {
+      "name": "limier-field-memtest-no-bios",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "memtest threw errors on one stick and now the board won't even get to bios. what happened",
+      "gate": "a system failed and the failure sequence has not been established",
+      "required": ["le-limier"],
+      "allowed": ["le-cartographe", "le-sauvegarder"]
+    },
+    {
+      "name": "limier-bullet-mismatched-psu",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "the psu in this old dell has a different fan and a label that doesn't match the model number",
+      "gate": "a part is non-original, non-standard, or does not match its documentation",
+      "required": ["le-limier"],
+      "allowed": ["le-taxonomiste", "le-sauvegarder"]
+    },
+    {
+      "name": "limier-bullet-dates-disagree",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "listing says 2009, the date code on the board says 2011. which one's right",
+      "gate": "two records disagree about the same event",
+      "required": ["le-limier"],
+      "allowed": ["le-taxonomiste"]
+    },
+    {
+      "name": "redempteur-field-back-to-mod",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "let's get back to the handheld mod. dropped it last week when fastboot kept stalling",
+      "gate": "something broken, stalled, or abandoned is being re-entered",
+      "required": ["le-redempteur"],
+      "allowed": ["le-cartographe", "le-continuant", "le-sauvegarder", "le-limier"]
+    },
+    {
+      "name": "redempteur-bullet-same-failure",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "third pump that's died the same way. i keep doing the same thing and getting the same result",
+      "gate": "a pattern of failure is repeating and has been named as such",
+      "required": ["le-redempteur"],
+      "allowed": ["le-limier", "le-renegat"]
+    },
+    {
+      "name": "redempteur-bullet-own-decision",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "i deleted the old backup config last month to clean up and now the nightly job doesn't know where anything goes",
+      "gate": "a previous decision created the problem now being addressed",
+      "required": ["le-redempteur"],
+      "allowed": ["le-limier", "le-sauvegarder", "le-cartographe"]
+    },
+    {
+      "name": "renegat-field-weigh-offers",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "one offer is 19 an hour five minutes away, the other is 23 but an hour's drive each way. which do i take",
+      "gate": "an offer, purchase, or listing is being weighed on pay, cost, or time against its real return",
+      "required": ["le-renegat"],
+      "allowed": ["le-vigile"]
+    },
+    {
+      "name": "renegat-bullet-hot-air-station",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "thinking of buying a 400 dollar hot air station to replace one capacitor on the old sound card",
+      "gate": "a plan requires a purchase, a fabrication, or a dependency that the goal does not justify",
+      "required": ["le-renegat"],
+      "allowed": ["le-forgeron"]
+    },
+    {
+      "name": "renegat-bullet-scope-creep",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "started out fixing the site nav. now i'm rewriting the build system and redoing the whole design",
+      "gate": "scope has grown past its original statement",
+      "required": ["le-renegat"],
+      "allowed": ["le-continuant", "le-cartographe"]
+    },
+    {
+      "name": "taxonomiste-field-accession-matchbook",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "add this motel matchbook to the ephemera collection",
+      "gate": "a new artifact, file, note, photograph, or record enters the archive",
+      "required": ["le-taxonomiste"],
+      "allowed": ["le-sauvegarder", "le-limier"]
+    },
+    {
+      "name": "taxonomiste-bullet-two-names",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "half my notes call it the bench rig, the other half say test box. same machine",
+      "gate": "the same thing is being called by two different names in two places",
+      "required": ["le-taxonomiste"],
+      "allowed": ["le-continuant"]
+    },
+    {
+      "name": "taxonomiste-bullet-receipt-scheme",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "need a filename scheme for the scanned receipts from here on",
+      "gate": "a naming scheme, folder structure, tag vocabulary, or schema is being created or changed",
+      "required": ["le-taxonomiste"],
+      "allowed": ["le-continuant", "le-forgeron"]
+    },
+    {
+      "name": "forgeron-field-discontinued-bracket",
+      "kind": "positive",
+      "source": "field",
+      "prompt": "the drive cage bracket is discontinued. need some way to mount the ssd in that bay",
+      "gate": "a part does not exist, is discontinued, or is priced beyond reason and could be fabricated",
+      "required": ["le-forgeron"],
+      "allowed": ["le-cartographe", "le-renegat"]
+    },
+    {
+      "name": "forgeron-bullet-script-the-steps",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "i do the same six steps to export and checksum every sd card. turn it into something i can just run",
+      "gate": "a procedure needs to become a script, template, or repeatable process",
+      "required": ["le-forgeron"],
+      "allowed": ["le-sauvegarder", "le-continuant"]
+    },
+    {
+      "name": "forgeron-bullet-judgment-done",
+      "kind": "positive",
+      "source": "bullet",
+      "prompt": "plan's settled and the map's done. write the title card renderer for episode 2",
+      "gate": "the judgment phase is complete and the remaining work is making",
+      "required": ["le-forgeron"],
+      "allowed": ["le-continuant", "le-curateur"]
+    },
+    {
+      "name": "brake-routine-finder-shortcut",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "what's the shortcut to show hidden files in finder",
+      "gate": "routine question: nothing on the ring changes the answer",
+      "required": [],
+      "allowed": [],
+      "forbidden": ["*"]
+    },
+    {
+      "name": "brake-messager-bench-log",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "bench log entry: replaced c12, board posts now",
+      "gate": "Do not invoke for working notes, bench logs, or internal records.",
+      "required": [],
+      "allowed": ["le-sauvegarder", "le-taxonomiste"],
+      "forbidden": ["le-messager"]
+    },
+    {
+      "name": "brake-vigile-local-move",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "move the photos from downloads into the project folder",
+      "gate": "Do not invoke for routine local file work with no exposure surface.",
+      "required": [],
+      "allowed": ["le-taxonomiste", "le-sauvegarder"],
+      "forbidden": ["le-vigile"]
+    },
+    {
+      "name": "brake-cartographe-single-rename",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "rename notes.TXT to notes.txt",
+      "gate": "Do not invoke for linear tasks or single-component work.",
+      "required": [],
+      "allowed": ["le-taxonomiste"],
+      "forbidden": ["le-cartographe"]
+    },
+    {
+      "name": "brake-curateur-intake",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "intake only: log these 30 garage photos as they are, no sorting yet",
+      "gate": "Do not invoke during intake, repair, or investigation.",
+      "required": [],
+      "allowed": ["le-sauvegarder", "le-taxonomiste"],
+      "forbidden": ["le-curateur"]
+    },
+    {
+      "name": "brake-limier-irrelevant-scratch",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "theres a scratch on the side panel, whatever. what thermal paste should i use on the new cpu",
+      "gate": "Do not invoke when the history is irrelevant to the decision.",
+      "required": [],
+      "allowed": [],
+      "forbidden": ["le-limier"]
+    },
+    {
+      "name": "fripon-bait-restore-untested",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "the backup restore has never actually been run start to finish. is it going to work when i need it?",
+      "gate": "Le Fripon's own bullet, unnamed: he never self-activates without the Operator",
+      "required": [],
+      "allowed": ["le-sauvegarder", "le-vigile", "le-continuant", "le-cartographe"]
+    },
+    {
+      "name": "fripon-bait-permissions-habit",
+      "kind": "negative",
+      "source": "brake",
+      "prompt": "the shared drive permissions haven't changed in years. they're fine, right?",
+      "gate": "Le Fripon's own bullet, unnamed: he never self-activates without the Operator",
+      "required": [],
+      "allowed": ["le-vigile", "le-sauvegarder"]
+    },
+    {
+      "name": "multi-wipe-and-sell",
+      "kind": "multi",
+      "source": "field",
+      "prompt": "about to wipe the old 2TB and sell it",
+      "gate": "a delete, wipe, format, flash, or overwrite is about to run + hardware is being sold, given away, decommissioned, or recycled",
+      "required": ["le-sauvegarder", "le-vigile"],
+      "allowed": ["le-renegat", "le-messager", "le-limier"]
+    },
+    {
+      "name": "multi-short-goes-public",
+      "kind": "multi",
+      "source": "field",
+      "prompt": "short's done. posting it public tonight, need the title and caption",
+      "gate": "a finding is leaving the archive + something is about to be published",
+      "required": ["le-messager", "le-vigile"],
+      "allowed": ["le-curateur"]
+    },
+    {
+      "name": "multi-estate-drive",
+      "kind": "multi",
+      "source": "bullet",
+      "prompt": "the drive from the estate sale has someone's tax documents on it. want to image it, then wipe it",
+      "gate": "a delete, wipe, format, flash, or overwrite is about to run + a photograph or document may contain identifying or sensitive material",
+      "required": ["le-sauvegarder", "le-vigile"],
+      "allowed": ["le-limier", "le-taxonomiste"]
+    },
+    {
+      "name": "multi-application-looks-off",
+      "kind": "multi",
+      "source": "field",
+      "prompt": "sending the application to the posting that seemed kind of off. salary's way high for the role",
+      "gate": "an application is being sent + an employer may not be what it claims",
+      "required": ["le-messager", "le-vigile"],
+      "allowed": ["le-renegat", "le-limier"]
+    },
+    {
+      "name": "multi-teardown-thread",
+      "kind": "multi",
+      "source": "bullet",
+      "prompt": "pick the best 8 shots from the teardown and write the thread to go with them",
+      "gate": "raw footage or photographs are being cut down into a post + a finding is leaving the archive",
+      "required": ["le-curateur", "le-messager"],
+      "allowed": ["le-vigile"]
+    },
+    {
+      "name": "named-argue-against-rebuild",
+      "kind": "named",
+      "source": "named",
+      "prompt": "argue against this: rebuilding the whole site in a new framework this weekend",
+      "gate": "Invoke when the Operator names \"argue against this\"",
+      "required": ["le-renegat"],
+      "allowed": ["le-continuant", "le-cartographe"]
+    },
+    {
+      "name": "named-who-is-maker",
+      "kind": "named",
+      "source": "named",
+      "prompt": "who is KR? stamped on the inside of the bracket, no other markings",
+      "gate": "Invoke when the Operator ... asks \"Who is X?\" of any name, handle, or maker's mark",
+      "required": ["le-limier"],
+      "allowed": ["le-taxonomiste"]
+    }
+  ]
+}

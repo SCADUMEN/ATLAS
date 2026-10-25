@@ -1,0 +1,11 @@
+#!/bin/sh
+# atlas-windings — the crown's log as counts: who convened, named or unnamed.
+#
+# Reads ~/.claude/atlas/windings.jsonl (or LOG) and prints numbers only. The
+# log holds prompt text and stays in the config home; this report never
+# quotes it, so it is safe to paste. The logic is rouage/windings.py.
+#
+#   atlas-windings [--since YYYY-MM-DD] [--json] [LOG]
+CDPATH=''
+HERE=$(cd -P "$(dirname "$0")" && pwd) || exit 1
+exec python3 -I "$HERE/../rouage/windings.py" "$@"

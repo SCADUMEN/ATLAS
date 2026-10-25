@@ -25,6 +25,7 @@ Council:
 - `overlays/le-protocol-de-trois.md` - Le Protocole des Trois Témoins, the three-witness judgment protocol.
 - `hardware/le-boitier.md` - the case. Enclosure and control specification for the physical instrument.
 - `subroutines/` - twelve operating modes, one file each.
+- `evals/` - the activation suite. Every member's gate as an executable `claude plugin eval` case, generated from `evals/suite.json`, and the post-test analysis. See `evals/README.md`.
 
 Overlays and templates:
 
@@ -40,7 +41,7 @@ Plugin surface (generated — edit the sources, then regenerate):
 - `agents/atlas.md` - the compact core, inline. Built by `bin/atlas-context --mode agent`.
 - `skills/` - the thirteen council members (cores only, built by `bin/atlas-skills`), plus the hand-authored `git-cleanup` utility skill.
 - `skills-standalone/atlas/` - the `/atlas` rite. Built by `bin/atlas-rite-skill`.
-- `hooks/hooks.json` - loads a project continuity capsule at session start, and routes every prompt through Le Rouage.
+- `hooks/hooks.json` - loads a project continuity capsule at session start, routes every prompt through Le Rouage, and draws Le Cadran after each turn.
 
 Scripts and examples:
 
@@ -48,7 +49,9 @@ Scripts and examples:
 - `bin/atlas-skills`, `bin/atlas-rite-skill` - generate the plugin's skills.
 - `bin/atlas-continuity` - initializes and checks an untracked project continuity capsule.
 - `bin/atlas-session-start` - the SessionStart hook. Emits the capsule as context.
-- `bin/atlas-route` - the UserPromptSubmit hook. Routes each prompt through the train, records the winding, and draws Le Cadran when the train convenes, seals, holds, or faults; `/atlas` routes its words but draws no dial. `ATLAS_NO_ROUTE=1` turns it off.
+- `bin/atlas-route` - the UserPromptSubmit hook. Routes each prompt through the train, records the winding, and seats the barrel when a member is named; it draws no dial. `ATLAS_NO_ROUTE=1` turns it off.
+- `bin/atlas-settle` - the Stop hook. Reads the turn back, takes each council skill the barrel invoked as a proposal, records a settle winding, and draws Le Cadran from what convened, named and unnamed together. Silent when nobody did.
+- `bin/atlas-windings` - the windings log as counts: who convened, named or unnamed, and how many bare continuations stayed dark. Never prints prompt text.
 - `bin/atlas-doctor` - verifies assembly, fingerprints, privacy boundaries, and doctrine stripping.
 - `bin/atlas-clones` - reports which clone the `/atlas` symlink resolves to, and flags any clone holding work that exists nowhere else. Matches on origin or on shared root commit, so a clone left pointing at a pre-rename URL is still recognized.
 - `adapters/` - handoff instructions for Codex and file-less agents.
@@ -267,6 +270,18 @@ Le Fripon carries `disable-model-invocation: true`. Doctrine says he never
 self-activates without L'Opérateur, and the harness enforces it: only
 `/atlas:le-fripon` reaches him.
 
+Every other member convenes unnamed too. Each skill description carries both
+halves of its gate, and when a situation meets the automatic half the barrel
+invokes the member's skill with its reason as `args`. Le Cadran is drawn after
+the reply from whoever actually convened. `evals/` holds the use cases that
+say when each one should, and should not:
+
+```sh
+python3 evals/suite.py --check   # the case files match evals/suite.json
+claude plugin eval . --ablation none --runs 3 --keep-temp --json arm.json
+bin/atlas-windings               # the same question, asked of your own log
+```
+
 ### Operator identity
 
 ATLAS serves one Operator, and by default addresses them generically as
@@ -348,6 +363,7 @@ in your shell rc. Other tools may rely on it; removing it is your call.
 ```sh
 python3 -m unittest discover runtime -v
 python3 -m unittest discover rouage -v
+python3 -m unittest discover evals -v
 bin/atlas-doctor
 claude plugin validate .
 ```

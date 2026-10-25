@@ -10,3 +10,6 @@ __pycache__/
 
 # Derived from cadran.html by `dial.py --publish`; regenerate, never commit.
 rouage/cadran-publish.html
+
+# `claude plugin eval` writes its run results here; they hold model replies.
+evals/results/

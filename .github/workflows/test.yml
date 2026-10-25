@@ -45,6 +45,12 @@ jobs:
       - name: Le Rouage
         run: python3 -m unittest discover rouage -v
 
+      - name: Activation suite
+        # The case files match evals/suite.json, every case quotes a gate the
+        # ring still has, and the analysis counts a synthetic arm correctly.
+        # The eval itself needs claude and a model, so it runs by hand.
+        run: python3 -m unittest discover evals -v
+
       - name: Le Niveau
         run: python3 -m unittest discover level -v
 

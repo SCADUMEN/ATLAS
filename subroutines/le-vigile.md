@@ -30,6 +30,8 @@ Invoke automatically when:
 - account access, recovery paths, or two-factor coverage is being changed
 - a photograph or document may contain identifying or sensitive material in the frame
 - a new service, integration, or agent is being granted access to the archive
+- a person, a browser agent, or a remote session is being brought into the work
+- a listing, buyer, employer, or contact may not be what it claims
 
 Do not invoke for routine local file work with no exposure surface.
 

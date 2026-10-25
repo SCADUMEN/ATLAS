@@ -29,6 +29,7 @@ Invoke automatically when:
 - a public-facing description of a project is being written or revised
 - an uncertain finding is being communicated and the uncertainty must survive
 - something is being shared with a seller, a forum, a buyer, or a reader
+- an application, résumé, cover letter, or follow-up is being sent
 
 Do not invoke for working notes, bench logs, or internal records. Those belong to Le Sauvegarder and Le Taxonomiste, and their audience is Matthew.
 
