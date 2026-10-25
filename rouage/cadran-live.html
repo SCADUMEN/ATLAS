@@ -154,6 +154,22 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
   figure { margin-bottom: 34px; }
 }
 
+/* terminal plates ------------------------------------------------------ */
+/* The face is character cells, so it is set as cells: one monospace run per
+   line, no wrapping, and a line-height tight enough that the box-drawing
+   frame closes. It pans on a phone for the same reason Plate 1 does. */
+.term { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 22px; }
+.term figure { margin: 0; overflow-x: auto; }
+.term pre { margin: 0; font-family: var(--data); font-size: 12px;
+  line-height: 1.22; color: #8a8a8a; white-space: pre; }
+.term figcaption { color: #9aa08f; }
+.term figcaption b { color: #d2d8ca; }
+@media (max-width: 700px) {
+  .term { grid-template-columns: none; }
+  .term pre { font-size: 11px; }
+}
+
 
 .live { display: grid; grid-template-columns: 1fr 330px; gap: 34px;
   align-items: start; }
@@ -176,6 +192,12 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
   cursor: pointer; }
 .chip:hover, .chip:focus-visible { border-color: var(--brass);
   color: var(--ink); outline: none; }
+.console select { font-family: var(--data); font-size: 13px; padding: 9px 10px;
+  background: var(--field); border: 1px solid var(--rule); color: var(--ink); }
+.console select:focus-visible { outline: 2px solid var(--brass);
+  outline-offset: 2px; }
+.facefig { margin-top: 10px; }
+.facefig .plate { display: flex; justify-content: center; overflow-x: auto; }
 </style>
 <div class="sheet">
   <header class="masthead">
@@ -194,13 +216,23 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
            placeholder="tiered: (none)" aria-label="Tiered members">
     <label><input type="checkbox" id="arm"> Arm Le Fripon</label>
   </div>
+  <div class="console">
+    <select id="member" aria-label="Proposed member">
+      <option value="">propose: (no one)</option></select>
+    <input type="text" id="reason" autocomplete="off" spellcheck="false"
+           placeholder="reason, in your own words" aria-label="Reason">
+  </div>
   <p class="hint">The train matches <b>named invocation only</b>. A route needs
   its verb &#8212; <b>run Publish</b>, not &#8220;publish&#8221;. Describing a
-  situation fires nothing: that half of every gate is the barrel's, and the
-  barrel is a person or a model, never this page. <b>Tiered</b> names who Le
-  Sceptique tiered this turn, comma-separated &#8212; anyone else admitted
-  holds at Le Sas. Empty leaves Le Sas transparent.</p>
-  <div class="console"><button class="chip" data-eg="run Publish">run Publish</button><button class="chip" data-eg="what happened here">what happened here</button><button class="chip" data-eg="red team my backups">red team my backups</button><button class="chip" data-eg="run Harden">run Harden</button><button class="chip" data-eg="rename this file">rename this file</button><button class="chip" data-eg="run Publish, security check">run Publish, security check</button><button class="chip" data-eg="run Publish" data-tier="Le Curateur">run Publish &#183; tier Le Curateur</button></div>
+  situation fires nothing on its own: that half of every gate is the
+  barrel's. In a session the barrel proposes by invoking a member's skill with
+  a reason; <b>propose</b> stands in for it here. The reason is admitted in
+  its own words, noted beside the bullet it sits nearest, and refused only as
+  an inverted gate &#8212; closer to a prohibition than to any activation. Le
+  Fripon alone still needs his gate quoted and the crown armed. <b>Tiered</b>
+  names who Le Sceptique tiered this turn, comma-separated &#8212; anyone else
+  admitted holds at Le Sas. Empty leaves Le Sas transparent.</p>
+  <div class="console"><button class="chip" data-eg="run Publish">run Publish</button><button class="chip" data-eg="what happened here">what happened here</button><button class="chip" data-eg="red team my backups">red team my backups</button><button class="chip" data-eg="run Harden">run Harden</button><button class="chip" data-eg="rename this file">rename this file</button><button class="chip" data-eg="run Publish, security check">run Publish, security check</button><button class="chip" data-eg="run Publish" data-tier="Le Curateur">run Publish &#183; tier Le Curateur</button><button class="chip" data-eg="the drive from the estate sale has a swapped controller board and the seller just shrugged" data-member="Le Limier" data-reason="a part was swapped by a previous owner and the seller shrugged when asked why">a seller shrugged &#183; propose Le Limier</button></div>
 
   <div class="live">
     <figure><div class="plate"><svg viewBox="0 0 820 762" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif">
@@ -487,6 +519,13 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
     <div id="readout"></div>
   </div>
 
+  <figure class="facefig"><div class="plate term"><pre id="face"></pre></div>
+    <figcaption><b>Plate 2</b> &#8212; the same turn as the terminal face
+    <code>bin/atlas-settle</code> draws after it, named and proposed together.
+    In a session it is drawn only when the train did more than the standing
+    watch. Assembled from <code>face_kit()</code>; <code>test_face_js.py</code>
+    holds it to <code>cadran_face.py</code> byte for byte.</figcaption></figure>
+
   <footer>
     <span>Forgotten Industries &#183; ATLAS &#183; Le Conseil</span>
     <span>A thing documented is a thing not yet lost.</span>
@@ -496,6 +535,7 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
 const D = {"cap":4,"precedence":["Le Sauvegarder","Le Vigile","Le Sceptique","Le Renégat","All others"],"strict":["le fripon"],"threshold":30,"filler":["a","an","and","any","are","as","at","be","been","being","but","by","did","do","does","for","from","had","has","have","if","in","into","invoke","is","it","its","no","nor","not","of","on","or","so","some","someone","something","than","that","the","then","these","this","those","to","was","were","when","while","with"],"invoke":["run","take","route"],"routes":{"Intake":["Taxonomiste","Curateur"],"Identify":["Limier","Taxonomiste"],"Build":["Cartographe","Forgeron"],"Publish":["Curateur","Vigile","Messager"],"Exhibit":["Curateur","Messager"],"Harden":["Vigile","Fripon","Vigile"],"Triage":["Renégat","Continuant"],"Recover":["Rédempteur","Forgeron"],"Judgement":[]},"mechanisms":[{"part":"Bezel","owner":"LE SAUVEGARDER","note":"unidirectional"},{"part":"Dial plate","owner":"L'ARCHIVE","note":"ground"},{"part":"Up-and-down arc","owner":"LE BARILLET","note":"undriven"},{"part":"Registers","owner":"SIGNAL · NOISE · GAIN","note":"undriven"},{"part":"Crown","owner":"DELIBERATELY NO ONE","note":"input"},{"part":"Going train","owner":"LE ROUAGE","note":"driving"},{"part":"Escapement","owner":"LE SAS","note":"release"},{"part":"Column wheel","owner":"LA ROUE À COLONNES","note":"verdicts"},{"part":"Brake","owner":"LE FREIN","note":"the halt"},{"part":"Perpetual calendar","owner":"LE CONTINUANT","note":"undriven"},{"part":"Retrograde arc","owner":"LE RÉDEMPTEUR // LE SAUVEGARDER","note":"undriven"},{"part":"Hands","owner":"DELIBERATELY NO ONE","note":"answer"},{"part":"Split-seconds hand","owner":"DELIBERATELY NO ONE","note":"where it was aimed"}],"members":[{"position":"11","name":"Le Continuant","phrases":["Le Continuant","Continuance","the work continues"],"standing":false,"sealed":false,"bullets":["a decision affects future structure, naming, architecture, maintenance, or continuity","a system must remain consistent across versions","the work must survive more than one session","Matthew is fatigued, overextended, or at risk of confusing endurance with obligation","a project needs sustainable rhythm instead of heroic effort","the question is whether to keep going, what to set down, or what pattern must survive","a choice must serve the future operator, not only the current session","work is moving to another machine, a removable drive, or a later session and must carry its own instructions"],"prohibitions":[]},{"position":"12","name":"Le Rédempteur","phrases":["Le Rédempteur","Le Redempteur","how do I fix it?","can I come back to this?"],"standing":false,"sealed":false,"bullets":["something broken, stalled, or abandoned is being re-entered","a previous decision created the problem now being addressed","a pattern of failure is repeating and has been named as such","the question is not only \"how do I fix it?\" but \"can I come back to this?\"","consequence is present in the work and is being worked around rather than through"],"prohibitions":["ordinary difficulty, slow progress, or a hard problem","fatigue or overextension — that is Le Continuant","a project merely being old, dusty, or long-shelved","Matthew being tired, terse, or frustrated","the mere presence of an artifact with history"]},{"position":"01","name":"Le Sceptique","phrases":["Le Sceptique","the airlock","Le Sas","check the gain","how do we know that"],"standing":true,"sealed":false,"bullets":[],"prohibitions":[]},{"position":"02","name":"Le Curateur","phrases":["Le Curateur","the curator","the docent","what's worth showing","what's the through-line"],"standing":false,"sealed":false,"bullets":["preserved material has accumulated without a decision about what it is for","a dossier, essay, restoration log, or field note is being started and the subject is unsettled","the same artifact could belong to several stories and one must be chosen","a body of work needs an order, a sequence, or an entry point","someone unfamiliar is about to encounter the archive and needs a path through it","the archive is complete and still unreadable","raw footage or photographs are being cut down into a short, a video, or a post"],"prohibitions":["Do not invoke during intake, repair, or investigation."]},{"position":"03","name":"Le Taxonomiste","phrases":["Le Taxonomiste","the taxonomist","classify this","how should this be filed"],"standing":false,"sealed":false,"bullets":["a new artifact, file, note, photograph, or record enters the archive","a naming scheme, folder structure, tag vocabulary, or schema is being created or changed","an item does not fit the existing categories","the same thing is being called by two different names in two places","a category is being created for a single item","a label must carry uncertainty rather than resolve it"],"prohibitions":["Do not invoke for one-off files with no retrieval future, or during active repair work when filing would interrupt the sequence."]},{"position":"04","name":"Le Vigile","phrases":["Le Vigile","the watchman","security check","what's exposed"],"standing":false,"sealed":false,"bullets":["credentials, tokens, keys, or passwords appear in a file, a note, or a conversation","something is about to be published, pushed to a public repository, or shared","backup, custody, or single-copy status is in question","hardware is being sold, given away, decommissioned, or recycled","account access, recovery paths, or two-factor coverage is being changed","a photograph or document may contain identifying or sensitive material in the frame","a new service, integration, or agent is being granted access to the archive","a person, a browser agent, or a remote session is being brought into the work","a listing, buyer, employer, or contact may not be what it claims"],"prohibitions":["Do not invoke for routine local file work with no exposure surface."]},{"position":"05","name":"Le Fripon","phrases":["Le Fripon","L'Intrus","red team"],"standing":false,"sealed":true,"bullets":["a backup, recovery, or custody procedure has been designed but never exercised","an access control, permission set, or credential scheme is assumed to work","a publication pipeline could leak more than intended","a recovery plan has never been run end to end","an assumption about safety has hardened into habit"],"prohibitions":[]},{"position":"06","name":"Le Renégat","phrases":["Le Renégat","Le Renegat","the renegade","argue against this","should we even"],"standing":false,"sealed":false,"bullets":["scope has grown past its original statement","a project has been resumed more than twice without reaching a stable state","the effort required has become disproportionate to the value of the object","a plan requires a purchase, a fabrication, or a dependency that the goal does not justify","the reason for continuing is sunk cost, obligation, or identity rather than usefulness","the council has produced a list longer than the available time","the work is being carried because stopping would feel like failure","an offer, purchase, or listing is being weighed on pay, cost, or time against its real return"],"prohibitions":[]},{"position":"07","name":"Le Cartographe","phrases":["Le Cartographe","the cartographer","map this","what depends on what"],"standing":false,"sealed":false,"bullets":["a build, repair, or project has more than three interacting parts","an order of operations matters and has not been established","a change in one component may affect others in non-obvious ways","compatibility between parts, revisions, standards, or formats is in question","a project's blockers are unclear and the next move cannot be identified","provenance runs through multiple owners, systems, or transformations","the same dependency keeps surfacing from different directions","a procedure must cross machines, operating systems, or toolchains to finish"],"prohibitions":["Do not invoke for linear tasks or single-component work."]},{"position":"08","name":"Le Limier","phrases":["Le Limier","the bloodhound","release the hound","reconstruct this","what happened here","Who is X?","Who is JJ Ammo Can?"],"standing":false,"sealed":false,"bullets":["an artifact shows modification, damage, or repair whose cause is unknown","a system failed and the failure sequence has not been established","provenance is broken and must be reasoned across a gap","a file, drive, or archive contains material whose origin is unclear","two records disagree about the same event","a record, a seller, or a previous owner answers the question with a shrug","the Operator asks \"Who is X?\" about a name, a handle, or a mark of unknown origin","a part is non-original, non-standard, or does not match its documentation","something was done to an object by a previous owner and the reason matters"],"prohibitions":["Do not invoke when the history is irrelevant to the decision."]},{"position":"09","name":"Le Forgeron","phrases":["Le Forgeron","the smith","build this","let's make it"],"standing":false,"sealed":false,"bullets":["a part does not exist, is discontinued, or is priced beyond reason and could be fabricated","a repair, adapter, mount, bracket, tray, duct, or pass-through is the next physical step","a procedure needs to become a script, template, or repeatable process","a system has been mapped and the critical path is clear","the judgment phase is complete and the remaining work is making"],"prohibitions":["Do not invoke while the source is unpreserved, the claim is unverified, or the scope is unsettled."]},{"position":"10","name":"Le Messager","phrases":["Le Messager","the messenger","write this up","how do we say this"],"standing":false,"sealed":false,"bullets":["a finding is leaving the archive: a post, page, caption, listing, README, or message","a technical result must be explained to someone without the context","a summary is being made of a larger body of work","a public-facing description of a project is being written or revised","an uncertain finding is being communicated and the uncertainty must survive","something is being shared with a seller, a forum, a buyer, or a reader","an application, résumé, cover letter, or follow-up is being sent"],"prohibitions":["Do not invoke for working notes, bench logs, or internal records."]},{"position":"crown","name":"Le Sauvegarder","phrases":["Le Sauvegarder","the keeper","preserve this","archive first"],"standing":false,"sealed":false,"bullets":["a source file, artifact, component, image, note, or record is at risk","source code, content, or site structure is about to be edited","something needs to be photographed, logged, measured, named, catalogued, backed up, or cited","a decision may destroy context","a project is being edited before its current state has been understood","an artifact — physical, digital, or memory — needs preservation","a fragile thought needs to become a durable record","restoration is tempting but the source has not been examined","a delete, wipe, format, flash, or overwrite is about to run"],"prohibitions":[]}]};
 const INK = {"bg": "#0b0c12", "brass_hi": "#c9a86a", "brass_lo": "#6e5a30", "plate": "#14161f", "edge": "#2a2f42", "ink": "#e8ecff", "dim": "#ab9668", "cyan": "#35e6ff", "amber": "#d9a04a", "active": "#3dff9e", "sealed": "#ffb43d", "held": "#7d6f52", "dark": "#463a24", "consulted": "#e8f04a", "dissent": "#ff4fd8", "fault": "#ff5470"};
 const STATE_INK = {"consulted": "#e8f04a", "active": "#3dff9e", "sealed": "#ffb43d", "held": "#7d6f52", "dissent": "#ff4fd8", "dark": "#463a24"};
+const K = {"width":64,"inner":60,"rows":25,"cr":12,"cc":30,"cells":[[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["▲","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["▓","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["1",""],["2",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["1",""],["1",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["1",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],["1",""],["0",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["2",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["9",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["3",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],["═",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["L",""],["'",""],["A",""],["R",""],["C",""],["H",""],["I",""],["V",""],["E",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["8",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["4",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["7",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["5",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["0",""],["6",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["▓","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["▓","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]],[[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["▓","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],["░","#af8700"],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""],[" ",""]]],"locked":[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"markers":{"crown":[12,56],"11":[4,22],"12":[3,31],"01":[4,40],"02":[7,47],"03":[12,49],"04":[17,47],"05":[20,40],"06":[21,31],"07":[20,22],"08":[17,15],"09":[12,13],"10":[7,15]},"bandRows":{"brake":17,"escapement":18},"owners":{"brake":"LE FREIN","escapement":"LE SAS"},"hands":{"split":{"11":[[12,29,"\\"],[11,28,"\\"],[10,27,"\\"],[9,26,"\\"],[8,25,"\\"],[7,24,"\\"],[6,23,"•"]],"12":[[11,30,"|"],[9,30,"|"],[7,30,"|"],[5,30,"•"]],"01":[[12,31,"/"],[11,32,"/"],[10,33,"/"],[9,34,"/"],[8,35,"/"],[7,36,"/"],[6,37,"•"]],"02":[[12,31,"/"],[11,32,"/"],[11,34,"/"],[10,35,"/"],[10,37,"/"],[9,39,"/"],[9,41,"/"],[8,42,"•"]],"03":[[12,31,"-"],[12,33,"-"],[12,35,"-"],[12,37,"-"],[12,39,"-"],[12,41,"-"],[12,43,"-"],[12,44,"•"]],"04":[[12,31,"\\"],[13,32,"\\"],[13,34,"\\"],[14,35,"\\"],[14,37,"\\"],[15,39,"\\"],[15,41,"\\"],[16,42,"•"]],"05":[[12,31,"\\"],[13,32,"\\"],[14,33,"\\"],[15,34,"\\"],[16,35,"\\"],[17,36,"\\"],[18,37,"•"]],"06":[[13,30,"|"],[15,30,"|"],[17,30,"|"],[19,30,"•"]],"07":[[12,29,"/"],[13,28,"/"],[14,27,"/"],[15,26,"/"],[16,25,"/"],[17,24,"/"],[18,23,"•"]],"08":[[12,29,"/"],[13,28,"/"],[13,26,"/"],[14,25,"/"],[14,23,"/"],[15,21,"/"],[15,19,"/"],[16,18,"•"]],"09":[[12,29,"-"],[12,27,"-"],[12,25,"-"],[12,23,"-"],[12,21,"-"],[12,19,"-"],[12,17,"-"],[12,16,"•"]],"10":[[12,29,"\\"],[11,28,"\\"],[11,26,"\\"],[10,25,"\\"],[10,23,"\\"],[9,21,"\\"],[9,19,"\\"],[8,18,"•"]]},"minute":{"11":[[12,29,"\\"],[11,29,"\\"],[11,28,"\\"],[10,28,"\\"],[10,27,"\\"],[9,27,"\\"],[9,26,"\\"],[8,26,"\\"],[8,25,"\\"],[7,25,"\\"],[7,24,"\\"],[6,24,"\\"],[6,23,"•"]],"12":[[11,30,"|"],[10,30,"|"],[9,30,"|"],[8,30,"|"],[7,30,"|"],[6,30,"|"],[5,30,"•"]],"01":[[12,31,"/"],[11,31,"/"],[11,32,"/"],[10,32,"/"],[10,33,"/"],[9,33,"/"],[9,34,"/"],[8,34,"/"],[8,35,"/"],[7,35,"/"],[7,36,"/"],[6,36,"/"],[6,37,"•"]],"02":[[12,31,"/"],[12,32,"/"],[11,32,"/"],[11,33,"/"],[11,34,"/"],[11,35,"/"],[10,35,"/"],[10,36,"/"],[10,37,"/"],[10,38,"/"],[9,39,"/"],[9,40,"/"],[9,41,"/"],[9,42,"/"],[8,42,"•"]],"03":[[12,31,"-"],[12,32,"-"],[12,33,"-"],[12,34,"-"],[12,35,"-"],[12,36,"-"],[12,37,"-"],[12,38,"-"],[12,39,"-"],[12,40,"-"],[12,41,"-"],[12,42,"-"],[12,43,"-"],[12,44,"•"]],"04":[[12,31,"\\"],[12,32,"\\"],[13,32,"\\"],[13,33,"\\"],[13,34,"\\"],[13,35,"\\"],[14,35,"\\"],[14,36,"\\"],[14,37,"\\"],[14,38,"\\"],[15,39,"\\"],[15,40,"\\"],[15,41,"\\"],[15,42,"\\"],[16,42,"•"]],"05":[[12,31,"\\"],[13,31,"\\"],[13,32,"\\"],[14,32,"\\"],[14,33,"\\"],[15,33,"\\"],[15,34,"\\"],[16,34,"\\"],[16,35,"\\"],[17,35,"\\"],[17,36,"\\"],[18,36,"\\"],[18,37,"•"]],"06":[[13,30,"|"],[14,30,"|"],[15,30,"|"],[16,30,"|"],[17,30,"|"],[18,30,"|"],[19,30,"•"]],"07":[[12,29,"/"],[13,29,"/"],[13,28,"/"],[14,28,"/"],[14,27,"/"],[15,27,"/"],[15,26,"/"],[16,26,"/"],[16,25,"/"],[17,25,"/"],[17,24,"/"],[18,24,"/"],[18,23,"•"]],"08":[[12,29,"/"],[12,28,"/"],[13,28,"/"],[13,27,"/"],[13,26,"/"],[13,25,"/"],[14,25,"/"],[14,24,"/"],[14,23,"/"],[14,22,"/"],[15,21,"/"],[15,20,"/"],[15,19,"/"],[15,18,"/"],[16,18,"•"]],"09":[[12,29,"-"],[12,28,"-"],[12,27,"-"],[12,26,"-"],[12,25,"-"],[12,24,"-"],[12,23,"-"],[12,22,"-"],[12,21,"-"],[12,20,"-"],[12,19,"-"],[12,18,"-"],[12,17,"-"],[12,16,"•"]],"10":[[12,29,"\\"],[12,28,"\\"],[11,28,"\\"],[11,27,"\\"],[11,26,"\\"],[11,25,"\\"],[10,25,"\\"],[10,24,"\\"],[10,23,"\\"],[10,22,"\\"],[9,21,"\\"],[9,20,"\\"],[9,19,"\\"],[9,18,"\\"],[8,18,"•"]]},"hour":{"11":[[12,29,"\\"],[11,29,"\\"],[11,28,"\\"],[10,28,"\\"],[10,27,"\\"],[9,27,"\\"],[9,26,"\\"],[8,26,"\\"],[8,25,"\\"],[7,25,"\\"],[7,24,"•"]],"12":[[11,30,"|"],[10,30,"|"],[9,30,"|"],[8,30,"|"],[7,30,"|"],[6,30,"•"]],"01":[[12,31,"/"],[11,31,"/"],[11,32,"/"],[10,32,"/"],[10,33,"/"],[9,33,"/"],[9,34,"/"],[8,34,"/"],[8,35,"/"],[7,35,"/"],[7,36,"•"]],"02":[[12,31,"/"],[12,32,"/"],[11,32,"/"],[11,33,"/"],[11,34,"/"],[11,35,"/"],[10,35,"/"],[10,36,"/"],[10,37,"/"],[10,38,"/"],[10,39,"/"],[9,39,"/"],[9,40,"•"]],"03":[[12,31,"-"],[12,32,"-"],[12,33,"-"],[12,34,"-"],[12,35,"-"],[12,36,"-"],[12,37,"-"],[12,38,"-"],[12,39,"-"],[12,40,"-"],[12,41,"•"]],"04":[[12,31,"\\"],[12,32,"\\"],[13,32,"\\"],[13,33,"\\"],[13,34,"\\"],[13,35,"\\"],[14,35,"\\"],[14,36,"\\"],[14,37,"\\"],[14,38,"\\"],[14,39,"\\"],[15,39,"\\"],[15,40,"•"]],"05":[[12,31,"\\"],[13,31,"\\"],[13,32,"\\"],[14,32,"\\"],[14,33,"\\"],[15,33,"\\"],[15,34,"\\"],[16,34,"\\"],[16,35,"\\"],[17,35,"\\"],[17,36,"•"]],"06":[[13,30,"|"],[14,30,"|"],[15,30,"|"],[16,30,"|"],[17,30,"|"],[18,30,"•"]],"07":[[12,29,"/"],[13,29,"/"],[13,28,"/"],[14,28,"/"],[14,27,"/"],[15,27,"/"],[15,26,"/"],[16,26,"/"],[16,25,"/"],[17,25,"/"],[17,24,"•"]],"08":[[12,29,"/"],[12,28,"/"],[13,28,"/"],[13,27,"/"],[13,26,"/"],[13,25,"/"],[14,25,"/"],[14,24,"/"],[14,23,"/"],[14,22,"/"],[14,21,"/"],[15,21,"/"],[15,20,"•"]],"09":[[12,29,"-"],[12,28,"-"],[12,27,"-"],[12,26,"-"],[12,25,"-"],[12,24,"-"],[12,23,"-"],[12,22,"-"],[12,21,"-"],[12,20,"-"],[12,19,"•"]],"10":[[12,29,"\\"],[12,28,"\\"],[11,28,"\\"],[11,27,"\\"],[11,26,"\\"],[11,25,"\\"],[10,25,"\\"],[10,24,"\\"],[10,23,"\\"],[10,22,"\\"],[10,21,"\\"],[9,21,"\\"],[9,20,"•"]]}},"handOrder":[["split","#87875f"],["minute","#eeeeee"],["hour","#00ffff"]],"marker":{"active":"●","consulted":"◐","sealed":"◆","held":"○","dissent":"✕","dark":"·"},"color":{"active":"#00d787","consulted":"#ffff00","sealed":"#ffaf00","held":"#87875f","dissent":"#ff00ff","dark":"#444444"},"fault":"#ff5f5f","hours":["01","02","03","04","05","06","07","08","09","10","11","12"],"names":{"11":"Le Continuant","12":"Le Rédempteur","01":"Le Sceptique","02":"Le Curateur","03":"Le Taxonomiste","04":"Le Vigile","05":"Le Fripon","06":"Le Renégat","07":"Le Cartographe","08":"Le Limier","09":"Le Forgeron","10":"Le Messager"},"pivot":"◉","title":"LE CADRAN · face","undriven":"UNDRIVEN  registers · up-and-down · calendar"};
 // LE ROUAGE, in the browser. The stage logic only - no gate vocabulary.
 //
 // Every phrase, the roster, the precedence ladder, the cap, the routes and the
@@ -844,6 +884,134 @@ function route(D, utterance, armed = null, capAuthorized = null, opts = {}) {
   return trace;
 }
 
+// LE CADRAN, as a face, assembled in the browser.
+//
+// Not a port of cadran_face.py. The geometry - case, majors, numerals,
+// engraving, and every path a hand can take - arrives as K, the kit
+// face_kit() exports, so nothing here can draw a circle differently. What is
+// left is what a trace changes: the marker beside each numeral, the two bands,
+// which hands go down and in what order, and the footer. That assembly is the
+// one thing written twice, and test_face_js.py holds it to face()'s bytes.
+
+// textwrap.wrap(text, width, subsequent_indent=indent), for the one shape the
+// footer gives it: words separated by runs of spaces, none longer than a line.
+// Whitespace is dropped at the start of every line after the first and at the
+// end of every line, as Python's drop_whitespace does. A no-break space is not
+// whitespace there either, which is what keeps "Le" beside its name.
+function wrap(text, width, indent) {
+  const chunks = text.split(/( +)/).filter((c) => c !== "").reverse();
+  const lines = [];
+  while (chunks.length) {
+    const lead = lines.length ? indent : "";
+    const room = width - lead.length;
+    if (lines.length && chunks[chunks.length - 1].trim() === "") chunks.pop();
+    const cur = [];
+    let len = 0;
+    while (chunks.length && len + chunks[chunks.length - 1].length <= room) {
+      const c = chunks.pop();
+      cur.push(c);
+      len += c.length;
+    }
+    if (!cur.length && chunks.length) cur.push(chunks.pop()); // over-long word
+    if (cur.length && cur[cur.length - 1].trim() === "") cur.pop();
+    if (cur.length) lines.push(lead + cur.join(""));
+  }
+  return lines;
+}
+
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+function face(K, t) {
+  const cells = K.cells.map((row) => row.map((c) => [c[0], c[1]]));
+  const locked = K.locked.map((row) => row.slice());
+  const put = (r, c, ch, hex, lock = false, force = false) => {
+    if (r < 0 || r >= K.rows || c < 0 || c >= K.inner) return;
+    if (locked[r][c] && !force) return;
+    cells[r][c] = [ch, hex];
+    if (lock) locked[r][c] = 1;
+  };
+  const text = (r, c, s, hex = "") =>
+    [...s].forEach((ch, i) => put(r, c + i, ch, hex, true, true));
+  const centred = (r, s, hex = "") =>
+    text(r, Math.floor((K.inner - [...s].length) / 2), s, hex);
+
+  const seat = Object.fromEntries(t.positions.map((p) => [p.position, p]));
+  const stateOf = (pos) => (seat[pos] ? seat[pos].state : "dark");
+
+  for (const [pos, [r, c]] of Object.entries(K.markers))
+    text(r, c, K.marker[stateOf(pos)], K.color[stateOf(pos)]);
+
+  // The browser train has no column wheel, so nothing is ever halted here;
+  // the band is still drawn from the trace when a trace carries it.
+  const held = (t.halted || []).length;
+  if (held) centred(K.bandRows.brake, `${K.owners.brake} · ${held} HELD`, K.color.dissent);
+  const released = t.stages.some((s) => s.startsWith("RELEASE"));
+  const band = t.failures.length ? "FAULT" : released ? "RELEASED" : "NO RELEASE";
+  centred(K.bandRows.escapement, `${K.owners.escapement} · ${band}`,
+          t.failures.length ? K.fault : "");
+
+  const hour = t.admitted.length ? t.admitted[0] : null;
+  const minute = t.routeEnd;
+  const split = t.routeAimed !== t.routeEnd ? t.routeAimed : null;
+  const at = { split, minute, hour };
+  for (const [kind, hex] of K.handOrder) {
+    const pos = at[kind];
+    if (!pos || !/^\d+$/.test(pos)) continue;
+    for (const [r, c, ch] of K.hands[kind][pos]) put(r, c, ch, hex);
+  }
+  text(K.cr, K.cc, K.pivot);
+
+  // Every glyph the face can hold is one column wide, so code points are the
+  // measure; cadran_face.py's dwidth() guard is what proves that stays true.
+  const framed = (plain, painted) =>
+    `│ ${painted}${" ".repeat(K.inner - [...plain].length)} │`;
+  const row = (r) => {
+    let n = cells[r].length;
+    while (n && cells[r][n - 1][0] === " ") n -= 1;
+    const plain = cells[r].slice(0, n).map((c) => c[0]).join("");
+    let html = "", run = "", hex = "";
+    const flush = () => {
+      if (run) html += hex ? `<span style="color:${hex}">${esc(run)}</span>` : esc(run);
+      run = "";
+    };
+    for (const [ch, h] of cells[r].slice(0, n)) {
+      const code = ch === " " ? "" : h;
+      if (code !== hex) { flush(); hex = code; }
+      run += ch;
+    }
+    flush();
+    return [plain, html];
+  };
+
+  const plainLines = [], htmlLines = [];
+  const add = (plain, html = esc(plain)) => { plainLines.push(plain); htmlLines.push(html); };
+  const top = `┌─ ${K.title} ` + "─".repeat(Math.max(K.width - [...K.title].length - 5, 1)) + "┐";
+  add(top);
+  for (let r = 0; r < K.rows; r++) {
+    const [p, h] = row(r);
+    add(framed(p, p), framed(p, h));
+  }
+  add(framed("", ""));
+
+  const handName = (pos) =>
+    pos ? `${pos} ${seat[pos] ? seat[pos].name : ""}`.trim() : "—";
+  const lit = K.hours.filter((pos) => stateOf(pos) !== "dark")
+    .map((pos) => `${K.marker[stateOf(pos)]} ${pos} ${K.names[pos]}`);
+  if (stateOf("crown") !== "dark") lit.push(`${K.marker[stateOf("crown")]} crown`);
+  const nbsp = " ";
+  const seats = lit.map((e) => e.replaceAll(" ", nbsp)).join("  ") || "none lit";
+  const footer = [
+    ...wrap("SEATS  " + seats, K.inner, " ".repeat(7)).map((l) => l.replaceAll(nbsp, " ")),
+    `HANDS  hour → ${handName(hour)}   minute → ${handName(minute)}`,
+  ];
+  if (split) footer.push(`       split → ${handName(split)} (aimed)`);
+  footer.push(K.undriven);
+  for (const l of footer) add(framed(l, l));
+  add("└" + "─".repeat(K.width - 2) + "┘");
+  add(` INPUT  "${t.utterance}"   armed ${t.armed || "—"}`);
+  return { text: plainLines.join("\n"), html: htmlLines.join("\n") };
+}
+
 // Paint a trace onto the dial that dial.py already drew.
 //
 // This writes values, never geometry. Every element it touches carries a
@@ -1022,15 +1190,32 @@ const tiered = () => {
   const v = tier.value.trim();
   return v ? v.split(",").map((s) => s.trim()).filter(Boolean) : null;
 };
-const run = () => paint(route(D, utt.value, arm.checked ? "Le Fripon" : null,
-                              null, { tiered: tiered() }));
+// The barrel's half, stood in for by whoever is at the page: one member and a
+// reason in their own words, exactly the pair bin/atlas-settle reads out of a
+// Skill call. No member chosen is no proposal, not an empty one.
+const member = document.getElementById("member");
+const reason = document.getElementById("reason");
+for (const m of D.members) member.add(new Option(`${m.position} ${m.name}`, m.name));
+const proposals = () => (member.value ? [[member.value, reason.value]] : null);
+
+const faceOut = document.getElementById("face");
+const run = () => {
+  const t = route(D, utt.value, arm.checked ? "Le Fripon" : null,
+                  null, { tiered: tiered(), proposals: proposals() });
+  paint(t);
+  faceOut.innerHTML = face(K, t).html;
+};
 utt.addEventListener("input", run);
 arm.addEventListener("change", run);
 tier.addEventListener("input", run);
+member.addEventListener("change", run);
+reason.addEventListener("input", run);
 document.querySelectorAll(".chip").forEach((c) =>
   c.addEventListener("click", () => {
     utt.value = c.dataset.eg;
     tier.value = c.dataset.tier || "";
+    member.value = c.dataset.member || "";
+    reason.value = c.dataset.reason || "";
     run();
     utt.focus();
   }));

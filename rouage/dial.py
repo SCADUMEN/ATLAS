@@ -920,6 +920,22 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
   .reading { gap: 22px; }
   figure { margin-bottom: 34px; }
 }
+
+/* terminal plates ------------------------------------------------------ */
+/* The face is character cells, so it is set as cells: one monospace run per
+   line, no wrapping, and a line-height tight enough that the box-drawing
+   frame closes. It pans on a phone for the same reason Plate 1 does. */
+.term { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 22px; }
+.term figure { margin: 0; overflow-x: auto; }
+.term pre { margin: 0; font-family: var(--data); font-size: 12px;
+  line-height: 1.22; color: #8a8a8a; white-space: pre; }
+.term figcaption { color: #9aa08f; }
+.term figcaption b { color: #d2d8ca; }
+@media (max-width: 700px) {
+  .term { grid-template-columns: none; }
+  .term pre { font-size: 11px; }
+}
 """
 
 # State colours for the sheet. The SVG palette is tuned for a dark plate and
@@ -1076,6 +1092,90 @@ def specimen_trace(ring, sp: dict) -> Trace:
     return route(ring, sp["u"], **kwargs)
 
 
+# Plate 3's turn: one utterance that names no gate, and the proposal the barrel
+# made for it after reading it. The same prompt is drawn twice - routed alone,
+# as the train saw it at prompt time, and settled with the proposal, as
+# bin/atlas-settle draws it after the turn. Named here for the same reason
+# SPECIMEN is: the sheet must not silently re-choose what it depicts.
+SETTLE_UTTERANCE = ("the drive from the estate sale has a swapped controller "
+                    "board and the seller just shrugged")
+SETTLE_PROPOSAL = ("Le Limier", "a part was swapped by a previous owner and "
+                                "the seller shrugged when asked why")
+
+_SGR = re.compile(r"\033\[(?:38;5;(\d+)|0)m")
+
+
+def xterm_hex(n: int) -> str:
+    """An xterm 256-colour index as the hex a terminal paints it."""
+    if n < 16:
+        base = ["000000", "800000", "008000", "808000", "000080", "800080",
+                "008080", "c0c0c0", "808080", "ff0000", "00ff00", "ffff00",
+                "0000ff", "ff00ff", "00ffff", "ffffff"]
+        return "#" + base[n]
+    if n < 232:
+        n -= 16
+        steps = [0, 95, 135, 175, 215, 255]
+        return "#%02x%02x%02x" % (steps[n // 36], steps[n // 6 % 6], steps[n % 6])
+    g = 8 + (n - 232) * 10
+    return "#%02x%02x%02x" % (g, g, g)
+
+
+def ansi_html(text: str) -> str:
+    """The terminal's own escapes, as spans. Only the codes the face and the
+    panel emit - a foreground index and a reset - so anything else surfacing
+    here is a renderer change this sheet has not been taught, and it fails."""
+    out, open_ = [], False
+    pos = 0
+    for m in _SGR.finditer(text):
+        out.append(esc(text[pos:m.start()]))
+        if open_:
+            out.append("</span>")
+            open_ = False
+        if m.group(1) is not None:
+            out.append(f'<span style="color:{xterm_hex(int(m.group(1)))}">')
+            open_ = True
+        pos = m.end()
+    out.append(esc(text[pos:]))
+    if open_:
+        out.append("</span>")
+    html = "".join(out)
+    assert "\033" not in html, "the terminal emitted an escape the sheet cannot set"
+    return html
+
+
+def terminal_plates(ring, anatomy: dict[str, str]) -> tuple[str, str]:
+    """Plates 3 and 4: the character surfaces, drawn by their own renderers.
+
+    Nothing about the face or the table is restated here. Both are run, in
+    colour, and their escapes translated - so the sheet shows exactly what the
+    terminal shows, and cannot fall behind it.
+    """
+    # Imported here: cadran_face imports this module for the anatomy.
+    from cadran_ascii import dial_ascii
+    from cadran_face import face
+
+    alone = route(ring, SETTLE_UTTERANCE)
+    settled = route(ring, SETTLE_UTTERANCE, proposals=[SETTLE_PROPOSAL])
+    note = next((c["note"] for c in settled.to_dict()["positions"]
+                 if c["name"] == SETTLE_PROPOSAL[0]), "")
+
+    def pane(trace, cap: str) -> str:
+        return (f'<figure><pre>{ansi_html(face(trace, anatomy, ring, color=True))}'
+                f'</pre><figcaption>{cap}</figcaption></figure>')
+
+    faces = (pane(alone, "<b>At prompt time</b> &#8212; the train alone. "
+                         "No gate is named, so only the standing watch is lit, "
+                         "and the hook stays silent.")
+             + pane(settled, "<b>After the turn</b> &#8212; settled with the "
+                             "barrel&#8217;s proposal, in its own words. "
+                             f"Admitted: {esc(note)}."))
+    table = (f'<figure><pre>{ansi_html(dial_ascii(settled, anatomy, ring, color=True))}'
+             f'</pre><figcaption><b>Le Conseil</b> &#8212; the same settled '
+             f'turn as the table <code>/atlas:le-conseil</code> prints.'
+             f'</figcaption></figure>')
+    return faces, table
+
+
 REGS = ('<span class="reg tl"></span><span class="reg tr"></span>'
         '<span class="reg bl"></span><span class="reg br"></span>')
 
@@ -1094,7 +1194,8 @@ def render(trace: Trace, standalone: bool = True) -> str:
     spec = "".join(
         f'<figure>{dial_svg(specimen_trace(ring, sp), 240, detailed=False)}'
         f'<figcaption>{sp["cap"]}</figcaption></figure>' for sp in SPECIMENS)
-    head = ("""<!doctype html>
+    faces, table = terminal_plates(ring, anatomy)
+    head =("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Le Cadran</title>
@@ -1114,9 +1215,11 @@ def render(trace: Trace, standalone: bool = True) -> str:
       <dt>Object</dt><dd>Le Cadran &#8212; the dial</dd>
       <dt>Class</dt><dd>Display. Prototype 0.</dd>
       <dt>Form</dt><dd>Diver's chronograph</dd>
-      <dt>Status</dt><dd>Rendering. Not built.</dd>
+      <dt>Status</dt><dd>Live in the terminal. This dial: rendering.</dd>
       <dt>Drive</dt><dd>Routing trace only</dd>
       <dt>Source</dt><dd><code>rouage/rouage.py</code></dd>
+      <dt>Face</dt><dd><code>rouage/cadran_face.py</code></dd>
+      <dt>Drawn by</dt><dd><code>bin/atlas-settle</code></dd>
       <dt>Doctrine</dt><dd><code>overlays/le-conseil.md</code></dd>
       <dt>Enclosure</dt><dd><code>hardware/le-boitier.md</code></dd>
     </dl></aside>
@@ -1146,6 +1249,19 @@ def render(trace: Trace, standalone: bool = True) -> str:
   <figure>
     <div class="plate">{REGS}<div class="scroll strip">{spec}</div></div>
     <figcaption><b>Plate 2</b> &#8212; specimens. One train, five inputs.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="plate">{REGS}<div class="term">{faces}</div></div>
+    <figcaption><b>Plate 3</b> &#8212; the face in the terminal, one prompt
+    drawn twice. What the train could see before the barrel read it, and
+    what convened once it had.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="plate">{REGS}<div class="term">{table}</div></div>
+    <figcaption><b>Plate 4</b> &#8212; the table. The face is for glancing;
+    the table names all thirteen.</figcaption>
   </figure>
 
   <section class="notes">
@@ -1209,6 +1325,40 @@ def render(trace: Trace, standalone: bool = True) -> str:
     &#8594; Vigile, so the hand reads 04 while the position is lit once &#8212;
     a candidate is a seat and a seat cannot be occupied twice. The route's shape
     is kept in the trace rather than by lighting a marker twice.</p>
+    <p><b>The face is the dial in character cells, under the same constraint.</b>
+    <code>cadran_face.py</code> borrows the boot masthead&#8217;s cell aspect
+    so the case comes out round, and the table&#8217;s glyphs and inks so a
+    state reads the same on both. The plate prints every numeral; only the
+    trace lights one. Engravings are locked cells the hands pass behind, so a
+    hand can never change a seat&#8217;s reading. The hands are plain ASCII
+    with a <code>&#8226;</code> tip, chosen by L&#8217;Op&#233;rateur from four
+    candidates drawn through the real face.</p>
+    <p><b>Face and table are two commands.</b> <code>/atlas:le-cadran</code>
+    draws the face; <code>/atlas:le-conseil</code> prints the table of all
+    thirteen. One is for glancing at a turn, the other for reading it.</p>
+    <p><b>The router draws the dial, never the model.</b> Le Rouage runs on
+    every prompt as a hook, and each turn &#8212; silent ones included &#8212;
+    is recorded to the windings log, so a gate that should have fired is
+    visible afterwards. The model is told not to redraw the face, which is the
+    honesty constraint carried into live use: a dial composed by the thing it
+    reports on is a prop.</p>
+    <p><b>The Arrival rite shows no dial.</b> Winding the crown still routes
+    its words and seats the barrel, but the rite&#8217;s panel is First Light
+    alone. Two instruments on one greeting read as clutter, not as state.</p>
+    <p><b>The dial moved to after the turn, because before it could only see a
+    typed name.</b> At prompt time the train has the words and nothing else, so
+    the automatic half of every gate stayed dark (Plate 3, left).
+    <code>bin/atlas-settle</code> runs when the turn ends: each council skill
+    the barrel invoked is a proposal, its <code>args</code> the reason, and one
+    face is drawn of what convened, named and automatic together. The reason
+    is admitted in its own words. Word overlap only reports the nearest bullet
+    and refuses the inverted gate, a reason closer to a prohibition than to
+    any activation. Le Fripon alone still needs his gate quoted, and the
+    crown.</p>
+    <p><b>Not yet verified live:</b> that Claude Code shows a <code>Stop</code>
+    hook&#8217;s message to the Operator. The face is built and tested; whether
+    it reaches the screen at the end of a turn is a host behaviour, and is
+    recorded here as open until it has been watched.</p>
     </div>
   </section>
 

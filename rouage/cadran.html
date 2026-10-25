@@ -156,6 +156,22 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
   .reading { gap: 22px; }
   figure { margin-bottom: 34px; }
 }
+
+/* terminal plates ------------------------------------------------------ */
+/* The face is character cells, so it is set as cells: one monospace run per
+   line, no wrapping, and a line-height tight enough that the box-drawing
+   frame closes. It pans on a phone for the same reason Plate 1 does. */
+.term { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 22px; }
+.term figure { margin: 0; overflow-x: auto; }
+.term pre { margin: 0; font-family: var(--data); font-size: 12px;
+  line-height: 1.22; color: #8a8a8a; white-space: pre; }
+.term figcaption { color: #9aa08f; }
+.term figcaption b { color: #d2d8ca; }
+@media (max-width: 700px) {
+  .term { grid-template-columns: none; }
+  .term pre { font-size: 11px; }
+}
 </style></head>
 <body>
 <div class="sheet">
@@ -171,9 +187,11 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
       <dt>Object</dt><dd>Le Cadran &#8212; the dial</dd>
       <dt>Class</dt><dd>Display. Prototype 0.</dd>
       <dt>Form</dt><dd>Diver's chronograph</dd>
-      <dt>Status</dt><dd>Rendering. Not built.</dd>
+      <dt>Status</dt><dd>Live in the terminal. This dial: rendering.</dd>
       <dt>Drive</dt><dd>Routing trace only</dd>
       <dt>Source</dt><dd><code>rouage/rouage.py</code></dd>
+      <dt>Face</dt><dd><code>rouage/cadran_face.py</code></dd>
+      <dt>Drawn by</dt><dd><code>bin/atlas-settle</code></dd>
       <dt>Doctrine</dt><dd><code>overlays/le-conseil.md</code></dd>
       <dt>Enclosure</dt><dd><code>hardware/le-boitier.md</code></dd>
     </dl></aside>
@@ -1956,6 +1974,117 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
     <figcaption><b>Plate 2</b> &#8212; specimens. One train, five inputs.</figcaption>
   </figure>
 
+  <figure>
+    <div class="plate"><span class="reg tl"></span><span class="reg tr"></span><span class="reg bl"></span><span class="reg br"></span><div class="term"><figure><pre>┌─ LE CADRAN · face ───────────────────────────────────────────┐
+│                         <span style="color:#af8700">░░░░░░▲░░░░░░</span>                        │
+│                    <span style="color:#af8700">░░░░░</span>             <span style="color:#af8700">░░░░░</span>                   │
+│                 <span style="color:#af8700">░░▓</span>                       <span style="color:#af8700">▓░░</span>                │
+│              <span style="color:#af8700">░░░</span>             12<span style="color:#444444">·</span>             <span style="color:#af8700">░░░</span>             │
+│             <span style="color:#af8700">░</span>       11<span style="color:#444444">·</span>               01<span style="color:#00d787">●</span>       <span style="color:#af8700">░</span>            │
+│           <span style="color:#af8700">░░</span>                                     <span style="color:#af8700">░░</span>          │
+│          <span style="color:#af8700">▓</span>                                         <span style="color:#af8700">▓</span>         │
+│         <span style="color:#af8700">░</span>    10<span style="color:#444444">·</span>                   <span style="color:#00ffff">/•</span>        02<span style="color:#444444">·</span>    <span style="color:#af8700">░</span>        │
+│        <span style="color:#af8700">░</span>                          <span style="color:#00ffff">//</span>                 <span style="color:#af8700">░</span>       │
+│        <span style="color:#af8700">░</span>                         <span style="color:#00ffff">//</span>                  <span style="color:#af8700">░</span>       │
+│       <span style="color:#af8700">░</span>                         <span style="color:#00ffff">//</span>                    <span style="color:#af8700">░</span>      │
+│       <span style="color:#af8700">░</span>                        <span style="color:#00ffff">//</span>                     <span style="color:#af8700">░</span>      │
+│       <span style="color:#af8700">▓</span>    09<span style="color:#444444">·</span>                ◉<span style="color:#00ffff">/</span>               03<span style="color:#444444">·</span>    <span style="color:#af8700">▓</span>═<span style="color:#444444">·</span>    │
+│       <span style="color:#af8700">░</span>                                               <span style="color:#af8700">░</span>      │
+│       <span style="color:#af8700">░</span>                                               <span style="color:#af8700">░</span>      │
+│        <span style="color:#af8700">░</span>                 L'ARCHIVE                   <span style="color:#af8700">░</span>       │
+│        <span style="color:#af8700">░</span>                                             <span style="color:#af8700">░</span>       │
+│         <span style="color:#af8700">░</span>    08<span style="color:#444444">·</span>                             04<span style="color:#444444">·</span>    <span style="color:#af8700">░</span>        │
+│          <span style="color:#af8700">▓</span>           LE SAS · RELEASED             <span style="color:#af8700">▓</span>         │
+│           <span style="color:#af8700">░░</span>                                     <span style="color:#af8700">░░</span>          │
+│             <span style="color:#af8700">░</span>       07<span style="color:#444444">·</span>               05<span style="color:#444444">·</span>       <span style="color:#af8700">░</span>            │
+│              <span style="color:#af8700">░░░</span>             06<span style="color:#444444">·</span>             <span style="color:#af8700">░░░</span>             │
+│                 <span style="color:#af8700">░░▓</span>                       <span style="color:#af8700">▓░░</span>                │
+│                    <span style="color:#af8700">░░░░░</span>             <span style="color:#af8700">░░░░░</span>                   │
+│                         <span style="color:#af8700">░░░░░░▓░░░░░░</span>                        │
+│                                                              │
+│ SEATS  ● 01 Le Sceptique                                     │
+│ HANDS  hour → 01 Le Sceptique   minute → —                   │
+│ UNDRIVEN  registers · up-and-down · calendar                 │
+└──────────────────────────────────────────────────────────────┘
+ INPUT  "the drive from the estate sale has a swapped controller board and the seller just shrugged"   armed —</pre><figcaption><b>At prompt time</b> &#8212; the train alone. No gate is named, so only the standing watch is lit, and the hook stays silent.</figcaption></figure><figure><pre>┌─ LE CADRAN · face ───────────────────────────────────────────┐
+│                         <span style="color:#af8700">░░░░░░▲░░░░░░</span>                        │
+│                    <span style="color:#af8700">░░░░░</span>             <span style="color:#af8700">░░░░░</span>                   │
+│                 <span style="color:#af8700">░░▓</span>                       <span style="color:#af8700">▓░░</span>                │
+│              <span style="color:#af8700">░░░</span>             12<span style="color:#444444">·</span>             <span style="color:#af8700">░░░</span>             │
+│             <span style="color:#af8700">░</span>       11<span style="color:#444444">·</span>               01<span style="color:#00d787">●</span>       <span style="color:#af8700">░</span>            │
+│           <span style="color:#af8700">░░</span>                                     <span style="color:#af8700">░░</span>          │
+│          <span style="color:#af8700">▓</span>                                         <span style="color:#af8700">▓</span>         │
+│         <span style="color:#af8700">░</span>    10<span style="color:#444444">·</span>                   <span style="color:#00ffff">/•</span>        02<span style="color:#444444">·</span>    <span style="color:#af8700">░</span>        │
+│        <span style="color:#af8700">░</span>                          <span style="color:#00ffff">//</span>                 <span style="color:#af8700">░</span>       │
+│        <span style="color:#af8700">░</span>                         <span style="color:#00ffff">//</span>                  <span style="color:#af8700">░</span>       │
+│       <span style="color:#af8700">░</span>                         <span style="color:#00ffff">//</span>                    <span style="color:#af8700">░</span>      │
+│       <span style="color:#af8700">░</span>                        <span style="color:#00ffff">//</span>                     <span style="color:#af8700">░</span>      │
+│       <span style="color:#af8700">▓</span>    09<span style="color:#444444">·</span>                ◉<span style="color:#00ffff">/</span>               03<span style="color:#444444">·</span>    <span style="color:#af8700">▓</span>═<span style="color:#444444">·</span>    │
+│       <span style="color:#af8700">░</span>                                               <span style="color:#af8700">░</span>      │
+│       <span style="color:#af8700">░</span>                                               <span style="color:#af8700">░</span>      │
+│        <span style="color:#af8700">░</span>                 L'ARCHIVE                   <span style="color:#af8700">░</span>       │
+│        <span style="color:#af8700">░</span>                                             <span style="color:#af8700">░</span>       │
+│         <span style="color:#af8700">░</span>    08<span style="color:#00d787">●</span>                             04<span style="color:#444444">·</span>    <span style="color:#af8700">░</span>        │
+│          <span style="color:#af8700">▓</span>           LE SAS · RELEASED             <span style="color:#af8700">▓</span>         │
+│           <span style="color:#af8700">░░</span>                                     <span style="color:#af8700">░░</span>          │
+│             <span style="color:#af8700">░</span>       07<span style="color:#444444">·</span>               05<span style="color:#444444">·</span>       <span style="color:#af8700">░</span>            │
+│              <span style="color:#af8700">░░░</span>             06<span style="color:#444444">·</span>             <span style="color:#af8700">░░░</span>             │
+│                 <span style="color:#af8700">░░▓</span>                       <span style="color:#af8700">▓░░</span>                │
+│                    <span style="color:#af8700">░░░░░</span>             <span style="color:#af8700">░░░░░</span>                   │
+│                         <span style="color:#af8700">░░░░░░▓░░░░░░</span>                        │
+│                                                              │
+│ SEATS  ● 01 Le Sceptique  ● 08 Le Limier                     │
+│ HANDS  hour → 01 Le Sceptique   minute → —                   │
+│ UNDRIVEN  registers · up-and-down · calendar                 │
+└──────────────────────────────────────────────────────────────┘
+ INPUT  "the drive from the estate sale has a swapped controller board and the seller just shrugged"   armed —</pre><figcaption><b>After the turn</b> &#8212; settled with the barrel&#8217;s proposal, in its own words. Admitted: nearest 40%: a record, a seller, or a previous owner answers the question with a shrug.</figcaption></figure></div></div>
+    <figcaption><b>Plate 3</b> &#8212; the face in the terminal, one prompt
+    drawn twice. What the train could see before the barrel read it, and
+    what convened once it had.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="plate"><span class="reg tl"></span><span class="reg tr"></span><span class="reg bl"></span><span class="reg br"></span><div class="term"><figure><pre>┌─ LE CADRAN · diver's chronograph ────────────────────────────┐
+│ LE SAUVEGARDER · unidirectional             MTM · not a part │
+│                                                              │
+│ POS MEMBER              STATE      WHY                       │
+│ 01  Le Sceptique        <span style="color:#00d787">● active</span>   standing                  │
+│ 02  Le Curateur         <span style="color:#444444">· dark</span>                               │
+│ 03  Le Taxonomiste      <span style="color:#444444">· dark</span>                               │
+│ 04  Le Vigile           <span style="color:#444444">· dark</span>                               │
+│ 05  Le Fripon           <span style="color:#444444">· dark</span>                               │
+│ 06  Le Renégat          <span style="color:#444444">· dark</span>                               │
+│ 07  Le Cartographe      <span style="color:#444444">· dark</span>                               │
+│ 08  Le Limier           <span style="color:#00d787">● active</span>   proposed:a part was swapp │
+│ 09  Le Forgeron         <span style="color:#444444">· dark</span>                               │
+│ 10  Le Messager         <span style="color:#444444">· dark</span>                               │
+│ 11  Le Continuant       <span style="color:#444444">· dark</span>                               │
+│ 12  Le Rédempteur       <span style="color:#444444">· dark</span>                               │
+│ --  Deliberately No One <span style="color:#444444">· dark</span>     crown · the only way in   │
+│                                                              │
+│ HANDS   minute → —                  hour → 01 Le Sceptique   │
+│         split  → —                                           │
+│ ROUTE   —   aimed —   ended —                                │
+│                                                              │
+│ REGISTERS  SIGNAL · NOISE · GAIN — UNDRIVEN (from 01)        │
+│ UP·DOWN    LE BARILLET — UNDRIVEN                            │
+│ CALENDAR   LE CONTINUANT — UNDRIVEN                          │
+│ COLUMN     LA ROUE À COLONNES · AT REST                      │
+│                                                              │
+│ LE FREIN · 0 held                                            │
+│ LE SAS · RELEASED                                            │
+│                                                              │
+│ CYCLE   WIND → EVALUATE → ORDER → METER → LOAD →             │
+│         COLLECT-&gt;barrel → TIER-&gt;01 → RELEASE-&gt;sas →          │
+│         DISTRIBUTE → RECORD-&gt;crown                           │
+│ NOTICES none recorded                                        │
+│ FAULTS  none recorded                                        │
+└──────────────────────────────────────────────────────────────┘
+ INPUT  "the drive from the estate sale has a swapped controller board and the seller just shrugged"   armed —</pre><figcaption><b>Le Conseil</b> &#8212; the same settled turn as the table <code>/atlas:le-conseil</code> prints.</figcaption></figure></div></div>
+    <figcaption><b>Plate 4</b> &#8212; the table. The face is for glancing;
+    the table names all thirteen.</figcaption>
+  </figure>
+
   <section class="notes">
     <h2>Field notes</h2>
     <div class="col">
@@ -2017,6 +2146,40 @@ footer { margin-top: 52px; border-top: 1px solid var(--rule); padding-top: 14px;
     &#8594; Vigile, so the hand reads 04 while the position is lit once &#8212;
     a candidate is a seat and a seat cannot be occupied twice. The route's shape
     is kept in the trace rather than by lighting a marker twice.</p>
+    <p><b>The face is the dial in character cells, under the same constraint.</b>
+    <code>cadran_face.py</code> borrows the boot masthead&#8217;s cell aspect
+    so the case comes out round, and the table&#8217;s glyphs and inks so a
+    state reads the same on both. The plate prints every numeral; only the
+    trace lights one. Engravings are locked cells the hands pass behind, so a
+    hand can never change a seat&#8217;s reading. The hands are plain ASCII
+    with a <code>&#8226;</code> tip, chosen by L&#8217;Op&#233;rateur from four
+    candidates drawn through the real face.</p>
+    <p><b>Face and table are two commands.</b> <code>/atlas:le-cadran</code>
+    draws the face; <code>/atlas:le-conseil</code> prints the table of all
+    thirteen. One is for glancing at a turn, the other for reading it.</p>
+    <p><b>The router draws the dial, never the model.</b> Le Rouage runs on
+    every prompt as a hook, and each turn &#8212; silent ones included &#8212;
+    is recorded to the windings log, so a gate that should have fired is
+    visible afterwards. The model is told not to redraw the face, which is the
+    honesty constraint carried into live use: a dial composed by the thing it
+    reports on is a prop.</p>
+    <p><b>The Arrival rite shows no dial.</b> Winding the crown still routes
+    its words and seats the barrel, but the rite&#8217;s panel is First Light
+    alone. Two instruments on one greeting read as clutter, not as state.</p>
+    <p><b>The dial moved to after the turn, because before it could only see a
+    typed name.</b> At prompt time the train has the words and nothing else, so
+    the automatic half of every gate stayed dark (Plate 3, left).
+    <code>bin/atlas-settle</code> runs when the turn ends: each council skill
+    the barrel invoked is a proposal, its <code>args</code> the reason, and one
+    face is drawn of what convened, named and automatic together. The reason
+    is admitted in its own words. Word overlap only reports the nearest bullet
+    and refuses the inverted gate, a reason closer to a prohibition than to
+    any activation. Le Fripon alone still needs his gate quoted, and the
+    crown.</p>
+    <p><b>Not yet verified live:</b> that Claude Code shows a <code>Stop</code>
+    hook&#8217;s message to the Operator. The face is built and tested; whether
+    it reaches the screen at the end of a turn is a host behaviour, and is
+    recorded here as open until it has been watched.</p>
     </div>
   </section>
 

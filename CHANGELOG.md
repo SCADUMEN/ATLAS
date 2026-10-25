@@ -6,6 +6,21 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [Unreleased]
+
+### Added
+- **Le Cadran · Live draws the terminal face and takes a proposal.** The live
+  page gains Plate 2, the face `bin/atlas-settle` draws after a turn, and a
+  propose row (member and reason) that stands in for the barrel, so the
+  attributed admission from #59 can be tried in the browser. The face is
+  assembled by `rouage/face.js` from `face_kit()`, which `cadran_face.py`
+  now builds its own face from; `rouage/test_face_js.py` holds the two to the
+  same bytes across the conformance matrix.
+- **The Le Cadran sheet records the terminal work.** `dial.py` adds Plate 3
+  (one prompt at prompt time and settled), Plate 4 (the Le Conseil table),
+  the face's spine rows, and field notes for #50–#59, all rendered by the
+  real renderers rather than restated.
+
 ## [1.15.1] - 2026-10-25
 
 ### Fixed
