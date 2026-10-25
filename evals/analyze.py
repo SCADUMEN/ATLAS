@@ -66,9 +66,13 @@ def extract(arm: str, aggregate: Path) -> dict:
                 "turns": run.get("turns"),
                 "costUsd": run.get("costUsd"),
                 "passed": run.get("passed"),
-                # None, not [], when the trace is gone: "never called" and
-                # "could not look" are different findings.
-                "calls": calls_in(trace) if trace and trace.exists() else None,
+                # None, not [], when the run errored or the trace is gone:
+                # "never called" and "could not look" are different findings.
+                # A run cut off by a rate or session limit has a trace with
+                # no calls in it, and counting that as silence would read an
+                # outage as a member staying dark.
+                "calls": (calls_in(trace) if not run.get("error")
+                          and trace and trace.exists() else None),
             })
     return {
         "arm": arm,
@@ -190,7 +194,7 @@ def score_arm(arm: dict, cases: dict, ring, members: list[str]) -> dict:
         "costUsd": arm["costUsd"],
         "partial": arm["partial"],
         "runs": len(runs),
-        "missingTraces": sum(1 for r in arm["runs"] if r["calls"] is None),
+        "missingTraces": sum(1 for r in arm["runs"] if r["calls"] is None and not r["error"]),
         "errors": sum(1 for r in arm["runs"] if r["error"]),
         "members": out_members,
         "kinds": {k: {"runs": v["runs"], "anyMember": rate(v["any"], v["runs"]),

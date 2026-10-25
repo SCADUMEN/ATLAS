@@ -6,6 +6,15 @@ versioning. The version is declared once, in `.claude-plugin/plugin.json`. On
 merge to `main`, the Release workflow tags `atlas--v<version>`, cuts a GitHub
 Release, and publishes the movement's Level.
 
+## [1.15.1] - 2026-10-25
+
+### Fixed
+- **`evals/analyze.py` no longer reads an errored run as silence.** A run
+  the eval runner ended on an error (a rate or session limit) still leaves a
+  trace with no council calls in it, and `extract` counted it as a run where
+  nobody convened. It now records such a run as unscored, the same as a
+  missing trace, so an outage can't show up as members staying dark.
+
 ## [1.15.0] - 2026-10-24
 
 ### Added
