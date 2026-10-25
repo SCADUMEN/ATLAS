@@ -176,15 +176,32 @@ const tiered = () => {
   const v = tier.value.trim();
   return v ? v.split(",").map((s) => s.trim()).filter(Boolean) : null;
 };
-const run = () => paint(route(D, utt.value, arm.checked ? "Le Fripon" : null,
-                              null, { tiered: tiered() }));
+// The barrel's half, stood in for by whoever is at the page: one member and a
+// reason in their own words, exactly the pair bin/atlas-settle reads out of a
+// Skill call. No member chosen is no proposal, not an empty one.
+const member = document.getElementById("member");
+const reason = document.getElementById("reason");
+for (const m of D.members) member.add(new Option(`${m.position} ${m.name}`, m.name));
+const proposals = () => (member.value ? [[member.value, reason.value]] : null);
+
+const faceOut = document.getElementById("face");
+const run = () => {
+  const t = route(D, utt.value, arm.checked ? "Le Fripon" : null,
+                  null, { tiered: tiered(), proposals: proposals() });
+  paint(t);
+  faceOut.innerHTML = face(K, t).html;
+};
 utt.addEventListener("input", run);
 arm.addEventListener("change", run);
 tier.addEventListener("input", run);
+member.addEventListener("change", run);
+reason.addEventListener("input", run);
 document.querySelectorAll(".chip").forEach((c) =>
   c.addEventListener("click", () => {
     utt.value = c.dataset.eg;
     tier.value = c.dataset.tier || "";
+    member.value = c.dataset.member || "";
+    reason.value = c.dataset.reason || "";
     run();
     utt.focus();
   }));
