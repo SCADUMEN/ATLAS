@@ -34,7 +34,7 @@ const LOG = argLog > 0 ? process.argv[argLog + 1]
 
 // How long each frame of a winding stays up. Long enough to read the order the
 // train worked in, short enough that a turn settles before the next one lands.
-const FRAME_MS = 110;
+const FRAME_MS = 90;
 
 // D and K are generated from the markdown at launch, every launch, so a
 // doctrine edit reaches this dial the next time it starts. Nothing is cached
@@ -81,10 +81,18 @@ function replay(D, w) {
 // t.stages     WIND, EVALUATE, ... RELEASE - the escapement band reads these
 // t.admitted   the hour hand points at admitted[0]
 // t.routeEnd / t.routeAimed   the minute and split hands
+//
+// The reveal is the train first, then who it seated, then where it pointed:
+// the stages wind through on a dark dial, the seats light in precedence
+// order, and the hands and any fault arrive with the trace itself.
 export function frames(t) {
-  // TODO(Matthew): the reveal. Return the prefixes in the order the dial
-  // should come up. Until then the dial lands in one frame.
-  return [t];
+  const dark = { ...t, positions: [], admitted: [], failures: [], halted: [],
+                 routeEnd: null, routeAimed: null };
+  const seq = t.stages.map((_, i) => ({ ...dark, stages: t.stages.slice(0, i + 1) }));
+  const wound = seq.length ? seq[seq.length - 1] : dark;
+  t.positions.forEach((_, i) => seq.push({ ...wound, positions: t.positions.slice(0, i + 1) }));
+  seq.push(t);
+  return seq;
 }
 
 // face() hands back HTML spans for the browser; the terminal wants runs.
@@ -139,12 +147,13 @@ function Cadran({ D, K }) {
   useEffect(() => {
     if (!played) return;
     const seq = frames(played.t);
+    const show = (f) => setFrame({ html: face(K, f).html, stage: f.stages[f.stages.length - 1] });
     let i = 0;
-    setFrame(face(K, seq[0]).html);
+    show(seq[0]);
     const id = setInterval(() => {
       i += 1;
       if (i >= seq.length) return clearInterval(id);
-      setFrame(face(K, seq[i]).html);
+      show(seq[i]);
     }, FRAME_MS);
     return () => clearInterval(id);
   }, [played]);
@@ -164,10 +173,17 @@ function Cadran({ D, K }) {
   if (!w) {
     return h(Text, { dimColor: true }, `No windings yet in ${LOG}. The dial stays dark until the crown is wound.`);
   }
+  // Face plus the two status lines. Shorter than that and the top of the dial
+  // is cut off, so say how tall the pane needs to be rather than draw half.
+  const need = frame ? frame.html.split("\n").length + 2 : 0;
+  const short = process.stdout.rows && process.stdout.rows < need;
   return h(Box, { flexDirection: "column" },
-    frame ? h(Face, { html: frame }) : null,
-    h(Text, { dimColor: true },
+    short ? h(Text, { color: "yellow", wrap: "truncate" },
+      ` pane is ${process.stdout.rows} rows; the dial needs ${need}`) : null,
+    frame ? h(Face, { html: frame.html }) : null,
+    h(Text, { dimColor: true, wrap: "truncate" },
       ` ${w.when}  ${w.kind || "prompt"}  ${at + 1}/${log.length}` +
+      `  stage ${frame && frame.stage ? frame.stage : "—"}` +
       `  ${follow.current ? "following" : "history"}  ← → step · q quit`),
     played.drift ? h(Text, { color: "red" },
       ` replay differs from the record: recorded [${played.drift.recorded}]` +
@@ -177,5 +193,11 @@ function Cadran({ D, K }) {
 // Run as a program, not when a test imports frames().
 if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { D, K } = loadDoctrine();
+  // The face is taller than most panes. On the main screen Ink can only
+  // redraw that by clearing, and every cleared frame lands in scrollback, so
+  // the dial runs on the alternate screen and the shell comes back untouched.
+  const tty = process.stdout.isTTY;
+  if (tty) process.stdout.write("\x1b[?1049h\x1b[H");
+  process.on("exit", () => { if (tty) process.stdout.write("\x1b[?1049l"); });
   render(h(Cadran, { D, K }));
 }
