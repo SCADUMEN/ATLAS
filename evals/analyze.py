@@ -136,6 +136,8 @@ def score_arm(arm: dict, cases: dict, ring, members: list[str]) -> dict:
         k = kinds.setdefault(case["kind"], Counter())
         k["runs"] += 1
         k["any"] += bool(called - {STANDING})
+        # A run rebuilt from its sandbox has calls but no grader verdict.
+        k["graded"] += r["passed"] is not None
         k["passed"] += bool(r["passed"])
 
         trace = replay(ring, case["prompt"], r["calls"])
@@ -167,8 +169,10 @@ def score_arm(arm: dict, cases: dict, ring, members: list[str]) -> dict:
                             else "inverted" if refused else "admitted"),
             })
 
-        pc = per_case.setdefault(r["case"], {"runs": 0, "passed": 0, "convened": Counter()})
+        pc = per_case.setdefault(r["case"], {"runs": 0, "graded": 0, "passed": 0,
+                                             "convened": Counter()})
         pc["runs"] += 1
+        pc["graded"] += r["passed"] is not None
         pc["passed"] += bool(r["passed"])
         pc["convened"].update(called)
 
@@ -198,12 +202,13 @@ def score_arm(arm: dict, cases: dict, ring, members: list[str]) -> dict:
         "errors": sum(1 for r in arm["runs"] if r["error"]),
         "members": out_members,
         "kinds": {k: {"runs": v["runs"], "anyMember": rate(v["any"], v["runs"]),
-                      "casePass": rate(v["passed"], v["runs"])}
+                      "casePass": rate(v["passed"], v["graded"])}
                   for k, v in sorted(kinds.items())},
         "panel": {str(k): v for k, v in sorted(panel.items())},
         "invariants": dict(invariants),
         "citations": citations,
-        "cases": {name: {"runs": v["runs"], "passed": v["passed"],
+        "cases": {name: {"runs": v["runs"],
+                         "passed": v["passed"] if v["graded"] else None,
                          "convened": dict(v["convened"])}
                   for name, v in per_case.items()},
     }
