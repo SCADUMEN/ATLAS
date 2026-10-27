@@ -1,0 +1,16 @@
+{
+  "name": "atlas-cadran-tui",
+  "private": true,
+  "type": "module",
+  "description": "Le Cadran, live in the terminal. Draws every winding the crown records.",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "atlas-cadran": "cadran.mjs"
+  },
+  "dependencies": {
+    "ink": "8.0.0",
+    "react": "19.3.1"
+  }
+}
