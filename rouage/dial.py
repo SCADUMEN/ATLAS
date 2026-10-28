@@ -9,7 +9,9 @@ there is nothing it could invent.
 
 Anything the train does not yet drive is drawn UNDRIVEN and says so on its face:
 
-  - The three registers are Le Sceptique's, from stage 7 (TIER), a person.
+  - The three registers. cadran_face.py drives them now, from the turn's gain
+    staging (readings()); this plate has not been taught to, so it still
+    draws the housings alone and says so.
   - The up-and-down arc is the context window. The train does not measure it.
   - Consulted is a real state the train cannot yet emit. It has its own
     ink anyway, so the dial cannot mistranslate it the day it arrives.
@@ -1102,7 +1104,7 @@ SETTLE_UTTERANCE = ("the drive from the estate sale has a swapped controller "
 SETTLE_PROPOSAL = ("Le Limier", "a part was swapped by a previous owner and "
                                 "the seller shrugged when asked why")
 
-_SGR = re.compile(r"\033\[(?:38;5;(\d+)|0)m")
+_SGR = re.compile(r"\033\[(?:(1;)?38;5;(\d+)(?:;48;5;(\d+))?|0)m")
 
 
 def xterm_hex(n: int) -> str:
@@ -1120,9 +1122,21 @@ def xterm_hex(n: int) -> str:
     return "#%02x%02x%02x" % (g, g, g)
 
 
+def span_style(fg: str, bg: str = "", bold: bool = False) -> str:
+    """One cell run's style, written the way face.js writes it, so the sheet's
+    face and the live page's face are the same markup."""
+    style = f"color:{fg}"
+    if bg:
+        style += f";background:{bg}"
+    if bold:
+        style += ";font-weight:bold"
+    return style
+
+
 def ansi_html(text: str) -> str:
     """The terminal's own escapes, as spans. Only the codes the face and the
-    panel emit - a foreground index and a reset - so anything else surfacing
+    panel emit - a foreground index, a seat's plate (bold, on a background),
+    and a reset - so anything else surfacing
     here is a renderer change this sheet has not been taught, and it fails."""
     out, open_ = [], False
     pos = 0
@@ -1131,8 +1145,8 @@ def ansi_html(text: str) -> str:
         if open_:
             out.append("</span>")
             open_ = False
-        if m.group(1) is not None:
-            out.append(f'<span style="color:{xterm_hex(int(m.group(1)))}">')
+        if m.group(2) is not None:
+            out.append(f'<span style="{span_style(xterm_hex(int(m.group(2))), xterm_hex(int(m.group(3))) if m.group(3) else "", bool(m.group(1)))}">')
             open_ = True
         pos = m.end()
     out.append(esc(text[pos:]))
@@ -1298,11 +1312,19 @@ def render(trace: Trace, standalone: bool = True) -> str:
     <p><b>An engraving is not a drive signal.</b> Naming who owns a subdial says
     nothing about whether a needle may move in it &#8212; a watch carries the
     maker's assignment on a dead register without claiming it is running.
-    So the registers and the arc now say whose they are <em>and</em> that they
-    are undriven. Signal, Noise and Gain come from stage 7, which is Le
-    Sceptique, which is a person. The arc is the context window, which the train
-    does not measure. Drawing a needle in either would be the exact failure
-    <code>hardware/le-boitier.md</code> names.</p>
+    So the arc says whose it is <em>and</em> that it is undriven: it is the
+    context window, which the train does not measure, and drawing a needle in
+    it would be the exact failure <code>hardware/le-boitier.md</code> names.</p>
+    <p><b>The registers are driven on the terminal face, from gain staging.</b>
+    They were held dark while Signal, Noise and Gain meant Le Sceptique&#8217;s
+    tier on each claim, which is a person&#8217;s judgement and not in the
+    trace. They now read what <code>le-sceptique.md</code> calls gain staging,
+    and every count is in the trace: SIGNAL is the seats that convened and went
+    through, NOISE the seats raised and held, GAIN everything that convened
+    against the cap, red past it. Le Sceptique is left out of all three, as he
+    is left out of the cap. A turn that convened nobody reads zero, and that is
+    the reading. The SVG plate above still draws the housings undriven until it
+    is taught the same counts.</p>
     <p><b>Dissent appears now, and it is magenta rather than red.</b> A fault is
     the routing failing; dissent is a member doing its job, so it must not
     borrow the fault colour. The state arrives from <em>la roue &#224;

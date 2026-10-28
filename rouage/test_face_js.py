@@ -81,6 +81,17 @@ class TheBrowserFaceIsTheTerminalFace(unittest.TestCase):
         for c, j in zip(self.cases, self.js):
             self.assertEqual(unescape(j["html"]), j["text"], c)
 
+    def test_the_browser_paints_what_the_terminal_paints(self):
+        # Glyph parity alone let the two faces differ in colour. A seat's plate
+        # is carried by colour, so the markup is held whole: the sheet's
+        # translation of the terminal's escapes against face.js's spans.
+        from dial import ansi_html
+        for c, j in zip(self.cases, self.js):
+            painted = face(route(self.ring, c["utterance"], c["armed"],
+                                 proposals=c["proposals"], tiered=c["tiered"]),
+                           ring=self.ring, color=True)
+            self.assertEqual(j["html"], ansi_html(painted), c)
+
     def test_the_matrix_lights_more_than_the_standing_watch(self):
         # A matrix of quiet turns would pass while never drawing a hand.
         self.assertTrue(any("split →" in j["text"] for j in self.js))

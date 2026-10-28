@@ -35,17 +35,32 @@ function wrap(text, width, indent) {
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+// cadran_face.rim(): a label set in a register's rim, any odd cell to the right.
+const rim = (label, inner) => {
+  const n = [...label].length, left = Math.floor((inner - n) / 2);
+  return "─".repeat(left) + label + "─".repeat(inner - n - left);
+};
+
+// cadran_face.readings(): the three registers, counted off the turn's seats.
+// Le Sceptique is standing and left out, as he is left out of the cap.
+export function readings(K, t) {
+  const seats = t.positions.filter((p) => p.position !== "01" && p.state !== "dark");
+  const noise = seats.filter((p) => p.state === "held").length;
+  return { signal: seats.length - noise, noise, gain: seats.length,
+           cap: Math.max(K.cap, t.capAuthorized || 0) };
+}
+
 export function face(K, t) {
-  const cells = K.cells.map((row) => row.map((c) => [c[0], c[1]]));
+  const cells = K.cells.map((row) => row.map((c) => [c[0], c[1], ""]));
   const locked = K.locked.map((row) => row.slice());
-  const put = (r, c, ch, hex, lock = false, force = false) => {
+  const put = (r, c, ch, hex, lock = false, force = false, bg = "") => {
     if (r < 0 || r >= K.rows || c < 0 || c >= K.inner) return;
     if (locked[r][c] && !force) return;
-    cells[r][c] = [ch, hex];
+    cells[r][c] = [ch, hex, bg];
     if (lock) locked[r][c] = 1;
   };
-  const text = (r, c, s, hex = "") =>
-    [...s].forEach((ch, i) => put(r, c + i, ch, hex, true, true));
+  const text = (r, c, s, hex = "", bg = "") =>
+    [...s].forEach((ch, i) => put(r, c + i, ch, hex, true, true, bg));
   const centred = (r, s, hex = "") =>
     text(r, Math.floor((K.inner - [...s].length) / 2), s, hex);
 
@@ -54,6 +69,24 @@ export function face(K, t) {
 
   for (const [pos, [r, c]] of Object.entries(K.markers))
     text(r, c, K.marker[stateOf(pos)], K.color[stateOf(pos)]);
+
+  for (const pos of K.hours) {
+    const [r, c] = K.markers[pos];
+    const s = stateOf(pos);
+    if (s === "dark") text(r, c - 2, pos, K.color.dark);
+    else text(r, c - 3, ` ${pos}${K.marker[s]} `, K.plateInk, K.color[s]);
+  }
+
+  const reading = readings(K, t);
+  for (const [key, [r, c]] of Object.entries(K.registers)) {
+    const n = reading[key];
+    const over = n > reading.cap;
+    const hex = over ? K.fault : K.registerColor[key];
+    for (let i = 0; i < K.cap; i++)
+      put(r + 1, c + 1 + 2 * i, K.pip[i < n ? 0 : 1], i < n ? hex : K.color.dark);
+    [...rim(over ? ` ${n}/${reading.cap} ` : ` ${n} `, K.registerInner)].forEach((ch, i) =>
+      put(r + 2, c + 1 + i, ch, "─ ".includes(ch) ? K.registerRim : hex));
+  }
 
   // The browser train has no column wheel, so nothing is ever halted here;
   // the band is still drawn from the trace when a trace carries it.
@@ -83,14 +116,17 @@ export function face(K, t) {
     let n = cells[r].length;
     while (n && cells[r][n - 1][0] === " ") n -= 1;
     const plain = cells[r].slice(0, n).map((c) => c[0]).join("");
-    let html = "", run = "", hex = "";
+    // A run is one style. A seat's plate is bold black on its state's
+    // colour, written as dial.span_style() writes it for the sheet.
+    let html = "", run = "", style = "";
     const flush = () => {
-      if (run) html += hex ? `<span style="color:${hex}">${esc(run)}</span>` : esc(run);
+      if (run) html += style ? `<span style="${style}">${esc(run)}</span>` : esc(run);
       run = "";
     };
-    for (const [ch, h] of cells[r].slice(0, n)) {
-      const code = ch === " " ? "" : h;
-      if (code !== hex) { flush(); hex = code; }
+    for (const [ch, h, bg] of cells[r].slice(0, n)) {
+      const code = bg ? `color:${h};background:${bg};font-weight:bold`
+        : ch === " " || !h ? "" : `color:${h}`;
+      if (code !== style) { flush(); style = code; }
       run += ch;
     }
     flush();

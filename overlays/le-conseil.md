@@ -27,7 +27,7 @@ The instrument is a diver's chronograph. That is not decoration — each part ca
 | **Hours 11 · 12** | Le Continuant · Le Rédempteur | Tyler and the returning self, adjacent at the top. |
 | **Hours 01 · 02** | Le Sceptique · Le Curateur | The claim, and the collection. |
 | **Hours 03–10** | The eight | They testify. |
-| **Registers** | Signal · Noise · Gain | Le Sceptique's readout, driven from 01. |
+| **Registers** | Signal · Noise · Gain | Le Sceptique's readout, driven from 01: his gain staging of the turn. Signal is what convened and went through, noise what was raised and held, gain everything that convened against the cap. |
 | **Barrel** | Le Barillet | The fitted model. Stores what the crown winds. Power reserve = context window. |
 | **Going train** | Le Rouage | Carries force to the escapement and distributes the result. Decides nothing. |
 | **Escapement** | Le Sas | Internal, unseen, regulates release. Not a member. |

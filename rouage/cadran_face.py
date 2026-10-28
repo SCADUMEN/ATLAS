@@ -58,6 +58,33 @@ BEZEL_COLOR = "\033[38;5;136m"
 # read as that seat's state.
 HAND_TIP = "•"
 
+# The registers: Le Sceptique's gain staging, read off the turn. Three subdials
+# in the chronograph's places - SIGNAL at nine, NOISE at three, GAIN under
+# twelve. The housings are engraved on the plate; only the pips and the
+# reading come from a trace, and a turn that convened nobody reads zero.
+REGISTER_WIDTH = 9
+REGISTER_RIM = "\033[38;5;243m"
+REGISTER_COLOR = {"signal": COLOR["active"], "noise": "\033[38;5;173m",
+                  "gain": BEZEL_COLOR}
+PIP_ON, PIP_OFF = "▮", "▯"
+
+# A seat that convened is set on a plate of its state's colour, numeral black
+# on it, so it reads from across the room. The marker glyph stays on the plate:
+# colour is the loud carrier, the glyph is the one that survives NO_COLOR.
+PLATE_INK = 16
+
+
+def plate_code(state: str) -> str:
+    """The escape for a seat's plate: bold black on the state's colour."""
+    index = COLOR[state].split(";")[-1].rstrip("m")
+    return f"\033[1;38;5;{PLATE_INK};48;5;{index}m"
+
+
+def rim(label: str, inner: int = REGISTER_WIDTH - 2) -> str:
+    """A label set in a register's rim, any odd cell going to the right."""
+    left = (inner - len(label)) // 2
+    return "─" * left + label + "─" * (inner - len(label) - left)
+
 
 def seat_angle(position: str) -> float:
     """Clockwise degrees from twelve o'clock. Seat 12 is at the top, 03 at the
@@ -134,7 +161,8 @@ class _Canvas:
                 run.clear()
 
         for ch, code in self.cells[r][:len(plain)]:
-            code = code if ch != " " else ""
+            # A blank cell paints nothing, unless it is the padding of a plate.
+            code = code if ch != " " or "48;5;" in code else ""
             if code != run_code:
                 flush()
                 run_code = code
@@ -215,6 +243,39 @@ class _Plate:
         self.band_rows = {"brake": cr + 5, "escapement": cr + 6}
         self.owners = {k: owner_of(anatomy, k) for k in ("brake", "escapement")}
 
+        # --- the plates' padding must be bare dial ----------------------------
+        # A lit seat's plate spans one cell either side of numeral and marker.
+        # Anything engraved there would vanish under it.
+        for pos, (r, c) in self.markers.items():
+            if pos == "crown":
+                continue
+            for pad in (c - 3, c + 1):
+                if cv.cells[r][pad][0] != " ":
+                    raise ValueError(f"seat {pos}'s plate would cover {cv.cells[r][pad][0]!r}")
+
+        # --- the three register housings --------------------------------------
+        # Halfway between the pivot and nine, and between the pivot and three,
+        # on the pivot's row; GAIN under the twelve. Engraved but not locked:
+        # the hands are drawn after and ride over a subdial, as they do on a
+        # chronograph.
+        half_way = (self.markers["03"][1] - cc) // 2
+        w = REGISTER_WIDTH
+        if 2 * ring.cap - 1 > w - 2:
+            raise ValueError(f"a register has no room for {ring.cap} pips")
+        self.registers = {
+            "signal": ("SIG", cr - 1, cc - half_way - w // 2),
+            "noise": ("NOISE", cr - 1, cc + half_way - w // 2),
+            "gain": ("GAIN", cr - 6, cc - w // 2),
+        }
+        for label, r, c in self.registers.values():
+            for dr, line in enumerate((f"╭{rim(label)}╮", "│" + " " * (w - 2) + "│",
+                                       f"╰{rim('')}╯")):
+                for dc, ch in enumerate(line):
+                    if cv.cells[r + dr][c + dc][0] != " ":
+                        raise ValueError(f"register {label} would cover "
+                                         f"{cv.cells[r + dr][c + dc][0]!r}")
+                    cv.put(r + dr, c + dc, ch, REGISTER_RIM)
+
         # --- every hand, at every seat --------------------------------------
         # Walk the ray first, draw second: the tip is the outermost cell the
         # hand reaches, and that is only known once the walk has finished. A
@@ -249,7 +310,28 @@ HAND_ORDER = (("split", SPLIT_COLOR), ("minute", MINUTE_COLOR),
               ("hour", HOUR_COLOR))
 PIVOT = "◉"
 TITLE = "LE CADRAN · face"
-UNDRIVEN = "UNDRIVEN  registers · up-and-down · calendar"
+UNDRIVEN = "UNDRIVEN  up-and-down · calendar"
+
+
+def readings(trace: Trace, ring: Ring) -> dict:
+    """The three registers for one turn, counted off its seats and nothing else.
+
+    le-sceptique.md, Gain Staging: name the noise so the cap has something to
+    act on; if twelve are lit, that is a routing failure, not a climax. So:
+
+        SIGNAL  seats that convened and went through
+        NOISE   seats that were raised and held - over the cap, untiered, braked
+        GAIN    everything that convened, read against the cap
+
+    Le Sceptique is left out of all three. He is standing, lit every turn and
+    not counted against the cap, so counting him would only move zero to one.
+    """
+    seats = [p["state"] for p in trace.to_dict()["positions"]
+             if p["position"] != "01" and p["state"] != "dark"]
+    noise = seats.count("held")
+    cap = max(ring.cap, trace.cap_authorized or 0)
+    return {"signal": len(seats) - noise, "noise": noise, "gain": len(seats),
+            "cap": cap}
 
 
 def face(trace: Trace, anatomy: dict | None = None, ring: Ring | None = None,
@@ -272,6 +354,28 @@ def face(trace: Trace, anatomy: dict | None = None, ring: Ring | None = None,
     # the plain face and the painted one cannot differ in a single glyph.
     for pos, (r, c) in plate.markers.items():
         cv.text(r, c, MARKER[state_of(pos)], COLOR[state_of(pos)])
+
+    # A seat that convened sits on its plate; a dark one fades back into the
+    # dial, so the eye goes to what the train lit.
+    for m in ring.hours:
+        r, c = plate.markers[m.position]
+        s = state_of(m.position)
+        if s == "dark":
+            cv.text(r, c - 2, m.position, COLOR["dark"])
+        else:
+            cv.text(r, c - 3, f" {m.position}{MARKER[s]} ", plate_code(s))
+
+    # --- the registers, before the hands so the hands ride over them --------
+    reading = readings(trace, ring)
+    for key, (_, r, c) in plate.registers.items():
+        n = reading[key]
+        over = n > reading["cap"]
+        code = FAULT_COLOR if over else REGISTER_COLOR[key]
+        for i in range(ring.cap):
+            cv.put(r + 1, c + 1 + 2 * i, PIP_ON if i < n else PIP_OFF,
+                   code if i < n else COLOR["dark"])
+        for i, ch in enumerate(rim(f" {n}/{reading['cap']} " if over else f" {n} ")):
+            cv.put(r + 2, c + 1 + i, ch, REGISTER_RIM if ch in "─ " else code)
 
     held = len(trace.halted)
     if held:
@@ -365,4 +469,10 @@ def face_kit(anatomy: dict | None = None, ring: Ring | None = None) -> dict:
         "hours": sorted(m.position for m in ring.hours),
         "names": {m.position: m.name for m in ring.hours},
         "pivot": PIVOT, "title": TITLE, "undriven": UNDRIVEN,
+        "cap": ring.cap,
+        "registers": {k: [r, c] for k, (_, r, c) in plate.registers.items()},
+        "registerColor": {k: hexof(v) for k, v in REGISTER_COLOR.items()},
+        "registerRim": hexof(REGISTER_RIM),
+        "pip": [PIP_ON, PIP_OFF], "registerInner": REGISTER_WIDTH - 2,
+        "plateInk": xterm_hex(PLATE_INK),
     }

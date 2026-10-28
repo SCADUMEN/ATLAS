@@ -29,6 +29,17 @@ Release, and publishes the movement's Level.
   trace. A replay that no longer matches its record is shown as drift, not
   passed off. Ink and React are pinned in their own package under
   `rouage/tui`; the Python side stays stdlib-only.
+- **The registers are driven, and a lit seat sits on a plate.** The face
+  carries three subdials: SIGNAL at nine, NOISE at three, GAIN under twelve.
+  They read Le Sceptique's gain staging, and each count comes from the
+  trace's seats: SIGNAL is the seats that went through, NOISE the seats held,
+  and GAIN everything convened against the cap, red past it. Le Sceptique,
+  who is standing, is not counted. A seat that convened is set bold black on
+  a block of its state's colour, and dark numerals fade back, so a lit seat
+  can't be missed. `cadran_face.readings()` and `face.js` compute the same
+  counts. `test_face_js.py` now holds the two faces to the same markup,
+  colour included, and not only the same glyphs. The SVG plate still draws
+  the registers undriven. The up-and-down and the calendar stay UNDRIVEN.
 
 ### Fixed
 - **Le Cadran · Live shows typed markup instead of parsing it.** The readout

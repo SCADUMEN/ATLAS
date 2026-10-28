@@ -98,12 +98,16 @@ export function frames(t) {
 // face() hands back HTML spans for the browser; the terminal wants runs.
 const ENT = { "&lt;": "<", "&gt;": ">", "&amp;": "&" };
 const unesc = (s) => s.replace(/&(lt|gt|amp);/g, (m) => ENT[m]);
+// A span carries a colour, and a seat's plate adds a background and bold.
 function runs(htmlLine) {
   const out = [];
-  const re = /<span style="color:(#[0-9a-fA-F]{6})">(.*?)<\/span>|([^<]+)/g;
+  const re = /<span style="([^"]*)">(.*?)<\/span>|([^<]+)/g;
   let m;
   while ((m = re.exec(htmlLine))) {
-    out.push(m[1] ? [unesc(m[2]), m[1]] : [unesc(m[3]), null]);
+    if (!m[1]) { out.push([unesc(m[3]), {}]); continue; }
+    const st = Object.fromEntries(m[1].split(";").map((d) => d.split(":")));
+    out.push([unesc(m[2]), { color: st.color, backgroundColor: st.background,
+                             bold: st["font-weight"] === "bold" }]);
   }
   return out;
 }
@@ -111,8 +115,8 @@ function runs(htmlLine) {
 function Face({ html }) {
   return h(Box, { flexDirection: "column" },
     html.split("\n").map((line, i) =>
-      h(Text, { key: i }, runs(line).map(([s, hex], j) =>
-        h(Text, { key: j, color: hex || undefined }, s)))));
+      h(Text, { key: i }, runs(line).map(([s, style], j) =>
+        h(Text, { key: j, ...style }, s)))));
 }
 
 function Cadran({ D, K }) {

@@ -69,7 +69,7 @@ The unidirectional ratchet turns out to carry the doctrine better than prose did
 | Element | Implementation | Notes |
 |---|---|---|
 | **Twelve hour markers** | Addressable RGB LEDs behind diffused acrylic batons | Six states map to six colours. Dark is genuinely off. |
-| **Three registers** | Round LCD modules or LED rings | Signal · Noise · Gain, driven from 01 |
+| **Three registers** | Round LCD modules or LED rings | Signal · Noise · Gain, driven from 01 as gain staging: seats through, seats held, everything convened against the cap. Le Sceptique, standing, is not counted |
 | **Hands** | Geared stepper on the centre post, full 360° | The answer. Sweeps to where the route actually stopped. |
 | **Split-seconds hand** | Second stepper, coaxial, shorter and dashed | La Rattrapante. Rides under the main hand and only separates when a route was cut short. Parked and unlit otherwise. |
 | **Escapement** | Single LED behind a window | Pulses once per release. Le Sas made visible. |
@@ -152,7 +152,7 @@ A 4 in round IPS panel rendering the existing interface at real size. This valid
 
 Build this first. Le Sauvegarder would insist.
 
-**Started.** `rouage/dial.py` renders the dial as SVG from a routing trace and nothing else. It is not firmware, but it is the layout under test, and it is honest by construction: the registers and the up-and-down arc are drawn undriven because the train cannot drive them.
+**Started.** `rouage/dial.py` renders the dial as SVG from a routing trace and nothing else. It is not firmware, but it is the layout under test, and it is honest by construction: the up-and-down arc is drawn undriven because the train cannot drive it. The registers were too, while they meant a tier on each claim; read as gain staging, every count is in the trace, and `rouage/cadran_face.py` drives them on the terminal face.
 
 ```sh
 python3 rouage/dial.py "what happened here"
