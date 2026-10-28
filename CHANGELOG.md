@@ -20,6 +20,28 @@ Release, and publishes the movement's Level.
   (one prompt at prompt time and settled), Plate 4 (the Le Conseil table),
   the face's spine rows, and field notes for #50–#59, all rendered by the
   real renderers rather than restated.
+- **Le Cadran, live in the terminal.** `rouage/tui/cadran.mjs` follows the
+  crown's log and draws every winding with Ink, quiet turns included. It
+  writes no geometry and no routing: `face_kit()`, `train.js` and `face.js`
+  supply all three, emitted from the markdown at each launch. Each turn plays
+  in steps — stages, then seats in precedence order, then the hands — and
+  `rouage/test_cadran_tui.py` holds every frame to a prefix of the real
+  trace. A replay that no longer matches its record is shown as drift, not
+  passed off. Ink and React are pinned in their own package under
+  `rouage/tui`; the Python side stays stdlib-only.
+- **The live dial is a module.** `ink-dial` (C, 100 XP) joins the ledger in
+  `overlays/le-niveau.md` on `rouage/tui/cadran.mjs`.
+- **The registers are driven, and a lit seat sits on a plate.** The face
+  carries three subdials: SIGNAL at nine, NOISE at three, GAIN under twelve.
+  They read Le Sceptique's gain staging, and each count comes from the
+  trace's seats: SIGNAL is the seats that went through, NOISE the seats held,
+  and GAIN everything convened against the cap, red past it. Le Sceptique,
+  who is standing, is not counted. A seat that convened is set bold black on
+  a block of its state's colour, and dark numerals fade back, so a lit seat
+  can't be missed. `cadran_face.readings()` and `face.js` compute the same
+  counts. `test_face_js.py` now holds the two faces to the same markup,
+  colour included, and not only the same glyphs. The SVG plate still draws
+  the registers undriven. The up-and-down and the calendar stay UNDRIVEN.
 
 ### Fixed
 - **Le Cadran · Live shows typed markup instead of parsing it.** The readout
@@ -28,6 +50,10 @@ Release, and publishes the movement's Level.
   so text typed into the page could inject HTML (self-XSS; flagged by CodeQL
   `js/xss-through-dom` when the page was published to forgotten-industries.net).
   `paint.js` now escapes every trace value it writes there.
+- **Eval case pass counts graded runs only.** A run rebuilt from its sandbox
+  carries calls but no grader verdict, and was scored as a failure;
+  `evals/analyze.py` now divides by graded runs and reports `null` for a case
+  with none.
 
 ## [1.15.1] - 2026-10-25
 

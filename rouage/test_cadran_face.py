@@ -13,8 +13,8 @@ from __future__ import annotations
 import re
 import unittest
 
-from cadran_ascii import MARKER
-from cadran_face import HAND_TIP, face, hand_glyph
+from cadran_ascii import COLOR, FAULT_COLOR, MARKER
+from cadran_face import HAND_TIP, face, hand_glyph, plate_code, readings
 from premiere_lueur import WIDTH, dwidth
 from rouage import load_ring, route
 
@@ -93,6 +93,77 @@ class TheBandsSayWhatHappened(unittest.TestCase):
     def test_the_undriven_complications_say_so(self):
         out = face(route(load_ring(), "run Publish"))
         self.assertIn("UNDRIVEN", out)
+
+
+class TheRegistersReadTheTurn(unittest.TestCase):
+    """SIGNAL, NOISE and GAIN are counted off the trace's seats. A register
+    that showed a number the seats do not add up to would be a needle drawn
+    where the train did not put it."""
+
+    BUSY = "map this, preserve this, release the hound, build this, classify this"
+
+    def register(self, out: str, label: str) -> str:
+        # The reading sits on the rim under the label. A hand may ride over
+        # the rim, so the number is found rather than the rim stripped.
+        rows = out.splitlines()
+        for i, row in enumerate(rows):
+            at = row.find(label)
+            if at >= 0 and "╭" in row:
+                start = row.rfind("╭", 0, at)
+                return re.search(r"\d+(?:/\d+)?", rows[i + 2][start:start + 9]).group()
+        self.fail(f"no {label} register on the face")
+
+    def test_the_counts_are_the_seats(self):
+        ring = load_ring()
+        for utt, kw in (("pr please", {}), ("who is JJ ammo can?", {}),
+                        (self.BUSY, {}), ("run Publish", {"tiered": []}),
+                        ("argue against this, map this",
+                         {"verdicts": [("Le Renégat", "Archive")]})):
+            trace = route(ring, utt, **kw)
+            seats = [p["state"] for p in trace.to_dict()["positions"]
+                     if p["position"] != "01" and p["state"] != "dark"]
+            r = readings(trace, ring)
+            self.assertEqual(r["noise"], seats.count("held"), utt)
+            self.assertEqual(r["signal"] + r["noise"], len(seats), utt)
+            self.assertEqual(r["gain"], len(seats), utt)
+
+    def test_a_turn_that_convened_nobody_reads_zero(self):
+        out = face(route(load_ring(), "pr please"))
+        for label in ("SIG", "NOISE", "GAIN"):
+            self.assertEqual(self.register(out, label), "0", label)
+
+    def test_gain_past_the_cap_reads_against_it_in_red(self):
+        ring = load_ring()
+        trace = route(ring, self.BUSY)
+        r = readings(trace, ring)
+        # Asserted, not assumed: the specimen must actually exceed the cap.
+        self.assertGreater(r["gain"], r["cap"], "specimen no longer over cap")
+        self.assertEqual(self.register(face(trace, ring=ring), "GAIN"),
+                         f"{r['gain']}/{r['cap']}")
+        self.assertIn(f"{FAULT_COLOR}▮", face(trace, ring=ring, color=True))
+
+    def test_an_authorized_cap_is_not_read_as_over(self):
+        ring = load_ring()
+        trace = route(ring, self.BUSY, authorize_cap=6)
+        r = readings(trace, ring)
+        self.assertEqual(r["cap"], 6)
+        self.assertEqual(self.register(face(trace, ring=ring), "GAIN"), str(r["gain"]))
+
+
+class TheLitSeatsAreOnPlates(unittest.TestCase):
+
+    def test_a_plate_only_where_the_train_lit_a_seat(self):
+        ring = load_ring()
+        trace = route(ring, "map this, release the hound")
+        state = {p["position"]: p["state"] for p in trace.to_dict()["positions"]}
+        out = face(trace, ring=ring, color=True)
+        for m in ring.hours:
+            s = state.get(m.position, "dark")
+            if s == "dark":
+                self.assertIn(f"{COLOR['dark']}{m.position}", out, m.position)
+            else:
+                self.assertIn(f"{plate_code(s)} {m.position}{MARKER[s]} ", out,
+                              m.position)
 
 
 class TheHandsFollowTheTrace(unittest.TestCase):

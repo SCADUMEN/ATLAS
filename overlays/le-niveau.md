@@ -121,6 +121,7 @@ Status is `built`, `partial`, or `planned`. Built and partial modules score thei
 | settle-dial | Settle — the turn read back, Attributed admission, Le Cadran drawn from what convened | system | B | built | bin/atlas-settle |
 | activation-suite | Activation suite — Le Conseil's use cases as executable eval cases | system | B | built | evals/suite.json |
 | windings-report | Windings report — the crown's log as counts, named and unnamed | system | C | built | bin/atlas-windings |
+| ink-dial | Le Cadran live — the dial redrawn in place, windings stepped through | system | C | built | rouage/tui/cadran.mjs |
 
 ---
 
