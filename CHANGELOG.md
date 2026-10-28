@@ -29,6 +29,8 @@ Release, and publishes the movement's Level.
   trace. A replay that no longer matches its record is shown as drift, not
   passed off. Ink and React are pinned in their own package under
   `rouage/tui`; the Python side stays stdlib-only.
+- **The live dial is a module.** `ink-dial` (C, 100 XP) joins the ledger in
+  `overlays/le-niveau.md` on `rouage/tui/cadran.mjs`.
 - **The registers are driven, and a lit seat sits on a plate.** The face
   carries three subdials: SIGNAL at nine, NOISE at three, GAIN under twelve.
   They read Le Sceptique's gain staging, and each count comes from the
